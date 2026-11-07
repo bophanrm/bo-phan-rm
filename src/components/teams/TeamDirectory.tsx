@@ -335,54 +335,65 @@ export function TeamDirectory() {
                   className="bg-white rounded-bento border border-slate-200/90 p-5 shadow-bento flex flex-col justify-between space-y-4 relative"
                 >
                   <div>
-                    {/* Team Header */}
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center space-x-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/80 shadow-2xs">
-                          <FolderKanban className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-slate-900 text-sm leading-tight truncate">{team.name}</h4>
-                          <div className="flex items-center space-x-1.5 text-[11px] text-slate-500 mt-0.5">
-                            <span>{teamMembers.length} thành viên</span>
-                            {hasSupervisor && (
-                              <>
-                                <span>•</span>
-                                <span className="text-purple-700 font-semibold truncate">
-                                  Giám sát: {getPersonalName(teamSupervisor.name)}
-                                </span>
-                              </>
-                            )}
+                    {/* Team Header (Phân tầng thông thoáng, không bị bóp nghẹt chữ) */}
+                    <div className="space-y-2 mb-3">
+                      {/* Hàng 1: Icon + Tên tổ + Tải công việc + Nút cài đặt */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center space-x-2.5 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/80 shadow-2xs">
+                            <FolderKanban className="w-4 h-4" />
                           </div>
+                          <h4 className="font-extrabold text-slate-900 text-base leading-snug truncate">
+                            {team.name}
+                          </h4>
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 shrink-0">
+                          {canViewWorkloadStats && (
+                            <div
+                              className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center space-x-1.5 shadow-2xs whitespace-nowrap ${
+                                activeCount > 0
+                                  ? 'bg-amber-50 text-amber-900 border-amber-300'
+                                  : 'bg-slate-50 text-slate-500 border-slate-200/80'
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                  activeCount > 0 ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'
+                                }`}
+                              />
+                              <span>{activeCount > 0 ? `${activeCount} việc đang chạy` : '0 việc'}</span>
+                            </div>
+                          )}
+
+                          {isLeadership && (
+                            <button
+                              onClick={() => setSelectedTeamForEdit(team)}
+                              title="Ban điều hành sắp xếp nhân sự cho tổ này"
+                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-slate-200 cursor-pointer"
+                            >
+                              <Settings className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-2 shrink-0">
-                        {canViewWorkloadStats && (
-                          <div
-                            className={`px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center space-x-1.5 shadow-2xs whitespace-nowrap ${
-                              activeCount > 0
-                                ? 'bg-amber-50 text-amber-800 border-amber-200/80'
-                                : 'bg-slate-50 text-slate-500 border-slate-200/60'
-                            }`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                activeCount > 0 ? 'bg-amber-500' : 'bg-slate-400'
-                              }`}
-                            />
-                            <span>{activeCount > 0 ? `${activeCount} việc đang chạy` : '0 việc'}</span>
-                          </div>
-                        )}
+                      {/* Hàng 2: Huy hiệu số thành viên & Giám sát ca phụ trách (Rộng rãi, không bị rớt dòng chữ) */}
+                      <div className="flex items-center flex-wrap gap-1.5 text-xs">
+                        <span className="inline-flex items-center space-x-1 text-slate-700 font-semibold bg-slate-100 px-2.5 py-1 rounded-lg text-[11px]">
+                          <Users className="w-3 h-3 text-slate-500" />
+                          <span>{teamMembers.length} thành viên</span>
+                        </span>
 
-                        {isLeadership && (
-                          <button
-                            onClick={() => setSelectedTeamForEdit(team)}
-                            title="Ban điều hành sắp xếp nhân sự cho tổ này"
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-slate-200"
-                          >
-                            <Settings className="w-3.5 h-3.5" />
-                          </button>
+                        {hasSupervisor ? (
+                          <span className="inline-flex items-center space-x-1 text-purple-900 font-bold bg-purple-50 border border-purple-200/80 px-2.5 py-1 rounded-lg text-[11px]">
+                            <ShieldCheck className="w-3 h-3 text-purple-600" />
+                            <span>Giám sát: {getPersonalName(teamSupervisor.name, true)}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center space-x-1 text-slate-400 font-normal bg-slate-50 border border-slate-200/60 px-2 py-0.5 rounded-lg text-[10px]">
+                            Chưa có giám sát
+                          </span>
                         )}
                       </div>
                     </div>
