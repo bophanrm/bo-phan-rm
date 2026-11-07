@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   User,
   Task,
@@ -1071,6 +1071,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveToCloud('teams', newTeams);
   };
 
+  // Cơ chế Thông Báo Đẩy (Web Push Notifications):
+  // Tuân thủ nghiêm ngặt quy tắc: "CHỈ THẤY THÔNG BÁO LIÊN QUAN ĐẾN MÌNH, KHÔNG THẤY CỦA NGƯỜI KHÁC HOẶC TỔ KHÁC".
+  // Chỉ bắn thông báo trình duyệt / hệ thống khi bản ghi thông báo có userId === currentUser.id.
+  const seenNotifIdsRef = useRef<Set<string>>(new Set());
+  const isInitialNotifsLoadRef = useRef(true);
+
+  // Xin quyền thông báo trình duyệt khi khởi chạy
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // Bắn thông báo đẩy đến đúng thiết bị của nhân sự liên quan khi có thông báo mới
+  useEffect(() => {
+    if (isInitialNotifsLoadRef.current) {
+      notifications.forEach((n) => seenNotifIdsRef.current.add(n.id));
+      isInitialNotifsLoadRef.current = false;
+      return;
+    }
+
+    // Lọc các thông báo MỚI được gửi ĐÍCH DANH cho currentUser
+    const myNewNotifs = notifications.filter(
+      (n) => n.userId === currentUser.id && !n.isRead && !seenNotifIdsRef.current.has(n.id)
+    );
+
+    if (myNewNotifs.length > 0) {
+      myNewNotifs.forEach((n) => {
+        seenNotifIdsRef.current.add(n.id);
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification(n.title, {
+              body: n.message,
+              icon: '/icons/icon-192x192.png',
+            });
+          } catch (e) {
+            console.error('Error triggering native push notification:', e);
+          }
+        }
+      });
+    }
+  }, [notifications, currentUser.id]);
+
   // Cơ chế nhắc nhở hoàn thành công việc Daily:
   // Toàn thời gian làm việc trong ngày (ca hành chính 7h30 - 16h00).
   // Đến 15h (1 tiếng trước khi hết ca), nếu chưa gửi báo cáo hoàn thành công việc sẽ tự động nhắc nhở.
@@ -1520,8 +1563,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const newTasks = [newTask, ...tasks];
     updateTasks(newTasks);
 
-    // Bắn thông báo đến TẤT CẢ các nhân viên trong tổ / danh sách cùng làm
-    const createdNotifs: NotificationItem[] = taskData.assignedTo.map((memberId, idx) => ({
+    // Bắn thông báo đến ĐÚNG các nhân viên được phân công làm việc
+    // Bảo vệ việc mật: Nếu là việc nội bộ BQL (isManagementOnly) thì không gửi thông báo cho Cấp 2, 3, 4
+    const validAssignees = taskData.isManagementOnly
+      ? taskData.assignedTo.filter((mId) => {
+          const u = users.find((user) => user.id === mId);
+          return u?.level === 'LEVEL_1_MANAGER' || u?.role === 'MANAGER';
+        })
+      : taskData.assignedTo;
+
+    const createdNotifs: NotificationItem[] = validAssignees.map((memberId, idx) => ({
       id: `notif-${Date.now()}-${idx}`,
       userId: memberId,
       title: taskData.teamName ? `Việc mới giao cho [${taskData.teamName}]!` : 'Bạn có công việc mới được giao!',
@@ -1533,9 +1584,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     }));
 
-    // Điểm 1 (Cách A): Nếu người giao là Cấp 2 (Điều Phối), gửi thêm thông báo cho các Tổ trưởng (Cấp 3 Lead) phụ trách
+    // Điểm 1 (Cách A): Nếu người giao là Cấp 2 (Điều Phối), gửi thêm thông báo cho các Tổ trưởng (Cấp 3 Lead) phụ trách của tổ đó
     const leadNotifs: NotificationItem[] = [];
-    if (currentUser.level === 'LEVEL_2_SECRETARY' || currentUser.role === 'SECRETARY') {
+    if (!taskData.isManagementOnly && (currentUser.level === 'LEVEL_2_SECRETARY' || currentUser.role === 'SECRETARY')) {
       taskData.reviewers?.forEach((reviewerId, idx) => {
         const reviewerUser = users.find((u) => u.id === reviewerId);
         if (reviewerUser?.level === 'LEVEL_3_LEAD' && !taskData.assignedTo.includes(reviewerId)) {
@@ -1553,11 +1604,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     updateNotifications([...leadNotifs, ...createdNotifs, ...notifications]);
-
-    // Native Web Push API simulation
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification('Việc mới được giao', { body: newTask.title });
-    }
   };
 
   // Submit report (Gửi về CÙNG LÚC cho Trưởng phòng VÀ Thư ký)
