@@ -38,7 +38,6 @@ export const INITIAL_TEAMS: TeamGroup[] = [
       'user-1794029277678', // Long Á Thành
       'user-1794029407279', // Phan Thanh Tài
       'user-1794029435861', // Trần Tuấn Hải
-      'user-1794029465528', // Lê Tấn Phát
     ],
   },
   {
@@ -55,6 +54,7 @@ export const INITIAL_TEAMS: TeamGroup[] = [
       'user-1794029355937', // Nguyễn Mạnh Hùng
       'user-1794029374322', // Trịnh Hữu Đăng
       'user-1794029389599', // Lý Minh Kiệt
+      'user-1794029465528', // Lê Tấn Phát
       'user-1794029487288', // Nguyễn Minh Trí
       'user-1794029518886', // Trần Hoàng Minh
     ],
@@ -343,11 +343,11 @@ export const INITIAL_USERS: User[] = [
     email: '',
     phone: '0363743297',
     role: 'STAFF',
-    level: 'LEVEL_3_LEAD',
+    level: 'LEVEL_4_STAFF',
     permissions: {
       canAssignTasks: false,
-      canAssignDailyTasks: true,
-      canReviewReports: true,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
       canManagePermissions: false,
     },
     department: '',
@@ -504,6 +504,7 @@ interface AppContextType {
   saveShiftConfig: (shift: ShiftInfo) => void;
   deleteShiftConfig: (shiftId: string) => void;
   resetShiftsConfig: () => void;
+  importBackup: (backupData: any) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -584,8 +585,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setCurrentUser(INITIAL_USERS[0]);
           localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
         } else if (parsedUsers.length > 0) {
-          // Chuẩn hóa tài khoản Quản Trị Viên: chỉ vận hành hệ thống, không giao việc, không duyệt
+          // Chuẩn hóa và đồng bộ các thay đổi chức vụ/phân quyền chính thức từ INITIAL_USERS
           const normalizedUsers = parsedUsers.map((u) => {
+            const official = INITIAL_USERS.find((initU) => initU.id === u.id);
+            if (official && (u.level !== official.level || u.role !== official.role)) {
+              return {
+                ...u,
+                role: official.role,
+                level: official.level,
+                permissions: official.permissions,
+              };
+            }
             if (u.id === 'user-admin' || u.role === 'ADMIN') {
               return {
                 ...u,
@@ -605,6 +615,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           });
           setUsers(normalizedUsers);
           setCurrentUser(normalizedUsers[0]);
+          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(normalizedUsers));
         } else {
           setUsers(INITIAL_USERS);
           setCurrentUser(INITIAL_USERS[0]);
@@ -620,7 +631,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setTeams(INITIAL_TEAMS);
           localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(INITIAL_TEAMS));
         } else {
-          setTeams(parsedTeams);
+          // Đồng bộ nếu cơ cấu tổ đội chính thức có cập nhật thành viên
+          const syncedTeams = parsedTeams.map((pt) => {
+            const initT = INITIAL_TEAMS.find((it) => it.id === pt.id);
+            if (initT) {
+              return {
+                ...pt,
+                leaderId: initT.leaderId,
+                memberIds: initT.memberIds,
+              };
+            }
+            return pt;
+          });
+          setTeams(syncedTeams);
+          localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(syncedTeams));
         }
       } else {
         setTeams(INITIAL_TEAMS);
@@ -1720,6 +1744,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return true; // GENERAL
   }).length;
 
+  const importBackup = (backupData: any): boolean => {
+    try {
+      if (!backupData || typeof backupData !== 'object') return false;
+      if (Array.isArray(backupData.users) && backupData.users.length > 0) {
+        setUsers(backupData.users);
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(backupData.users));
+      }
+      if (Array.isArray(backupData.teams)) {
+        setTeams(backupData.teams);
+        localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(backupData.teams));
+      }
+      if (Array.isArray(backupData.tasks)) {
+        setTasks(backupData.tasks);
+        localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(backupData.tasks));
+      }
+      if (Array.isArray(backupData.notifications)) {
+        setNotifications(backupData.notifications);
+        localStorage.setItem(STORAGE_KEYS.NOTIFS, JSON.stringify(backupData.notifications));
+      }
+      if (Array.isArray(backupData.shifts) && backupData.shifts.length > 0) {
+        setShifts(backupData.shifts);
+        localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(backupData.shifts));
+      }
+      if (Array.isArray(backupData.shiftsConfig) && backupData.shiftsConfig.length > 0) {
+        setShiftsConfig(backupData.shiftsConfig);
+        localStorage.setItem(STORAGE_KEYS.SHIFTS_CONFIG, JSON.stringify(backupData.shiftsConfig));
+      }
+      return true;
+    } catch (e) {
+      console.error('Import backup failed:', e);
+      return false;
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1763,6 +1821,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         saveShiftConfig,
         deleteShiftConfig,
         resetShiftsConfig,
+        importBackup,
       }}
     >
       {children}

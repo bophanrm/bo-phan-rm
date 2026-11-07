@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
-import { DownloadCloud, CheckCircle2, ShieldCheck, X, HardDrive, FileJson, Clock } from 'lucide-react';
+import { DownloadCloud, CheckCircle2, ShieldCheck, X, HardDrive, FileJson, Clock, UploadCloud, AlertCircle } from 'lucide-react';
 
 interface BackupDrawerProps {
   isOpen: boolean;
@@ -10,8 +10,10 @@ interface BackupDrawerProps {
 }
 
 export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
-  const { tasks, notifications, users, shiftsConfig } = useApp();
+  const { tasks, notifications, users, shiftsConfig, teams, shifts, importBackup } = useApp();
   const [downloaded, setDownloaded] = useState(false);
+  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
@@ -22,6 +24,8 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
       version: '1.0.0',
       totalTasks: tasks.length,
       users,
+      teams,
+      shifts,
       tasks,
       notifications,
       shiftsConfig,
@@ -37,6 +41,33 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
 
     setDownloaded(true);
     setTimeout(() => setDownloaded(false), 3000);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        const ok = importBackup(json);
+        if (ok) {
+          setImportStatus('success');
+          setTimeout(() => {
+            setImportStatus('idle');
+            window.location.reload();
+          }, 1200);
+        } else {
+          setImportStatus('error');
+        }
+      } catch (err) {
+        console.error('Lỗi đọc file JSON:', err);
+        setImportStatus('error');
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -103,7 +134,7 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
 
           {/* Manual Download Button */}
           <div className="pt-2">
-            <h4 className="text-xs font-semibold text-slate-700 mb-2">Tải bản sao lưu về máy tính ngay:</h4>
+            <h4 className="text-xs font-semibold text-slate-700 mb-2">Tải bản sao lưu về máy tính:</h4>
             <button
               onClick={handleExportBackup}
               className="w-full flex items-center justify-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl shadow-sm transition-all text-sm"
@@ -112,7 +143,44 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
               <span>{downloaded ? 'Đã tải thành công file Backup!' : 'Tải toàn bộ dữ liệu về máy (.JSON)'}</span>
             </button>
             <p className="text-[11px] text-slate-500 text-center mt-2">
-              File chứa toàn bộ danh sách công việc, nhân sự và báo cáo kết quả hiện tại.
+              File chứa toàn bộ danh sách công việc, nhân sự, tổ đội, ca trực và báo cáo.
+            </p>
+          </div>
+
+          {/* Manual Import Section */}
+          <div className="pt-2 border-t border-slate-200">
+            <h4 className="text-xs font-semibold text-slate-700 mb-2">Nạp dữ liệu từ file sao lưu:</h4>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center justify-center space-x-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-medium py-3 px-4 rounded-xl shadow-xs transition-all text-sm"
+            >
+              <UploadCloud className="w-4 h-4 text-blue-600" />
+              <span>Nạp file sao lưu vào máy (.JSON)</span>
+            </button>
+
+            {importStatus === 'success' && (
+              <div className="mt-2 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Nạp dữ liệu thành công! Đang làm mới hệ thống...</span>
+              </div>
+            )}
+
+            {importStatus === 'error' && (
+              <div className="mt-2 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>File không đúng định dạng sao lưu hoặc bị lỗi.</span>
+              </div>
+            )}
+
+            <p className="text-[11px] text-slate-500 text-center mt-2">
+              Dùng để đồng bộ tức thì dữ liệu mới nhất từ thiết bị khác.
             </p>
           </div>
         </div>
