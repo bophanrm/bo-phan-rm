@@ -127,17 +127,6 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
 
           {/* Right Actions */}
           <div className="flex items-center space-x-1 sm:space-x-2">
-            {/* Quick Giao Việc button on mobile if authorized */}
-            {canAssign && (
-              <button
-                onClick={() => openCreateModal(!checkCanAssignProject(currentUser))}
-                className="md:hidden flex items-center space-x-1 bg-blue-600 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Giao việc</span>
-              </button>
-            )}
-
             {/* Notification Bell (Cả Mobile & Desktop) */}
             <button
               onClick={() => setShowNotifs(true)}

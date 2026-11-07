@@ -170,36 +170,38 @@ export default function Home() {
                 </span>
               </div>
             ) : (
-              <div className="flex items-center flex-wrap gap-2 pt-0.5 text-xs">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-xs">
-                  <span className="text-blue-100 font-medium">📍 Ca hôm nay:</span>
-                  <span className={`font-bold ${todayShiftInfo.isOff ? 'text-amber-200' : 'text-emerald-300'}`}>
-                    {todayShiftInfo.name}{todayShiftInfo.time ? ` (${todayShiftInfo.time})` : ''}
-                  </span>
+              <div className="flex items-end justify-between gap-3 pt-1">
+                {/* Khối ca hôm nay và ca ngày mai */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-xs">
+                    <span className="text-blue-100 font-medium">📍 Ca hôm nay:</span>
+                    <span className={`font-bold ${todayShiftInfo.isOff ? 'text-amber-200' : 'text-emerald-300'}`}>
+                      {todayShiftInfo.name}{todayShiftInfo.time ? ` (${todayShiftInfo.time})` : ''}
+                    </span>
+                  </div>
+
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-xs">
+                    <span className="text-blue-200 font-medium">🗓️ Ca ngày mai:</span>
+                    <span className={`font-bold ${tomorrowShiftInfo.isOff ? 'text-amber-200' : 'text-emerald-300'}`}>
+                      {tomorrowShiftInfo.name}{tomorrowShiftInfo.time ? ` (${tomorrowShiftInfo.time})` : ''}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-xs">
-                  <span className="text-blue-200 font-medium">🗓️ Ca ngày mai:</span>
-                  <span className={`font-bold ${tomorrowShiftInfo.isOff ? 'text-amber-200' : 'text-emerald-300'}`}>
-                    {tomorrowShiftInfo.name}{tomorrowShiftInfo.time ? ` (${tomorrowShiftInfo.time})` : ''}
-                  </span>
-                </div>
+                {/* Nút Giao Việc nổi bật ngay vị trí khoanh tròn (cả mobile và desktop) */}
+                {canAssign && (
+                  <button
+                    onClick={() => {
+                      setIsCreateDaily(!checkCanAssignProject(currentUser));
+                      setIsCreateOpen(true);
+                    }}
+                    className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-xs sm:text-sm px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg shadow-amber-500/25 border border-amber-200 hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer"
+                  >
+                    <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" />
+                    <span className="tracking-wide uppercase font-black text-[11px] sm:text-xs">Giao việc</span>
+                  </button>
+                )}
               </div>
-            )}
-          </div>
-
-          <div className="hidden sm:flex items-center space-x-3 self-start md:self-auto shrink-0">
-            {canAssign && (
-              <button
-                onClick={() => {
-                  setIsCreateDaily(!checkCanAssignProject(currentUser));
-                  setIsCreateOpen(true);
-                }}
-                className="flex items-center space-x-2 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95"
-              >
-                <PlusCircle className="w-4 h-4 text-blue-600" />
-                <span>Giao việc</span>
-              </button>
             )}
           </div>
         </div>
