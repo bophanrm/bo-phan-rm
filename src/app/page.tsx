@@ -26,8 +26,6 @@ import {
   Clock,
   AlertCircle,
   Layers,
-  FileSpreadsheet,
-  Download,
 } from 'lucide-react';
 
 export default function Home() {
@@ -205,38 +203,6 @@ export default function Home() {
                 )}
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Quick Excel Report Banner */}
-        <div className="bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-blue-50/80 border border-emerald-200/90 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-600/20">
-              <FileSpreadsheet className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                  Báo Cáo Cơ Cấu Phân Quyền & Nhân Sự RM 2026 (.xlsx)
-                </h4>
-                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-                  File mới xuất
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-600 mt-0.5">
-                Bao gồm 4 sheet: Ma trận thẩm quyền 4 cấp, Danh sách 19 nhân sự, Cơ cấu 3 tổ và Lịch trực ca tuần.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2 w-full sm:w-auto shrink-0">
-            <a
-              href="/reports/Bao_Cao_Phan_Quyen_Va_Nhan_Su_Bo_Phan_RM_2026-11-07.xlsx"
-              download="Bao_Cao_Phan_Quyen_Va_Nhan_Su_Bo_Phan_RM_2026-11-07.xlsx"
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Tải file Excel (.xlsx)</span>
-            </a>
           </div>
         </div>
 
