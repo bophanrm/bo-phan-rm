@@ -104,6 +104,20 @@ export const DEFAULT_SHIFTS: ShiftInfo[] = [
     isSystem: true,
     hasNoTime: true,
   },
+  {
+    id: 'CA_1794034335936',
+    name: 'Ca Buggy',
+    timeRange: '7h - 15h30',
+    startTime: '07:00',
+    endTime: '15:30',
+    badge: 'bg-rose-100 text-rose-950 border-rose-400 font-bold',
+    bgClass: 'bg-rose-50/80',
+    textClass: 'text-rose-950 font-bold',
+    borderClass: 'border-rose-300',
+    dotColor: 'bg-rose-500',
+    shortName: 'Buggy',
+    isSystem: false,
+  },
 ];
 
 // Chế độ nghỉ nửa ngày dành riêng cho Cấp 2 Điều Phối & Quản lý khi sắp lịch

@@ -26,10 +26,42 @@ import {
 import { getPersonalName } from '@/utils/nameHelper';
 import { calculateShiftTimes } from '@/utils/shiftHelper';
 
-// Predefined Team Groups / Tổ Đội (Khởi đầu sạch để người dùng tự do tạo mới)
-export const INITIAL_TEAMS: TeamGroup[] = [];
+// Predefined Team Groups / Tổ Đội chính thức
+export const INITIAL_TEAMS: TeamGroup[] = [
+  {
+    id: 'team-1',
+    name: 'Tổ Giám Sát',
+    description: 'Đội ngũ giám sát hiện trường & kỹ thuật',
+    leaderId: 'user-1794029435861', // Trần Tuấn Hải
+    memberIds: [
+      'user-1794028864725', // Nguyễn Hưng Thịnh
+      'user-1794029277678', // Long Á Thành
+      'user-1794029407279', // Phan Thanh Tài
+      'user-1794029435861', // Trần Tuấn Hải
+      'user-1794029465528', // Lê Tấn Phát
+    ],
+  },
+  {
+    id: 'team-2',
+    name: 'Tổ Kỹ Thuật',
+    description: 'Đội ngũ kỹ thuật viên vận hành trực tiếp',
+    leaderId: 'user-1794029487288', // Nguyễn Minh Trí
+    memberIds: [
+      'user-1794028828908', // Nguyễn Tùng Lâm
+      'user-1794029189349', // Nguyễn Hữu Tâm
+      'user-1794029248752', // Trần Lê Hiếu Hậu
+      'user-1794029304253', // Phạm Văn Dũng
+      'user-1794029326444', // Lê Sanh Chung
+      'user-1794029355937', // Nguyễn Mạnh Hùng
+      'user-1794029374322', // Trịnh Hữu Đăng
+      'user-1794029389599', // Lý Minh Kiệt
+      'user-1794029487288', // Nguyễn Minh Trí
+      'user-1794029518886', // Trần Hoàng Minh
+    ],
+  },
+];
 
-// Danh sách nhân sự: Khởi đầu sạch với 1 tài khoản Quản Trị Viên (Vận hành hệ thống) duy nhất
+// Danh sách nhân sự chính thức kèm ID chính thức của Bộ Phận RM
 export const INITIAL_USERS: User[] = [
   {
     id: 'user-admin',
@@ -47,6 +79,313 @@ export const INITIAL_USERS: User[] = [
     department: '',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
     phone: '',
+  },
+  {
+    id: 'user-1794028540003',
+    employeeId: '2705',
+    name: 'Tống Trường Xa',
+    email: '',
+    phone: '',
+    role: 'MANAGER',
+    level: 'LEVEL_1_MANAGER',
+    permissions: {
+      canAssignTasks: true,
+      canAssignDailyTasks: true,
+      canReviewReports: true,
+      canManagePermissions: true,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794028696018',
+    employeeId: '1660',
+    name: 'Nguyễn Trần Hoàng Vũ',
+    email: '',
+    phone: '0834455369',
+    role: 'MANAGER',
+    level: 'LEVEL_1_MANAGER',
+    permissions: {
+      canAssignTasks: true,
+      canAssignDailyTasks: true,
+      canReviewReports: true,
+      canManagePermissions: true,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794028728863',
+    employeeId: '1624',
+    name: 'Nguyễn Thị Thảo Nguyên',
+    email: '',
+    phone: '0933648973',
+    role: 'SECRETARY',
+    level: 'LEVEL_2_SECRETARY',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: true,
+      canReviewReports: true,
+      canManagePermissions: false,
+      canManageSchedule: true,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794028828908',
+    employeeId: '2498',
+    name: 'Nguyễn Tùng Lâm',
+    email: '',
+    phone: '0367021752',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794028864725',
+    employeeId: '623',
+    name: 'Nguyễn Hưng Thịnh',
+    email: '',
+    phone: '0918231582',
+    role: 'STAFF',
+    level: 'LEVEL_3_LEAD',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: true,
+      canReviewReports: true,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029189349',
+    employeeId: '2638',
+    name: 'Nguyễn Hữu Tâm',
+    email: '',
+    phone: '',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029248752',
+    employeeId: '2442',
+    name: 'Trần Lê Hiếu Hậu',
+    email: '',
+    phone: '0901874559',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029277678',
+    employeeId: '2008',
+    name: 'Long Á Thành',
+    email: '',
+    phone: '',
+    role: 'STAFF',
+    level: 'LEVEL_3_LEAD',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: true,
+      canReviewReports: true,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029304253',
+    employeeId: '375',
+    name: 'Phạm Văn Dũng',
+    email: '',
+    phone: '',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029326444',
+    employeeId: '2715',
+    name: 'Lê Sanh Chung',
+    email: '',
+    phone: '0918180032',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029355937',
+    employeeId: '2727',
+    name: 'Nguyễn Mạnh Hùng',
+    email: '',
+    phone: '0865545765',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029374322',
+    employeeId: '2781',
+    name: 'Trịnh Hữu Đăng',
+    email: '',
+    phone: '',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029389599',
+    employeeId: '2780',
+    name: 'Lý Minh Kiệt',
+    email: '',
+    phone: '',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029407279',
+    employeeId: '742',
+    name: 'Phan Thanh Tài',
+    email: '',
+    phone: '0908191929',
+    role: 'STAFF',
+    level: 'LEVEL_3_LEAD',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: true,
+      canReviewReports: true,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029435861',
+    employeeId: '827',
+    name: 'Trần Tuấn Hải',
+    email: '',
+    phone: '0937072767',
+    role: 'STAFF',
+    level: 'LEVEL_3_LEAD',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: true,
+      canReviewReports: true,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029465528',
+    employeeId: '725',
+    name: 'Lê Tấn Phát',
+    email: '',
+    phone: '0363743297',
+    role: 'STAFF',
+    level: 'LEVEL_3_LEAD',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: true,
+      canReviewReports: true,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029487288',
+    employeeId: '2404',
+    name: 'Nguyễn Minh Trí',
+    email: '',
+    phone: '0775050495',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'user-1794029518886',
+    employeeId: '1678',
+    name: 'Trần Hoàng Minh',
+    email: '',
+    phone: '0913526216',
+    role: 'STAFF',
+    level: 'LEVEL_4_STAFF',
+    permissions: {
+      canAssignTasks: false,
+      canAssignDailyTasks: false,
+      canReviewReports: false,
+      canManagePermissions: false,
+    },
+    department: '',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
   },
 ];
 
@@ -239,7 +578,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (savedUsers) {
         const parsedUsers = JSON.parse(savedUsers) as User[];
-        if (parsedUsers.length > 0) {
+        // Tự động nâng cấp nếu người dùng trước đó chỉ tải bản trắng 1 tài khoản user-admin
+        if (parsedUsers.length <= 1 && INITIAL_USERS.length > 1) {
+          setUsers(INITIAL_USERS);
+          setCurrentUser(INITIAL_USERS[0]);
+          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
+        } else if (parsedUsers.length > 0) {
           // Chuẩn hóa tài khoản Quản Trị Viên: chỉ vận hành hệ thống, không giao việc, không duyệt
           const normalizedUsers = parsedUsers.map((u) => {
             if (u.id === 'user-admin' || u.role === 'ADMIN') {
@@ -271,14 +615,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (savedTeams) {
-        setTeams(JSON.parse(savedTeams));
+        const parsedTeams = JSON.parse(savedTeams) as TeamGroup[];
+        if (parsedTeams.length === 0 && INITIAL_TEAMS.length > 0) {
+          setTeams(INITIAL_TEAMS);
+          localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(INITIAL_TEAMS));
+        } else {
+          setTeams(parsedTeams);
+        }
       } else {
         setTeams(INITIAL_TEAMS);
       }
 
       if (savedShifts) {
         const parsedShifts = JSON.parse(savedShifts) as WorkShiftAssignment[];
-        setShifts(parsedShifts);
+        if (parsedShifts.length <= 5 && INITIAL_USERS.length > 1) {
+          const initial = generateInitialShifts(INITIAL_USERS);
+          setShifts(initial);
+          localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(initial));
+        } else {
+          setShifts(parsedShifts);
+        }
       } else {
         const initial = generateInitialShifts(INITIAL_USERS);
         setShifts(initial);
@@ -295,6 +651,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             if (parsed.some((s) => s.id === 'OFF_HALF')) {
               parsed = parsed.filter((s) => s.id !== 'OFF_HALF');
               hasThemeUpdate = true;
+            }
+
+            // Bổ sung Ca Buggy nếu chưa có
+            if (!parsed.some((s) => s.id === 'CA_1794034335936')) {
+              const buggyShift = DEFAULT_SHIFTS.find((s) => s.id === 'CA_1794034335936');
+              if (buggyShift) {
+                parsed.push(buggyShift);
+                hasThemeUpdate = true;
+              }
             }
 
             // Đồng bộ nâng cấp màu sắc tương phát cao và chế độ không ghi giờ cho các ca hệ thống mặc định
