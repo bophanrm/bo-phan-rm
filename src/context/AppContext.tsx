@@ -25,6 +25,7 @@ import {
 } from '@/types';
 import { getPersonalName } from '@/utils/nameHelper';
 import { calculateShiftTimes } from '@/utils/shiftHelper';
+import { supabase } from '@/lib/supabase';
 
 // Predefined Team Groups / Tổ Đội chính thức
 export const INITIAL_TEAMS: TeamGroup[] = [
@@ -924,24 +925,139 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Đồng bộ đám mây Supabase
+  const saveToCloud = async (key: string, value: any) => {
+    try {
+      await supabase.from('app_sync_store').upsert({
+        key,
+        value,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('Sync to cloud error (falling back to offline):', err);
+    }
+  };
+
+  // Tự động kết nối và lắng nghe dữ liệu thời gian thực từ Supabase
+  useEffect(() => {
+    const fetchFromCloud = async () => {
+      try {
+        const { data, error } = await supabase.from('app_sync_store').select('*');
+        if (error) {
+          console.warn('Could not fetch from Supabase (bảng có thể chưa tạo):', error.message);
+          return;
+        }
+        if (data && data.length > 0) {
+          data.forEach((row) => {
+            if (row.key === 'users' && Array.isArray(row.value) && row.value.length > 0) {
+              setUsers(row.value);
+              localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(row.value));
+            } else if (row.key === 'teams' && Array.isArray(row.value)) {
+              setTeams(row.value);
+              localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(row.value));
+            } else if (row.key === 'shifts' && Array.isArray(row.value) && row.value.length > 0) {
+              setShifts(row.value);
+              localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(row.value));
+            } else if (row.key === 'tasks' && Array.isArray(row.value)) {
+              setTasks(row.value);
+              localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(row.value));
+            } else if (row.key === 'notifications' && Array.isArray(row.value)) {
+              setNotifications(row.value);
+              localStorage.setItem(STORAGE_KEYS.NOTIFS, JSON.stringify(row.value));
+            } else if (row.key === 'shifts_config' && Array.isArray(row.value)) {
+              setShiftsConfig(row.value);
+              localStorage.setItem(STORAGE_KEYS.SHIFTS_CONFIG, JSON.stringify(row.value));
+            } else if (row.key === 'schedule_approvals' && row.value) {
+              setScheduleApprovals(row.value);
+              localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(row.value));
+            } else if (row.key === 'messages' && Array.isArray(row.value)) {
+              setMessages(row.value);
+              localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(row.value));
+            }
+          });
+        } else {
+          // Gieo mầm dữ liệu chuẩn lần đầu tiên lên đám mây
+          await saveToCloud('users', INITIAL_USERS);
+          await saveToCloud('teams', INITIAL_TEAMS);
+          await saveToCloud('shifts', generateInitialShifts(INITIAL_USERS));
+          await saveToCloud('shifts_config', DEFAULT_SHIFTS);
+          await saveToCloud('notifications', INITIAL_NOTIFICATIONS);
+        }
+      } catch (err) {
+        console.warn('Supabase initial fetch exception:', err);
+      }
+    };
+
+    fetchFromCloud();
+
+    const channel = supabase
+      .channel('bophanrm-realtime-sync')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'app_sync_store',
+        },
+        (payload: any) => {
+          const row = payload.new;
+          if (!row || !row.key) return;
+          if (row.key === 'users' && Array.isArray(row.value)) {
+            setUsers(row.value);
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(row.value));
+          } else if (row.key === 'teams' && Array.isArray(row.value)) {
+            setTeams(row.value);
+            localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(row.value));
+          } else if (row.key === 'shifts' && Array.isArray(row.value)) {
+            setShifts(row.value);
+            localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(row.value));
+          } else if (row.key === 'tasks' && Array.isArray(row.value)) {
+            setTasks(row.value);
+            localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(row.value));
+          } else if (row.key === 'notifications' && Array.isArray(row.value)) {
+            setNotifications(row.value);
+            localStorage.setItem(STORAGE_KEYS.NOTIFS, JSON.stringify(row.value));
+          } else if (row.key === 'shifts_config' && Array.isArray(row.value)) {
+            setShiftsConfig(row.value);
+            localStorage.setItem(STORAGE_KEYS.SHIFTS_CONFIG, JSON.stringify(row.value));
+          } else if (row.key === 'schedule_approvals' && row.value) {
+            setScheduleApprovals(row.value);
+            localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(row.value));
+          } else if (row.key === 'messages' && Array.isArray(row.value)) {
+            setMessages(row.value);
+            localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(row.value));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const updateTasks = (newTasks: Task[]) => {
     setTasks(newTasks);
     localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(newTasks));
+    saveToCloud('tasks', newTasks);
   };
 
   const updateNotifications = (newNotifs: NotificationItem[]) => {
     setNotifications(newNotifs);
     localStorage.setItem(STORAGE_KEYS.NOTIFS, JSON.stringify(newNotifs));
+    saveToCloud('notifications', newNotifs);
   };
 
   const updateUsers = (newUsers: User[]) => {
     setUsers(newUsers);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(newUsers));
+    saveToCloud('users', newUsers);
   };
 
   const updateTeams = (newTeams: TeamGroup[]) => {
     setTeams(newTeams);
     localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(newTeams));
+    saveToCloud('teams', newTeams);
   };
 
   // Cơ chế nhắc nhở hoàn thành công việc Daily:
@@ -997,6 +1113,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateShifts = (newShifts: WorkShiftAssignment[]) => {
     setShifts(newShifts);
     localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(newShifts));
+    saveToCloud('shifts', newShifts);
   };
 
   const assignShift = (userId: string, date: string, shiftId: ShiftId, note?: string, isHalfDay?: boolean) => {
@@ -1016,6 +1133,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
       const updated = [...filtered, newShift];
       localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(updated));
+      saveToCloud('shifts', updated);
       return updated;
     });
   };
@@ -1040,6 +1158,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
       });
       localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(updated));
+      saveToCloud('shifts', updated);
       return updated;
     });
   };
@@ -1066,6 +1185,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
 
       localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(updated));
+      saveToCloud('shifts', updated);
       return updated;
     });
   };
@@ -1090,6 +1210,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updated = [...prev, shift];
       }
       localStorage.setItem(STORAGE_KEYS.SHIFTS_CONFIG, JSON.stringify(updated));
+      saveToCloud('shifts_config', updated);
       return updated;
     });
   };
@@ -1098,6 +1219,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setShiftsConfig((prev) => {
       const updated = prev.filter((s) => s.id !== shiftId);
       localStorage.setItem(STORAGE_KEYS.SHIFTS_CONFIG, JSON.stringify(updated));
+      saveToCloud('shifts_config', updated);
       return updated;
     });
   };
@@ -1105,6 +1227,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const resetShiftsConfig = () => {
     setShiftsConfig(DEFAULT_SHIFTS);
     localStorage.setItem(STORAGE_KEYS.SHIFTS_CONFIG, JSON.stringify(DEFAULT_SHIFTS));
+    saveToCloud('shifts_config', DEFAULT_SHIFTS);
   };
 
   const getScheduleApproval = (mondayDate: string): WeekScheduleApproval => {
@@ -1159,6 +1282,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     setScheduleApprovals(updated);
     localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(updated));
+    saveToCloud('schedule_approvals', updated);
 
     // Gửi thông báo nhắc nhở đẩy đến Ban Quản Lý (Cấp 1) - Quản trị viên không duyệt lịch
     const managerUsers = users.filter((u) => u.role !== 'ADMIN' && (u.level === 'LEVEL_1_MANAGER' || u.role === 'MANAGER'));
@@ -1188,6 +1312,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     setScheduleApprovals(updated);
     localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(updated));
+    saveToCloud('schedule_approvals', updated);
 
     // Gửi thông báo đến TẤT CẢ nhân viên trong công ty
     const nowTimestamp = Date.now();
@@ -1215,6 +1340,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     setScheduleApprovals(updated);
     localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(updated));
+    saveToCloud('schedule_approvals', updated);
 
     const targetUserIds = existing.submittedBy
       ? [existing.submittedBy]
@@ -1854,6 +1980,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMessages((prev) => {
       const updated = [...prev, newMsg];
       localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(updated));
+      saveToCloud('messages', updated);
       return updated;
     });
   };
@@ -1873,6 +2000,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       if (changed) {
         localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(updated));
+        saveToCloud('messages', updated);
         return updated;
       }
       return prev;
@@ -1903,26 +2031,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (Array.isArray(backupData.users) && backupData.users.length > 0) {
         setUsers(backupData.users);
         localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(backupData.users));
+        saveToCloud('users', backupData.users);
       }
       if (Array.isArray(backupData.teams)) {
         setTeams(backupData.teams);
         localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(backupData.teams));
+        saveToCloud('teams', backupData.teams);
       }
       if (Array.isArray(backupData.tasks)) {
         setTasks(backupData.tasks);
         localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(backupData.tasks));
+        saveToCloud('tasks', backupData.tasks);
       }
       if (Array.isArray(backupData.notifications)) {
         setNotifications(backupData.notifications);
         localStorage.setItem(STORAGE_KEYS.NOTIFS, JSON.stringify(backupData.notifications));
+        saveToCloud('notifications', backupData.notifications);
       }
       if (Array.isArray(backupData.shifts) && backupData.shifts.length > 0) {
         setShifts(backupData.shifts);
         localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(backupData.shifts));
+        saveToCloud('shifts', backupData.shifts);
       }
       if (Array.isArray(backupData.shiftsConfig) && backupData.shiftsConfig.length > 0) {
         setShiftsConfig(backupData.shiftsConfig);
         localStorage.setItem(STORAGE_KEYS.SHIFTS_CONFIG, JSON.stringify(backupData.shiftsConfig));
+        saveToCloud('shifts_config', backupData.shiftsConfig);
       }
       return true;
     } catch (e) {
