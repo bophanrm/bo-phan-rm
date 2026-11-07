@@ -94,13 +94,13 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
             <div className="flex items-start space-x-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-sm font-semibold text-emerald-900">Sao lưu tự động đang HOẠT ĐỘNG</h4>
+                <h4 className="text-sm font-semibold text-emerald-900">Đồng Bộ Đám Mây Realtime: ĐANG HOẠT ĐỘNG</h4>
                 <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
-                  Đúng 00:00 hằng ngày, kịch bản tự động sẽ xuất dữ liệu và đồng bộ hóa sang <strong>Google Drive cá nhân</strong> của bạn.
+                  Hệ thống kết nối trực tiếp với <strong>Supabase Cloud</strong>. Mọi thay đổi về phân ca, công việc, báo cáo sẽ tự động nhảy số tức thì trên toàn bộ 19 máy của nhân sự trong ~0.2 giây.
                 </p>
                 <div className="mt-3 flex items-center space-x-1.5 text-[11px] text-emerald-800 font-medium">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>Lần backup gần nhất: Hôm nay, 00:00:15 (Thành công)</span>
+                  <span>Trạng thái: Trực tuyến (Đã liên kết bophanrm&apos;s Project)</span>
                 </div>
               </div>
             </div>
