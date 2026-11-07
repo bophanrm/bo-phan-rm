@@ -77,8 +77,19 @@ export function ChatCenter() {
       lastMessage: generalLastMsg,
     });
 
-    // 2. Team Channels (Tổ / Đội)
-    teams.forEach((team) => {
+    // 2. Team Channels (Tổ / Đội) - Bảo mật phân quyền tổ đội
+    // Nhân viên chỉ thấy tổ của mình. Cấp 1 (Quản lý), Cấp 2 (Điều phối) và Admin thấy các tổ để giám sát & điều phối
+    const isLeadership =
+      currentUser.level === 'LEVEL_1_MANAGER' ||
+      currentUser.role === 'ADMIN' ||
+      currentUser.role === 'MANAGER' ||
+      currentUser.level === 'LEVEL_2_SECRETARY';
+
+    const visibleTeams = isLeadership
+      ? teams
+      : teams.filter((team) => team.memberIds.includes(currentUser.id));
+
+    visibleTeams.forEach((team) => {
       const teamChannelId = team.id;
       const teamMessages = messages.filter((m) => m.channelId === teamChannelId);
       const lastMsg = teamMessages[teamMessages.length - 1];
@@ -154,8 +165,29 @@ export function ChatCenter() {
   // Selected conversation object
   const currentConversation = conversations.find((c) => c.id === selectedChannelId) || conversations[0];
 
+  // Kiểm tra quyền truy cập vào kênh được chọn (Bảo mật tổ đội & tin nhắn riêng)
+  const canAccessSelectedChannel = React.useMemo(() => {
+    if (!selectedChannelId || selectedChannelId === 'general') return true;
+    const team = teams.find((t) => t.id === selectedChannelId);
+    if (team) {
+      const isMember = team.memberIds.includes(currentUser.id);
+      const isLeadership =
+        currentUser.level === 'LEVEL_1_MANAGER' ||
+        currentUser.role === 'ADMIN' ||
+        currentUser.role === 'MANAGER' ||
+        currentUser.level === 'LEVEL_2_SECRETARY';
+      return isMember || isLeadership;
+    }
+    if (selectedChannelId.startsWith('direct--')) {
+      return selectedChannelId.includes(currentUser.id);
+    }
+    return true;
+  }, [selectedChannelId, teams, currentUser]);
+
   // Active messages for the selected channel
-  const activeMessages = messages.filter((m) => m.channelId === selectedChannelId);
+  const activeMessages = canAccessSelectedChannel
+    ? messages.filter((m) => m.channelId === selectedChannelId)
+    : [];
 
   // Auto mark as read when selecting conversation or new messages arrive
   useEffect(() => {
