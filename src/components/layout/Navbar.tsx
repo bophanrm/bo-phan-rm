@@ -167,8 +167,11 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
               onClick={() => setShowUserModal(true)}
               className="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer"
             >
-              <span className="text-xs font-bold text-slate-800 truncate max-w-[160px] sm:max-w-[220px]">
-                {getPersonalName(currentUser.name)}
+              <span className="text-xs font-bold text-slate-800 truncate max-w-[160px] sm:max-w-[220px] flex items-center">
+                {currentUser.employeeId && (
+                  <span className="font-mono text-slate-500 mr-1 text-[11px] font-semibold">[{currentUser.employeeId}]</span>
+                )}
+                <span>{getPersonalName(currentUser.name)}</span>
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             </button>
@@ -281,7 +284,10 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
                     <div className="flex items-center space-x-2">
                       <div>
                         <div className="flex items-center space-x-2">
-                          <p className="font-bold text-sm text-slate-900">{getPersonalName(u.name)}</p>
+                          <p className="font-bold text-sm text-slate-900">
+                            {u.employeeId && <span className="font-mono text-xs text-slate-500 mr-1.5 font-semibold">[{u.employeeId}]</span>}
+                            {getPersonalName(u.name)}
+                          </p>
                           <span
                             className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
                               u.role === 'ADMIN'
