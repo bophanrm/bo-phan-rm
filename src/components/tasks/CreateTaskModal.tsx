@@ -342,18 +342,25 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
               </div>
 
               {/* Điểm 4: Tùy chọn việc nội bộ Ban Quản Lý (Bảo mật - chỉ Cấp 1 xem) */}
-              <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-indigo-50/80 border border-indigo-200 text-xs font-semibold text-indigo-950 cursor-pointer transition-all hover:bg-indigo-100/70">
-                <input
-                  type="checkbox"
-                  checked={isManagementOnly}
-                  onChange={(e) => setIsManagementOnly(e.target.checked)}
-                  className="w-4 h-4 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500 cursor-pointer"
-                />
-                <div className="flex items-center space-x-1.5">
-                  <Shield className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span>Công việc nội bộ Ban Quản Lý (Bảo mật - chỉ Cấp 1 xem & duyệt)</span>
-                </div>
-              </label>
+              <div className="space-y-1.5">
+                <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-indigo-50/80 border border-indigo-200 text-xs font-semibold text-indigo-950 cursor-pointer transition-all hover:bg-indigo-100/70">
+                  <input
+                    type="checkbox"
+                    checked={isManagementOnly}
+                    onChange={(e) => setIsManagementOnly(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500 cursor-pointer"
+                  />
+                  <div className="flex items-center space-x-1.5">
+                    <Shield className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span>Công việc nội bộ Ban Quản Lý (Bảo mật - chỉ Cấp 1 xem & duyệt)</span>
+                  </div>
+                </label>
+                {isManagementOnly && (
+                  <p className="text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200 leading-relaxed font-medium">
+                    ⚠️ <strong>Lưu ý:</strong> Khi bật tùy chọn này, công việc chỉ xuất hiện trên tài khoản Cấp 1 (Ban Quản Lý). Nhân sự Cấp 2, 3, 4 được giao việc sẽ <u>hoàn toàn không nhìn thấy</u> để đảm bảo tính tuyệt mật.
+                  </p>
+                )}
+              </div>
             </>
           )}
           <div>
