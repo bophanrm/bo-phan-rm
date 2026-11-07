@@ -10,12 +10,13 @@ interface BackupDrawerProps {
 }
 
 export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
-  const { tasks, notifications, users, shiftsConfig, teams, shifts, importBackup } = useApp();
+  const { currentUser, tasks, notifications, users, shiftsConfig, teams, shifts, importBackup } = useApp();
   const [downloaded, setDownloaded] = useState(false);
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (!isOpen) return null;
+  // Chỉ Quản Trị Viên mới có quyền mở và thao tác sao lưu thủ công
+  if (!isOpen || currentUser.role !== 'ADMIN') return null;
 
   // Export full backup
   const handleExportBackup = () => {

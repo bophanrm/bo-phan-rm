@@ -141,14 +141,16 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
               )}
             </button>
 
-            {/* Backup status / manual export */}
-            <button
-              onClick={() => setShowBackup(true)}
-              title="Sao lưu dự phòng Google Drive"
-              className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 relative transition-colors"
-            >
-              <DownloadCloud className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            {/* Nút sao lưu thủ công - CHỈ hiển thị trên tài khoản Quản trị viên (ADMIN) */}
+            {currentUser.role === 'ADMIN' && (
+              <button
+                onClick={() => setShowBackup(true)}
+                title="Sao lưu dự phòng & Quản lý dữ liệu hệ thống (Chỉ Quản trị viên)"
+                className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-blue-600 relative transition-colors"
+              >
+                <DownloadCloud className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              </button>
+            )}
 
             {/* Mobile Preview Link */}
             <Link
