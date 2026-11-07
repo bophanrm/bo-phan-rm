@@ -137,11 +137,15 @@ export default function Home() {
       />
 
       <main className="w-full px-3 sm:px-6 lg:px-8 xl:px-10 pt-4 sm:pt-6 pb-24 sm:pb-12 space-y-4 sm:space-y-6">
-        {/* Welcome Banner & Current Role indicator */}
-        <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-xl shadow-blue-600/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-2">
+        {/* Welcome Banner & Role Card - Thiết kế cân đối thẩm mỹ */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-xl shadow-blue-600/15 border border-blue-500/25 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+          {/* Subtle background glow effect */}
+          <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Cột trái: Thông tin chức danh, lời chào và lịch ca */}
+          <div className="relative z-10 flex-1 space-y-2.5">
             <div className="inline-flex items-center">
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm">
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/15 text-white backdrop-blur-md border border-white/20 shadow-xs">
                 {currentUser.role === 'ADMIN'
                   ? '🛡️ Quản Trị Viên • Vận Hành Hệ Thống'
                   : currentUser.level === 'LEVEL_1_MANAGER' || currentUser.role === 'MANAGER'
@@ -154,7 +158,7 @@ export default function Home() {
               </span>
             </div>
 
-            <h1 className="text-lg sm:text-2xl font-extrabold tracking-tight leading-tight">
+            <h1 className="text-lg sm:text-2xl font-extrabold tracking-tight leading-snug">
               {currentUser.role === 'ADMIN'
                 ? 'Chào Quản Trị Viên, hệ thống đang vận hành ổn định!'
                 : canReview && submittedTasks > 0
@@ -162,48 +166,47 @@ export default function Home() {
                 : `Chào ${getPersonalName(currentUser.name, false)}, chúc bạn một ngày làm việc hiệu quả!`}
             </h1>
 
-            {/* Dòng thông báo quyền hạn cho Quản Trị Viên hoặc Ca làm việc cho nhân viên tác nghiệp */}
+            {/* Dòng ca hôm nay & ca ngày mai hoặc thông báo quyền cho Admin */}
             {currentUser.role === 'ADMIN' ? (
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-xs text-xs">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-xs text-xs">
                 <span className="font-semibold text-blue-100">
                   &ldquo;Tài khoản này có đầy đủ mọi thẩm quyền cao nhất: thêm/sửa/xoá nhân viên, phân quyền 4 cấp bậc, tạo tổ/đội.&rdquo;
                 </span>
               </div>
             ) : (
-              <div className="flex items-end justify-between gap-3 pt-1">
-                {/* Khối ca hôm nay và ca ngày mai */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-xs">
-                    <span className="text-blue-100 font-medium">📍 Ca hôm nay:</span>
-                    <span className={`font-bold ${todayShiftInfo.isOff ? 'text-amber-200' : 'text-emerald-300'}`}>
-                      {todayShiftInfo.name}{todayShiftInfo.time ? ` (${todayShiftInfo.time})` : ''}
-                    </span>
-                  </div>
-
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-xs">
-                    <span className="text-blue-200 font-medium">🗓️ Ca ngày mai:</span>
-                    <span className={`font-bold ${tomorrowShiftInfo.isOff ? 'text-amber-200' : 'text-emerald-300'}`}>
-                      {tomorrowShiftInfo.name}{tomorrowShiftInfo.time ? ` (${tomorrowShiftInfo.time})` : ''}
-                    </span>
-                  </div>
+              <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-xs">
+                  <span className="text-blue-100 font-medium">📍 Ca hôm nay:</span>
+                  <span className={`font-bold ${todayShiftInfo.isOff ? 'text-amber-200' : 'text-emerald-300'}`}>
+                    {todayShiftInfo.name}{todayShiftInfo.time ? ` (${todayShiftInfo.time})` : ''}
+                  </span>
                 </div>
 
-                {/* Nút Giao Việc nổi bật ngay vị trí khoanh tròn (cả mobile và desktop) */}
-                {canAssign && (
-                  <button
-                    onClick={() => {
-                      setIsCreateDaily(!checkCanAssignProject(currentUser));
-                      setIsCreateOpen(true);
-                    }}
-                    className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-xs sm:text-sm px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg shadow-amber-500/25 border border-amber-200 hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer"
-                  >
-                    <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" />
-                    <span className="tracking-wide uppercase font-black text-[11px] sm:text-xs">Giao việc</span>
-                  </button>
-                )}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-xs">
+                  <span className="text-blue-200 font-medium">🗓️ Ca ngày mai:</span>
+                  <span className={`font-bold ${tomorrowShiftInfo.isOff ? 'text-amber-200' : 'text-emerald-300'}`}>
+                    {tomorrowShiftInfo.name}{tomorrowShiftInfo.time ? ` (${tomorrowShiftInfo.time})` : ''}
+                  </span>
+                </div>
               </div>
             )}
           </div>
+
+          {/* Cột phải: Nút Giao Việc nổi bật, cân đối hoàn hảo trên Desktop và Mobile */}
+          {canAssign && (
+            <div className="relative z-10 flex items-center justify-end md:self-center shrink-0 pt-1 md:pt-0">
+              <button
+                onClick={() => {
+                  setIsCreateDaily(!checkCanAssignProject(currentUser));
+                  setIsCreateOpen(true);
+                }}
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-xs sm:text-sm px-5 py-3 sm:px-6 sm:py-3.5 rounded-xl sm:rounded-2xl shadow-xl shadow-amber-500/25 border border-amber-200/90 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950 shrink-0" />
+                <span className="tracking-wider uppercase font-black text-xs sm:text-sm">Giao việc</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bento KPI Summary Metrics */}
