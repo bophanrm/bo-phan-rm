@@ -617,7 +617,7 @@ export function DailyTracker({
             </div>
           </div>
           <button
-            onClick={() => onOpenReportModal(myUnsubmittedDailyTasks[0])}
+            onClick={() => onOpenReviewModal(myUnsubmittedDailyTasks[0])}
             className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center space-x-1.5 cursor-pointer"
           >
             <FileText className="w-4 h-4" />
@@ -845,7 +845,7 @@ export function DailyTracker({
                         </button>
                       ) : task.assignedTo.includes(currentUser.id) && task.status !== 'APPROVED' ? (
                         <button
-                          onClick={() => onOpenReportModal(task)}
+                          onClick={() => onOpenReviewModal(task)}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-xs cursor-pointer"
                         >
                           Nộp việc

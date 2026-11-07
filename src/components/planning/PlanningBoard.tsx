@@ -375,13 +375,7 @@ export function PlanningBoard({ onOpenCreateModal, onOpenReviewModal, onOpenRepo
                   activeTasks.map((task) => (
                     <div
                       key={task.id}
-                      onClick={() => {
-                        if (task.assignedTo.includes(currentUser.id) && task.status !== 'APPROVED') {
-                          onOpenReportModal(task);
-                        } else {
-                          onOpenReviewModal(task);
-                        }
-                      }}
+                      onClick={() => onOpenReviewModal(task)}
                       className="bg-slate-50 hover:bg-blue-50/50 p-3.5 rounded-xl border border-slate-200 transition-all text-left space-y-2 cursor-pointer active:scale-[0.99]"
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -493,13 +487,7 @@ export function PlanningBoard({ onOpenCreateModal, onOpenReviewModal, onOpenRepo
                   dayTasks.map((task) => (
                     <div
                       key={task.id}
-                      onClick={() => {
-                        if (task.assignedTo.includes(currentUser.id) && task.status !== 'APPROVED') {
-                          onOpenReportModal(task);
-                        } else {
-                          onOpenReviewModal(task);
-                        }
-                      }}
+                      onClick={() => onOpenReviewModal(task)}
                       className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs hover:shadow-md hover:border-blue-400 transition-all cursor-pointer text-left space-y-1.5 group"
                     >
                       <div className="flex items-center justify-between gap-1">
