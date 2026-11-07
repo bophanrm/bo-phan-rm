@@ -132,7 +132,11 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
 
     try {
       const newDeadlineIso = computeNewDeadlineIso();
-      const finalReason = reason.trim() || (useShiftTime ? `Theo ca trực (${shiftCalc.formattedShiftText})` : 'Điều chỉnh tiến độ hoàn thành');
+      const finalReason =
+        reason.trim() ||
+        (useShiftTime
+          ? `Theo ca ${shiftCalc.shiftInfo.name}: ${shiftCalc.shiftInfo.timeRange || 'Ca nghỉ'}`
+          : 'Điều chỉnh tiến độ hoàn thành');
 
       if (pendingRequest && hasApprovePermission) {
         // Cấp trên / Người giao việc phê duyệt yêu cầu gia hạn

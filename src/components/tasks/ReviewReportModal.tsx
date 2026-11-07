@@ -26,9 +26,47 @@ import {
   AlertCircle,
   FolderKanban,
   Check,
+  RotateCcw,
 } from 'lucide-react';
 import { getPersonalName } from '@/utils/nameHelper';
 import { canReviewTask } from '@/utils/permissions';
+
+// Helper làm sạch lý do gia hạn, triệt tiêu toàn bộ dấu ngoặc đơn lồng nhau (())
+function cleanReasonText(text: string | undefined): string {
+  if (!text) return '';
+  let s = text.trim();
+  s = s.replace(/Nghỉ Ca\s*\([^)]*\)/gi, 'Nghỉ ca');
+  s = s.replace(/Nghỉ ca\s*\([^)]*\)/gi, 'Nghỉ ca');
+  s = s.replace(/Theo ca trực\s*\(([^()]+)\s*\(([^()]+)\)\)/gi, 'Theo $1: $2');
+  s = s.replace(/Theo ca trực\s*\(([^()]+)\)/gi, 'Theo $1');
+  s = s.replace(/Theo ca trực\s+/gi, 'Theo ca ');
+
+  while (s.startsWith('(') && s.endsWith(')')) {
+    s = s.slice(1, -1).trim();
+  }
+
+  s = s.replace(/\(([^()]+)\s*\(([^()]+)\)\)/gi, '$1: $2');
+  return s;
+}
+
+// Helper định dạng ngày giờ chuẩn không có số giây, tách giờ và ngày gọn gàng
+function formatCleanDateTime(dateVal: string | Date | undefined) {
+  if (!dateVal) return { time: '--:--', date: 'Chưa xác định', full: 'Chưa xác định' };
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return { time: '--:--', date: 'Chưa xác định', full: 'Chưa xác định' };
+
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+
+  return {
+    time: `${hours}:${minutes}`,
+    date: `${day}/${month}/${year}`,
+    full: `${hours}:${minutes} — ${day}/${month}/${year}`,
+  };
+}
 
 interface ReviewReportModalProps {
   task: Task | null;
@@ -84,6 +122,10 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
       : task.assignedTo
           .map((id) => users.find((u) => u.id === id)?.name || id)
           .map((n) => getPersonalName(n, true));
+
+  // Clean formatted deadlines (không giây, tách giờ và ngày)
+  const reportDeadlineClean = formatCleanDateTime(task.reportDeadline);
+  const dueDateClean = formatCleanDateTime(task.dueDate);
 
   // Handle Review action (Duyệt hoặc Yêu cầu sửa)
   const handleReviewAction = (status: 'ACCEPTED' | 'REVISION_NEEDED') => {
@@ -327,29 +369,47 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
                 </div>
               </div>
 
-              {/* Mốc thời gian */}
-              <div className="space-y-1">
-                <span className="text-slate-500 font-medium flex items-center space-x-1.5">
-                  <Clock className="w-3.5 h-3.5 text-rose-500" />
-                  <span>Hạn nộp báo cáo:</span>
-                </span>
-                <p className="font-bold text-rose-700 pl-5">
-                  {task.reportDeadline && !isNaN(new Date(task.reportDeadline).getTime())
-                    ? new Date(task.reportDeadline).toLocaleString('vi-VN')
-                    : 'Không xác định'}
-                </p>
-              </div>
+              {/* Mốc thời gian hạn chót gọn gàng & phân tầng */}
+              <div className="sm:col-span-2 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Thẻ 1: Hạn nộp báo cáo */}
+                  <div className="bg-rose-50/70 border border-rose-200/90 rounded-xl p-3 flex items-center justify-between shadow-2xs">
+                    <div className="space-y-0.5">
+                      <span className="text-rose-900 font-bold text-xs flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>Hạn nộp báo cáo</span>
+                      </span>
+                      <p className="text-[11px] text-rose-700/80">Thời hạn nộp kết quả nghiệm thu</p>
+                    </div>
+                    <div className="text-right pl-2 shrink-0">
+                      <span className="text-base font-black text-rose-700 tracking-tight block">
+                        {reportDeadlineClean.time}
+                      </span>
+                      <span className="text-xs font-semibold text-rose-950 block">
+                        {reportDeadlineClean.date}
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="space-y-1">
-                <span className="text-slate-500 font-medium flex items-center space-x-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Hạn hoàn thành (Due date):</span>
-                </span>
-                <p className="font-semibold text-slate-800 pl-5">
-                  {task.dueDate && !isNaN(new Date(task.dueDate).getTime())
-                    ? new Date(task.dueDate).toLocaleString('vi-VN')
-                    : 'Không xác định'}
-                </p>
+                  {/* Thẻ 2: Hạn hoàn thành công việc */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between shadow-2xs">
+                    <div className="space-y-0.5">
+                      <span className="text-slate-900 font-bold text-xs flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span>Hạn hoàn thành công việc</span>
+                      </span>
+                      <p className="text-[11px] text-slate-500">Thời hạn thi công & bàn giao</p>
+                    </div>
+                    <div className="text-right pl-2 shrink-0">
+                      <span className="text-base font-black text-slate-900 tracking-tight block">
+                        {dueDateClean.time}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-600 block">
+                        {dueDateClean.date}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -365,18 +425,39 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
 
             {/* Lịch sử gia hạn / chuyển giao nếu có */}
             {task.extensionHistory && task.extensionHistory.length > 0 && (
-              <div className="pt-2 border-t border-slate-200 text-xs">
-                <span className="font-bold text-amber-900 block mb-1.5">
-                  🔄 Lịch sử gia hạn / chuyển giao:
+              <div className="pt-2.5 border-t border-slate-200 text-xs">
+                <span className="font-bold text-amber-950 flex items-center gap-1.5 mb-2">
+                  <RotateCcw className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Lịch sử gia hạn & điều chỉnh ca:</span>
                 </span>
-                <div className="space-y-1.5 pl-2 border-l-2 border-amber-300">
-                  {task.extensionHistory.map((ext, idx) => (
-                    <div key={idx} className="text-[11px] text-slate-700">
-                      <strong>{ext.extendedByName}</strong> gia hạn đến{' '}
-                      <strong>{new Date(ext.newDeadline).toLocaleString('vi-VN')}</strong>
-                      {ext.reason && <span className="italic text-slate-500"> ({ext.reason})</span>}
-                    </div>
-                  ))}
+                <div className="space-y-1.5">
+                  {task.extensionHistory.map((ext, idx) => {
+                    const extTime = formatCleanDateTime(ext.newDeadline);
+                    const reasonClean = cleanReasonText(ext.reason);
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-amber-50/70 border border-amber-200/80 rounded-xl px-3 py-2 text-[11px] text-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 shadow-2xs"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                          <span className="font-bold text-slate-900">
+                            {getPersonalName(ext.extendedByName, true)}
+                          </span>
+                          <span className="text-slate-500">gia hạn đến:</span>
+                          <span className="font-extrabold text-amber-950 bg-white px-2 py-0.5 rounded-md border border-amber-300 shadow-2xs font-mono text-xs">
+                            {extTime.time} — {extTime.date}
+                          </span>
+                        </div>
+                        {reasonClean && (
+                          <div className="text-slate-600 pl-3.5 sm:pl-0">
+                            <span className="text-slate-400">Lý do: </span>
+                            <span className="font-semibold text-slate-800">{reasonClean}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
