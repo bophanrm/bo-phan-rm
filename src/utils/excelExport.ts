@@ -440,7 +440,17 @@ export async function exportShiftScheduleToExcel({
     };
   });
 
-  const staffUsers = users.filter((u) => u.role === 'STAFF' || u.level === 'LEVEL_3_LEAD' || u.level === 'LEVEL_4_STAFF');
+  const getLevelPriority = (u: User) => {
+    if (u.level === 'LEVEL_1_MANAGER' || u.role === 'MANAGER') return 1;
+    if (u.level === 'LEVEL_2_SECRETARY' || u.role === 'SECRETARY') return 2;
+    if (u.level === 'LEVEL_3_LEAD') return 3;
+    if (u.level === 'LEVEL_4_STAFF' || u.role === 'STAFF') return 4;
+    return 5;
+  };
+
+  const staffUsers = users
+    .filter((u) => u.role !== 'ADMIN')
+    .sort((a, b) => getLevelPriority(a) - getLevelPriority(b));
   let rowIdx = 6;
 
   staffUsers.forEach((user, idx) => {

@@ -556,9 +556,7 @@ export function generateInitialShifts(usersList: User[]): WorkShiftAssignment[] 
   monday.setDate(today.getDate() - distanceToMonday);
   monday.setHours(0, 0, 0, 0);
 
-  const staffUsers = usersList.filter(
-    (u) => u.role !== 'ADMIN' && (u.role === 'STAFF' || u.level === 'LEVEL_3_LEAD' || u.level === 'LEVEL_4_STAFF')
-  );
+  const staffUsers = usersList.filter((u) => u.role !== 'ADMIN');
 
   // Tạo lịch phân ca sẵn: các tuần quá khứ (-2, -1), tuần hiện tại (0), và tuần sau (+1)
   // Tuyệt đối không tạo lịch cho các tuần xa hơn tuần sau (weekOffset <= 1)
@@ -575,7 +573,15 @@ export function generateInitialShifts(usersList: User[]): WorkShiftAssignment[] 
         const isSunday = d === 6;
         let shiftId: ShiftId;
 
-        if (isSunday) {
+        // Cấp 1 (Quản lý) và Cấp 2 (Điều phối) mặc định làm Ca Hành Chính (7h30 - 16h), Chủ Nhật nghỉ
+        if (
+          user.level === 'LEVEL_1_MANAGER' ||
+          user.role === 'MANAGER' ||
+          user.level === 'LEVEL_2_SECRETARY' ||
+          user.role === 'SECRETARY'
+        ) {
+          shiftId = isSunday ? 'OFF' : 'HANH_CHINH';
+        } else if (isSunday) {
           shiftId = (idx + weekOffset) % 3 === 0 ? 'CA_1' : (idx + weekOffset) % 3 === 1 ? 'CA_2' : 'OFF';
         } else {
           // 4 ca chính quy theo yêu cầu: Ca Hành Chính: 7h30 - 16h, Ca 1: 6h - 14h, Ca 2: 14h - 22h, Ca 3: 22h - 6h

@@ -86,13 +86,19 @@ export function WeeklySchedulePlannerModal({
     };
   }, []);
 
-  // Operational staff list
+  const getLevelPriority = (u: User) => {
+    if (u.level === 'LEVEL_1_MANAGER' || u.role === 'MANAGER') return 1;
+    if (u.level === 'LEVEL_2_SECRETARY' || u.role === 'SECRETARY') return 2;
+    if (u.level === 'LEVEL_3_LEAD') return 3;
+    if (u.level === 'LEVEL_4_STAFF' || u.role === 'STAFF') return 4;
+    return 5;
+  };
+
+  // Operational staff list (Cấp 1, Cấp 2, Cấp 3, Cấp 4)
   const staffList = useMemo(() => {
-    return users.filter(
-      (u) =>
-        u.role !== 'ADMIN' &&
-        (u.role === 'STAFF' || u.level === 'LEVEL_3_LEAD' || u.level === 'LEVEL_4_STAFF' || !u.role)
-    );
+    return users
+      .filter((u) => u.role !== 'ADMIN')
+      .sort((a, b) => getLevelPriority(a) - getLevelPriority(b));
   }, [users]);
 
   // Helper: Get user's shift in the current week for a given day index (0..6)

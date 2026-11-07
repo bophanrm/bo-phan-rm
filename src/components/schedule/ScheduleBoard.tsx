@@ -195,10 +195,20 @@ export function ScheduleBoard() {
     }
   }, [currentMonday, nextMondayTime, canViewNextWeek, thisWeekMonday, nextWeekMonday]);
 
-  // Staff list (Cấp 3 Giám sát và Cấp 4 Kỹ thuật viên - Loại bỏ tài khoản Quản trị viên)
-  const operationalStaff = users.filter(
-    (u) => u.role !== 'ADMIN' && (u.role === 'STAFF' || u.level === 'LEVEL_3_LEAD' || u.level === 'LEVEL_4_STAFF')
-  );
+  const getLevelPriority = (u: User) => {
+    if (u.level === 'LEVEL_1_MANAGER' || u.role === 'MANAGER') return 1;
+    if (u.level === 'LEVEL_2_SECRETARY' || u.role === 'SECRETARY') return 2;
+    if (u.level === 'LEVEL_3_LEAD') return 3;
+    if (u.level === 'LEVEL_4_STAFF' || u.role === 'STAFF') return 4;
+    return 5;
+  };
+
+  // Staff list: Toàn bộ nhân sự chính thức của bộ phận (Cấp 1, Cấp 2, Cấp 3, Cấp 4) - xếp theo cấp bậc
+  const operationalStaff = useMemo(() => {
+    return users
+      .filter((u) => u.role !== 'ADMIN')
+      .sort((a, b) => getLevelPriority(a) - getLevelPriority(b));
+  }, [users]);
   const filteredStaff = operationalStaff;
 
   // Handle Export Excel
@@ -705,11 +715,19 @@ export function ScheduleBoard() {
                             </span>
                           )}
                         </div>
-                        {userTeam && (
+                        {userTeam ? (
                           <p className="text-[10px] text-slate-400 truncate max-w-[170px] mt-0.5">
                             {userTeam.name}
                           </p>
-                        )}
+                        ) : user.level === 'LEVEL_1_MANAGER' || user.role === 'MANAGER' ? (
+                          <p className="text-[10px] text-purple-600 font-bold truncate max-w-[170px] mt-0.5">
+                            Ban Quản Lý
+                          </p>
+                        ) : user.level === 'LEVEL_2_SECRETARY' || user.role === 'SECRETARY' ? (
+                          <p className="text-[10px] text-indigo-600 font-bold truncate max-w-[170px] mt-0.5">
+                            Điều Phối Lịch Ca
+                          </p>
+                        ) : null}
                       </div>
                     </td>
 
