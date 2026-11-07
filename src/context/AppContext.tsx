@@ -30,35 +30,40 @@ import { supabase } from '@/lib/supabase';
 // Predefined Team Groups / Tổ Đội chính thức
 export const INITIAL_TEAMS: TeamGroup[] = [
   {
-    id: 'team-1',
-    name: 'Tổ Giám Sát',
-    description: 'Đội ngũ giám sát hiện trường & kỹ thuật',
-    leaderId: 'user-1794029435861', // Trần Tuấn Hải
-    memberIds: [
-      'user-1794028864725', // Nguyễn Hưng Thịnh
-      'user-1794029277678', // Long Á Thành
-      'user-1794029407279', // Phan Thanh Tài
-      'user-1794029435861', // Trần Tuấn Hải
-    ],
-  },
-  {
     id: 'team-2',
     name: 'Tổ Kỹ Thuật',
-    description: 'Đội ngũ kỹ thuật viên vận hành trực tiếp',
-    leaderId: 'user-1794029487288', // Nguyễn Minh Trí
     memberIds: [
-      'user-1794028828908', // Nguyễn Tùng Lâm
-      'user-1794029189349', // Nguyễn Hữu Tâm
-      'user-1794029248752', // Trần Lê Hiếu Hậu
-      'user-1794029304253', // Phạm Văn Dũng
-      'user-1794029326444', // Lê Sanh Chung
-      'user-1794029355937', // Nguyễn Mạnh Hùng
-      'user-1794029374322', // Trịnh Hữu Đăng
-      'user-1794029389599', // Lý Minh Kiệt
-      'user-1794029465528', // Lê Tấn Phát
-      'user-1794029487288', // Nguyễn Minh Trí
-      'user-1794029518886', // Trần Hoàng Minh
+      'user-1794028828908',
+      'user-1794029355937',
+      'user-1794029374322',
+      'user-1794029389599',
+      'user-1794029465528',
+      'user-1794029487288',
+      'user-1794029518886',
+      'user-1794029407279',
+      'user-1794029435861',
     ],
+    description: 'Đội ngũ kỹ thuật viên vận hành trực tiếp',
+  },
+  {
+    id: 'team-1794046319850',
+    name: 'Tổ Buggy',
+    memberIds: [
+      'user-1794029277678',
+      'user-1794029304253',
+      'user-1794029326444',
+    ],
+    description: 'Chuyên trách sửa chữa bảo trì xe Buggy',
+  },
+  {
+    id: 'team-1794046361685',
+    name: 'Tổ Workshop',
+    memberIds: [
+      'user-1794028864725',
+      'user-1794029189349',
+      'user-1794029248752',
+    ],
+    description: 'Chuyên trách sửa chữa bảo trì các thiết bị Nội - Ngoại Thất',
   },
 ];
 

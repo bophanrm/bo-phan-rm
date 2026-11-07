@@ -1,0 +1,5525 @@
+{
+  "exportedAt": "2026-11-07T10:34:48.692Z",
+  "version": "1.0.0",
+  "totalTasks": 0,
+  "users": [
+    {
+      "id": "user-admin",
+      "name": "Quản Trị Viên",
+      "role": "ADMIN",
+      "email": "",
+      "phone": "",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "ADMIN",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canManageSchedule": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": true
+      }
+    },
+    {
+      "id": "user-1794028540003",
+      "name": "Tống Trường Xa",
+      "role": "MANAGER",
+      "email": "",
+      "level": "LEVEL_1_MANAGER",
+      "phone": "",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2705",
+      "permissions": {
+        "canAssignTasks": true,
+        "canReviewReports": true,
+        "canAssignDailyTasks": true,
+        "canManagePermissions": true
+      }
+    },
+    {
+      "id": "user-1794028696018",
+      "name": "Nguyễn Trần Hoàng Vũ",
+      "role": "MANAGER",
+      "email": "",
+      "level": "LEVEL_1_MANAGER",
+      "phone": "0834455369",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "1660",
+      "permissions": {
+        "canAssignTasks": true,
+        "canReviewReports": true,
+        "canAssignDailyTasks": true,
+        "canManagePermissions": true
+      }
+    },
+    {
+      "id": "user-1794028728863",
+      "name": "Nguyễn Thị Thảo Nguyên",
+      "role": "SECRETARY",
+      "email": "",
+      "level": "LEVEL_2_SECRETARY",
+      "phone": "0933648973",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "1624",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": true,
+        "canManageSchedule": true,
+        "canAssignDailyTasks": true,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794028828908",
+      "name": "Nguyễn Tùng Lâm",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "0367021752",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2498",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794028864725",
+      "name": "Nguyễn Hưng Thịnh",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_3_LEAD",
+      "phone": "0918231582",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "623",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": true,
+        "canAssignDailyTasks": true,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029189349",
+      "name": "Nguyễn Hữu Tâm",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2638",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029248752",
+      "name": "Trần Lê Hiếu Hậu",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "0901874559",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2442",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029277678",
+      "name": "Long Á Thành",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_3_LEAD",
+      "phone": "",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2008",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": true,
+        "canAssignDailyTasks": true,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029304253",
+      "name": "Phạm Văn Dũng",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "375",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029326444",
+      "name": "Lê Sanh Chung",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "0918180032",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2715",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029355937",
+      "name": "Nguyễn Mạnh Hùng",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "0865545765",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2727",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029374322",
+      "name": "Trịnh Hữu Đăng",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2781",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029389599",
+      "name": "Lý Minh Kiệt",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2780",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029407279",
+      "name": "Phan Thanh Tài",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_3_LEAD",
+      "phone": "0908191929",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "742",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": true,
+        "canAssignDailyTasks": true,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029435861",
+      "name": "Trần Tuấn Hải",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_3_LEAD",
+      "phone": "0937072767",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "827",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": true,
+        "canAssignDailyTasks": true,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029465528",
+      "name": "Lê Tấn Phát",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "0363743297",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "725",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029487288",
+      "name": "Nguyễn Minh Trí",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "0775050495",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "2404",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    },
+    {
+      "id": "user-1794029518886",
+      "name": "Trần Hoàng Minh",
+      "role": "STAFF",
+      "email": "",
+      "level": "LEVEL_4_STAFF",
+      "phone": "0913526216",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80",
+      "department": "",
+      "employeeId": "1678",
+      "permissions": {
+        "canAssignTasks": false,
+        "canReviewReports": false,
+        "canAssignDailyTasks": false,
+        "canManagePermissions": false
+      }
+    }
+  ],
+  "teams": [
+    {
+      "id": "team-2",
+      "name": "Tổ Kỹ Thuật",
+      "memberIds": [
+        "user-1794028828908",
+        "user-1794029355937",
+        "user-1794029374322",
+        "user-1794029389599",
+        "user-1794029465528",
+        "user-1794029487288",
+        "user-1794029518886",
+        "user-1794029407279",
+        "user-1794029435861"
+      ],
+      "description": "Đội ngũ kỹ thuật viên vận hành trực tiếp"
+    },
+    {
+      "id": "team-1794046319850",
+      "name": "Tổ Buggy",
+      "memberIds": [
+        "user-1794029277678",
+        "user-1794029304253",
+        "user-1794029326444"
+      ],
+      "description": "Chuyên trách sửa chữa bảo trì xe Buggy"
+    },
+    {
+      "id": "team-1794046361685",
+      "name": "Tổ Workshop",
+      "memberIds": [
+        "user-1794028864725",
+        "user-1794029189349",
+        "user-1794029248752"
+      ],
+      "description": "Chuyên trách sửa chữa bảo trì các thiết bị Nội - Ngoại Thất"
+    }
+  ],
+  "shifts": [
+    {
+      "id": "shift-user-1794028540003-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_1",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_2",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_2",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_2",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_1",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_2",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_1",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_2",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-18",
+      "date": "2026-10-18",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-19",
+      "date": "2026-10-19",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-19",
+      "date": "2026-10-19",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-19",
+      "date": "2026-10-19",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_3",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794029304253",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-19",
+      "date": "2026-10-19",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_3",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-19",
+      "date": "2026-10-19",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_3",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-19",
+      "date": "2026-10-19",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_3",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-19",
+      "date": "2026-10-19",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_3",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-19",
+      "date": "2026-10-19",
+      "userId": "user-1794029487288",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-19",
+      "date": "2026-10-19",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_3",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_2",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_2",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_1",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_2",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_1",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_2",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-20",
+      "date": "2026-10-20",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_1",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-21",
+      "date": "2026-10-21",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-21",
+      "date": "2026-10-21",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_3",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794029277678",
+      "shiftId": "HANH_CHINH",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-21",
+      "date": "2026-10-21",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_3",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794029326444",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-21",
+      "date": "2026-10-21",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-21",
+      "date": "2026-10-21",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_3",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794029407279",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-21",
+      "date": "2026-10-21",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_3",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794029465528",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-21",
+      "date": "2026-10-21",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-21",
+      "date": "2026-10-21",
+      "userId": "user-1794029518886",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_1",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_2",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_2",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_2",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_1",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_2",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_1",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_2",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-22",
+      "date": "2026-10-22",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-23",
+      "date": "2026-10-23",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-23",
+      "date": "2026-10-23",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-23",
+      "date": "2026-10-23",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_3",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794029304253",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-23",
+      "date": "2026-10-23",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_3",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-23",
+      "date": "2026-10-23",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_3",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-23",
+      "date": "2026-10-23",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_3",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-23",
+      "date": "2026-10-23",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_3",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-23",
+      "date": "2026-10-23",
+      "userId": "user-1794029487288",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-23",
+      "date": "2026-10-23",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_3",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794028540003",
+      "shiftId": "OFF",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794028696018",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794028728863",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794028864725",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_2",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029277678",
+      "shiftId": "OFF",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_2",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029355937",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_1",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_2",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029407279",
+      "shiftId": "OFF",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_1",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_2",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029487288",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-24",
+      "date": "2026-10-24",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_1",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-25",
+      "date": "2026-10-25",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-25",
+      "date": "2026-10-25",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-25",
+      "date": "2026-10-25",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_3",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794029304253",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-25",
+      "date": "2026-10-25",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_3",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-25",
+      "date": "2026-10-25",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_3",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-25",
+      "date": "2026-10-25",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_3",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-25",
+      "date": "2026-10-25",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_3",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-25",
+      "date": "2026-10-25",
+      "userId": "user-1794029487288",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-25",
+      "date": "2026-10-25",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_3",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_2",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_2",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_1",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_2",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_1",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_2",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-26",
+      "date": "2026-10-26",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_1",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-27",
+      "date": "2026-10-27",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-27",
+      "date": "2026-10-27",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_3",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794029277678",
+      "shiftId": "HANH_CHINH",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-27",
+      "date": "2026-10-27",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_3",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794029326444",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-27",
+      "date": "2026-10-27",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-27",
+      "date": "2026-10-27",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_3",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794029407279",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-27",
+      "date": "2026-10-27",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_3",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794029465528",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-27",
+      "date": "2026-10-27",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-27",
+      "date": "2026-10-27",
+      "userId": "user-1794029518886",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_1",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_2",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_2",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_2",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_1",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_2",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_1",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_2",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-28",
+      "date": "2026-10-28",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-29",
+      "date": "2026-10-29",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-29",
+      "date": "2026-10-29",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-29",
+      "date": "2026-10-29",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_3",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794029304253",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-29",
+      "date": "2026-10-29",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_3",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-29",
+      "date": "2026-10-29",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_3",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-29",
+      "date": "2026-10-29",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_3",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-29",
+      "date": "2026-10-29",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_3",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-29",
+      "date": "2026-10-29",
+      "userId": "user-1794029487288",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-29",
+      "date": "2026-10-29",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_3",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_2",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_2",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_1",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_2",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_1",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_2",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-30",
+      "date": "2026-10-30",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_1",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794028540003",
+      "shiftId": "OFF",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794028696018",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794028728863",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794028828908",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029248752",
+      "shiftId": "OFF",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_2",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029326444",
+      "shiftId": "OFF",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_2",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029389599",
+      "shiftId": "OFF",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_1",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_2",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029465528",
+      "shiftId": "OFF",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-10-31",
+      "date": "2026-10-31",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_2",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_2",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_1",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_2",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_1",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_2",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-01",
+      "date": "2026-11-01",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_1",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-02",
+      "date": "2026-11-02",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-02",
+      "date": "2026-11-02",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_3",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794029277678",
+      "shiftId": "HANH_CHINH",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-02",
+      "date": "2026-11-02",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_3",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794029326444",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-02",
+      "date": "2026-11-02",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-02",
+      "date": "2026-11-02",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_3",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794029407279",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-02",
+      "date": "2026-11-02",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_3",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794029465528",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-02",
+      "date": "2026-11-02",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-02",
+      "date": "2026-11-02",
+      "userId": "user-1794029518886",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_1",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_2",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_2",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_2",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_1",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_2",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_1",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_2",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-03",
+      "date": "2026-11-03",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-04",
+      "date": "2026-11-04",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-04",
+      "date": "2026-11-04",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-04",
+      "date": "2026-11-04",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_3",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794029304253",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-04",
+      "date": "2026-11-04",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_3",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-04",
+      "date": "2026-11-04",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_3",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-04",
+      "date": "2026-11-04",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_3",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-04",
+      "date": "2026-11-04",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_3",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-04",
+      "date": "2026-11-04",
+      "userId": "user-1794029487288",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-04",
+      "date": "2026-11-04",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_3",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029189349",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_2",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_2",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029374322",
+      "shiftId": "CA_1",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_2",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_1",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_2",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-05",
+      "date": "2026-11-05",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_1",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-06",
+      "date": "2026-11-06",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-06",
+      "date": "2026-11-06",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_3",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794029277678",
+      "shiftId": "HANH_CHINH",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-06",
+      "date": "2026-11-06",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_3",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794029326444",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-06",
+      "date": "2026-11-06",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-06",
+      "date": "2026-11-06",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_3",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794029407279",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-06",
+      "date": "2026-11-06",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_3",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794029465528",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-06",
+      "date": "2026-11-06",
+      "note": "Trực đêm giám sát máy chủ & sự cố",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-06",
+      "date": "2026-11-06",
+      "userId": "user-1794029518886",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794028540003",
+      "shiftId": "OFF",
+      "userName": "Tống Trường Xa",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794028696018",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794028728863",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794028828908",
+      "shiftId": "CA_1",
+      "userName": "Nguyễn Tùng Lâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794028864725",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Hưng Thịnh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029189349",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Hữu Tâm",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029248752",
+      "shiftId": "CA_1",
+      "userName": "Trần Lê Hiếu Hậu",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_2",
+      "userName": "Long Á Thành",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029304253",
+      "shiftId": "OFF",
+      "userName": "Phạm Văn Dũng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1",
+      "userName": "Lê Sanh Chung",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029355937",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Mạnh Hùng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029374322",
+      "shiftId": "OFF",
+      "userName": "Trịnh Hữu Đăng",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029389599",
+      "shiftId": "CA_1",
+      "userName": "Lý Minh Kiệt",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_2",
+      "userName": "Phan Thanh Tài",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029435861",
+      "shiftId": "OFF",
+      "userName": "Trần Tuấn Hải",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_2",
+      "userName": "Nguyễn Minh Trí",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-07",
+      "date": "2026-11-07",
+      "userId": "user-1794029518886",
+      "shiftId": "OFF",
+      "userName": "Trần Hoàng Minh",
+      "updatedAt": "2026-11-07T10:22:32.773Z",
+      "assignedBy": "user-admin"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794028540003",
+      "shiftId": "HANH_CHINH",
+      "userName": "Tống Trường Xa",
+      "isHalfDay": true,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028540003-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794028540003",
+      "shiftId": "OFF",
+      "userName": "Tống Trường Xa",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794028696018",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "isHalfDay": true,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028696018-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794028696018",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Trần Hoàng Vũ",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794028728863",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "isHalfDay": true,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028728863-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794028728863",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Thị Thảo Nguyên",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794028864725",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hưng Thịnh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028864725-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794028864725",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Hưng Thịnh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1794034335936",
+      "userName": "Long Á Thành",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1794034335936",
+      "userName": "Long Á Thành",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1794034335936",
+      "userName": "Long Á Thành",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1794034335936",
+      "userName": "Long Á Thành",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1794034335936",
+      "userName": "Long Á Thành",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029277678",
+      "shiftId": "CA_1794034335936",
+      "userName": "Long Á Thành",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029277678-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029277678",
+      "shiftId": "OFF",
+      "userName": "Long Á Thành",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_2",
+      "userName": "Phan Thanh Tài",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029407279",
+      "shiftId": "CA_2",
+      "userName": "Phan Thanh Tài",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029407279",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phan Thanh Tài",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029407279",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phan Thanh Tài",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029407279",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phan Thanh Tài",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029407279",
+      "shiftId": "HANH_CHINH",
+      "userName": "Phan Thanh Tài",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029407279-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029407279",
+      "shiftId": "OFF",
+      "userName": "Phan Thanh Tài",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029435861",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Tuấn Hải",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029435861",
+      "shiftId": "OFF",
+      "userName": "Trần Tuấn Hải",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029435861-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029435861",
+      "shiftId": "CA_1",
+      "userName": "Trần Tuấn Hải",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794028828908",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Tùng Lâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794028828908-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794028828908",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Tùng Lâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029189349",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Hữu Tâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029189349-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029189349",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Hữu Tâm",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029248752",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trần Lê Hiếu Hậu",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029248752-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029248752",
+      "shiftId": "OFF",
+      "userName": "Trần Lê Hiếu Hậu",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1794034335936",
+      "userName": "Phạm Văn Dũng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1794034335936",
+      "userName": "Phạm Văn Dũng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1794034335936",
+      "userName": "Phạm Văn Dũng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1794034335936",
+      "userName": "Phạm Văn Dũng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1794034335936",
+      "userName": "Phạm Văn Dũng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029304253",
+      "shiftId": "OFF",
+      "userName": "Phạm Văn Dũng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029304253-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029304253",
+      "shiftId": "CA_1794034335936",
+      "userName": "Phạm Văn Dũng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1794034335936",
+      "userName": "Lê Sanh Chung",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1794034335936",
+      "userName": "Lê Sanh Chung",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1794034335936",
+      "userName": "Lê Sanh Chung",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1794034335936",
+      "userName": "Lê Sanh Chung",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1794034335936",
+      "userName": "Lê Sanh Chung",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029326444",
+      "shiftId": "OFF",
+      "userName": "Lê Sanh Chung",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029326444-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029326444",
+      "shiftId": "CA_1794034335936",
+      "userName": "Lê Sanh Chung",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029355937",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Mạnh Hùng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029355937",
+      "shiftId": "HANH_CHINH",
+      "userName": "Nguyễn Mạnh Hùng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029355937-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029355937",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Mạnh Hùng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029374322",
+      "shiftId": "HANH_CHINH",
+      "userName": "Trịnh Hữu Đăng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029374322-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029374322",
+      "shiftId": "OFF",
+      "userName": "Trịnh Hữu Đăng",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029389599",
+      "shiftId": "HANH_CHINH",
+      "userName": "Lý Minh Kiệt",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029389599-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029389599",
+      "shiftId": "OFF",
+      "userName": "Lý Minh Kiệt",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029465528",
+      "shiftId": "CA_1",
+      "userName": "Lê Tấn Phát",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029465528-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029465528",
+      "shiftId": "OFF",
+      "userName": "Lê Tấn Phát",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029487288",
+      "shiftId": "OFF",
+      "userName": "Nguyễn Minh Trí",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029487288-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029487288",
+      "shiftId": "CA_3",
+      "userName": "Nguyễn Minh Trí",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-08",
+      "date": "2026-11-08",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_3",
+      "userName": "Trần Hoàng Minh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-09",
+      "date": "2026-11-09",
+      "userId": "user-1794029518886",
+      "shiftId": "OFF",
+      "userName": "Trần Hoàng Minh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-10",
+      "date": "2026-11-10",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-11",
+      "date": "2026-11-11",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-12",
+      "date": "2026-11-12",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-13",
+      "date": "2026-11-13",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    },
+    {
+      "id": "shift-user-1794029518886-2026-11-14",
+      "date": "2026-11-14",
+      "userId": "user-1794029518886",
+      "shiftId": "CA_2",
+      "userName": "Trần Hoàng Minh",
+      "isHalfDay": false,
+      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "assignedBy": "user-1794028728863"
+    }
+  ],
+  "tasks": [],
+  "notifications": [
+    {
+      "id": "notif-sched-approved-2026-11-08-user-admin-1794046596907",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-admin",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028540003-1794046596908",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028540003",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028696018-1794046596909",
+      "title": "Lịch Làm Việc",
+      "isRead": true,
+      "userId": "user-1794028696018",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028728863-1794046596910",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028728863",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028828908-1794046596911",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028828908",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028864725-1794046596912",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028864725",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029189349-1794046596913",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029189349",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029248752-1794046596914",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029248752",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029277678-1794046596915",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029277678",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029304253-1794046596916",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029304253",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029326444-1794046596917",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029326444",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029355937-1794046596918",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029355937",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029374322-1794046596919",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029374322",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029389599-1794046596920",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029389599",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029407279-1794046596921",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029407279",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029435861-1794046596922",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029435861",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029465528-1794046596923",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029465528",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029487288-1794046596924",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029487288",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029518886-1794046596925",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029518886",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T10:16:36.907Z"
+    },
+    {
+      "id": "notif-sched-pending-1794046588072-0",
+      "title": "📋 Lịch Làm Việc Tuần Mới Chờ Phê Duyệt",
+      "isRead": false,
+      "userId": "user-1794028540003",
+      "message": "Nguyễn Thị Thảo Nguyên vừa hoàn tất sắp xếp ca và gửi phê duyệt Lịch Làm Việc tuần tới (2026-11-08). Vui lòng kiểm tra và phê duyệt để công bố ca trực cho cả team.",
+      "createdAt": "2026-11-07T10:16:28.072Z"
+    },
+    {
+      "id": "notif-sched-pending-1794046588072-1",
+      "title": "📋 Lịch Làm Việc Tuần Mới Chờ Phê Duyệt",
+      "isRead": false,
+      "userId": "user-1794028696018",
+      "message": "Nguyễn Thị Thảo Nguyên vừa hoàn tất sắp xếp ca và gửi phê duyệt Lịch Làm Việc tuần tới (2026-11-08). Vui lòng kiểm tra và phê duyệt để công bố ca trực cho cả team.",
+      "createdAt": "2026-11-07T10:16:28.072Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-admin-1794044533892",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-admin",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028540003-1794044533893",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028540003",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028696018-1794044533894",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028696018",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028728863-1794044533895",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028728863",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028828908-1794044533896",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028828908",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794028864725-1794044533897",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794028864725",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029189349-1794044533898",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029189349",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029248752-1794044533899",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029248752",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029277678-1794044533900",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029277678",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029304253-1794044533901",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029304253",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029326444-1794044533902",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029326444",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029355937-1794044533903",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029355937",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029374322-1794044533904",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029374322",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029389599-1794044533905",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029389599",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029407279-1794044533906",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029407279",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029435861-1794044533907",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029435861",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029465528-1794044533908",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029465528",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029487288-1794044533909",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029487288",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-approved-2026-11-08-user-1794029518886-1794044533910",
+      "title": "Lịch Làm Việc",
+      "isRead": false,
+      "userId": "user-1794029518886",
+      "message": "Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.",
+      "createdAt": "2026-11-07T09:42:13.892Z"
+    },
+    {
+      "id": "notif-sched-pending-1794044525871-0",
+      "title": "📋 Lịch Làm Việc Tuần Mới Chờ Phê Duyệt",
+      "isRead": false,
+      "userId": "user-1794028540003",
+      "message": "Nguyễn Thị Thảo Nguyên vừa hoàn tất sắp xếp ca và gửi phê duyệt Lịch Làm Việc tuần tới (2026-11-08). Vui lòng kiểm tra và phê duyệt để công bố ca trực cho cả team.",
+      "createdAt": "2026-11-07T09:42:05.871Z"
+    },
+    {
+      "id": "notif-sched-pending-1794044525871-1",
+      "title": "📋 Lịch Làm Việc Tuần Mới Chờ Phê Duyệt",
+      "isRead": false,
+      "userId": "user-1794028696018",
+      "message": "Nguyễn Thị Thảo Nguyên vừa hoàn tất sắp xếp ca và gửi phê duyệt Lịch Làm Việc tuần tới (2026-11-08). Vui lòng kiểm tra và phê duyệt để công bố ca trực cho cả team.",
+      "createdAt": "2026-11-07T09:42:05.872Z"
+    }
+  ],
+  "shiftsConfig": [
+    {
+      "id": "HANH_CHINH",
+      "name": "Ca Hành Chính",
+      "badge": "bg-blue-100 text-blue-950 border-blue-400 font-bold",
+      "bgClass": "bg-blue-50/80",
+      "endTime": "16:00",
+      "dotColor": "bg-blue-600",
+      "isSystem": true,
+      "shortName": "Hành Chính",
+      "startTime": "07:30",
+      "textClass": "text-blue-950 font-bold",
+      "timeRange": "7h30 - 16h",
+      "borderClass": "border-blue-300"
+    },
+    {
+      "id": "CA_1",
+      "name": "Ca 1",
+      "badge": "bg-amber-100 text-amber-950 border-amber-400 font-bold",
+      "bgClass": "bg-amber-50/80",
+      "endTime": "14:00",
+      "dotColor": "bg-amber-500",
+      "isSystem": true,
+      "shortName": "Ca 1",
+      "startTime": "06:00",
+      "textClass": "text-amber-950 font-bold",
+      "timeRange": "6h - 14h",
+      "borderClass": "border-amber-300"
+    },
+    {
+      "id": "CA_2",
+      "name": "Ca 2",
+      "badge": "bg-indigo-100 text-indigo-950 border-indigo-400 font-bold",
+      "bgClass": "bg-indigo-50/80",
+      "endTime": "22:00",
+      "dotColor": "bg-indigo-600",
+      "isSystem": true,
+      "shortName": "Ca 2",
+      "startTime": "14:00",
+      "textClass": "text-indigo-950 font-bold",
+      "timeRange": "14h - 22h",
+      "borderClass": "border-indigo-300"
+    },
+    {
+      "id": "CA_3",
+      "name": "Ca 3",
+      "badge": "bg-purple-900 text-purple-50 border-purple-950 font-bold shadow-xs",
+      "bgClass": "bg-purple-900/15",
+      "endTime": "06:00",
+      "dotColor": "bg-purple-700",
+      "isSystem": true,
+      "shortName": "Ca 3",
+      "startTime": "22:00",
+      "textClass": "text-purple-950 font-bold",
+      "timeRange": "22h - 6h",
+      "borderClass": "border-purple-300"
+    },
+    {
+      "id": "OFF",
+      "name": "Nghỉ Ca",
+      "badge": "bg-slate-200 text-slate-800 border-slate-300 font-bold",
+      "bgClass": "bg-slate-100/70",
+      "dotColor": "bg-slate-500",
+      "isSystem": true,
+      "hasNoTime": true,
+      "shortName": "Nghỉ",
+      "textClass": "text-slate-700 font-bold",
+      "timeRange": "Nghỉ ca",
+      "borderClass": "border-slate-300"
+    },
+    {
+      "id": "CA_1794034335936",
+      "name": "Ca Buggy",
+      "badge": "bg-rose-100 text-rose-950 border-rose-400 font-bold",
+      "bgClass": "bg-rose-50/80",
+      "endTime": "15:30",
+      "dotColor": "bg-rose-500",
+      "isSystem": false,
+      "shortName": "Buggy",
+      "startTime": "07:00",
+      "textClass": "text-rose-950 font-bold",
+      "timeRange": "7h - 15h30",
+      "borderClass": "border-rose-300"
+    }
+  ]
+}
