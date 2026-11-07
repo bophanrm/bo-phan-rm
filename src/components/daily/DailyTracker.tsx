@@ -40,6 +40,7 @@ import {
   BellRing,
   FileText,
   RotateCcw,
+  Eye,
 } from 'lucide-react';
 
 interface DailyTrackerProps {
@@ -853,9 +854,10 @@ export function DailyTracker({
                       ) : (
                         <button
                           onClick={() => onOpenReviewModal(task)}
-                          className="text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                          className="flex items-center space-x-1 text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
                         >
-                          Chi tiết
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Chi tiết</span>
                         </button>
                       )}
                     </div>
@@ -901,9 +903,19 @@ export function DailyTracker({
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 cursor-pointer group" onClick={() => onOpenReviewModal(task)}>
-                        <p className="font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors">{task.title}</p>
-                        <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{task.description}</p>
+                      <td
+                        className="px-4 py-3 cursor-pointer group"
+                        onClick={() => onOpenReviewModal(task)}
+                        title="Bấm để xem chi tiết hồ sơ công việc & nộp báo cáo"
+                      >
+                        <p className="font-bold text-slate-900 leading-snug group-hover:text-blue-600 group-hover:underline transition-colors">
+                          {task.title}
+                        </p>
+                        {task.description && (
+                          <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 group-hover:text-slate-700 leading-relaxed">
+                            {task.description}
+                          </p>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <p className="font-semibold text-slate-800">
@@ -911,18 +923,43 @@ export function DailyTracker({
                         </p>
                         <p className="text-[10px] text-slate-400">Giao bởi: {getPersonalName(task.createdByName || '')}</p>
                       </td>
-                      <td className="px-3.5 py-3 text-center font-semibold text-orange-600 whitespace-nowrap">
-                        {task.reportDeadline && !isNaN(new Date(task.reportDeadline).getTime()) ? (
-                          task.isDaily ? (
-                            <div className="flex flex-col items-center">
-                              <span className="font-bold text-slate-800">
-                                {new Date(task.reportDeadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                      <td className="px-3.5 py-3 text-center whitespace-nowrap">
+                        {task.reportDeadline && !isNaN(new Date(task.reportDeadline).getTime()) ? (() => {
+                          const deadline = new Date(task.reportDeadline);
+                          const isToday = deadline.toDateString() === now.toDateString();
+                          const tomorrow = new Date(now);
+                          tomorrow.setDate(now.getDate() + 1);
+                          const isTomorrow = deadline.toDateString() === tomorrow.toDateString();
+                          const isOverdue = now > deadline && task.status !== 'APPROVED';
+
+                          const timeFormatted = deadline.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                          const dateFormatted = isToday
+                            ? `Hôm nay (${deadline.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})`
+                            : isTomorrow
+                            ? `Ngày mai (${deadline.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})`
+                            : deadline.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+                          return (
+                            <div className="flex flex-col items-center justify-center space-y-0.5">
+                              {/* 1. GIỜ HIỂN THỊ Ở TRÊN */}
+                              <span
+                                className={`text-sm font-extrabold tracking-tight ${
+                                  isOverdue ? 'text-rose-600' : 'text-slate-900'
+                                }`}
+                              >
+                                {timeFormatted}
                               </span>
-                              <span className="text-[10px] text-slate-400 font-medium">
-                                {new Date(task.reportDeadline).toDateString() === now.toDateString()
-                                  ? 'Hôm nay'
-                                  : new Date(task.reportDeadline).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
+
+                              {/* 2. NGÀY HIỂN THỊ Ở DƯỚI */}
+                              <span
+                                className={`text-[11px] font-semibold ${
+                                  isToday ? 'text-blue-600 font-bold' : isTomorrow ? 'text-amber-700 font-semibold' : 'text-slate-500'
+                                }`}
+                              >
+                                {dateFormatted}
                               </span>
+
+                              {/* 3. THẺ GIA HẠN / NHẮC NỘP NẾU CÓ */}
                               {task.extensionRequest?.status === 'PENDING' && (
                                 <span
                                   title={`Đang xin gia hạn: ${new Date(task.extensionRequest.requestedNewDeadline).toLocaleString('vi-VN')} - Lý do: ${task.extensionRequest.reason}`}
@@ -942,34 +979,15 @@ export function DailyTracker({
                               {task.status !== 'APPROVED' &&
                                 task.status !== 'SUBMITTED' &&
                                 (!task.reports || task.reports.length === 0) &&
-                                now >= new Date(new Date(task.reportDeadline).getTime() - 60 * 60 * 1000) && (
+                                now >= new Date(deadline.getTime() - 60 * 60 * 1000) && (
                                   <span className="mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
                                     ⏰ Nhắc nộp báo cáo
                                   </span>
                                 )}
                             </div>
-                          ) : (
-                            <div className="flex flex-col items-center">
-                              <span>
-                                {new Date(task.reportDeadline).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                              {task.extensionRequest?.status === 'PENDING' && (
-                                <span
-                                  title={`Đang xin gia hạn: ${new Date(task.extensionRequest.requestedNewDeadline).toLocaleString('vi-VN')} - Lý do: ${task.extensionRequest.reason}`}
-                                  className="mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 animate-pulse"
-                                >
-                                  ⏳ Xin gia hạn
-                                </span>
-                              )}
-                              {task.extensionHistory && task.extensionHistory.length > 0 && task.extensionRequest?.status !== 'PENDING' && (
-                                <span className="mt-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200">
-                                  🔄 {task.extensionHistory[task.extensionHistory.length - 1].actionType === 'REASSIGN' ? 'Đã bàn giao' : 'Đã gia hạn'}
-                                </span>
-                              )}
-                            </div>
-                          )
-                        ) : (
-                          '---'
+                          );
+                        })() : (
+                          <span className="text-slate-400 text-xs">---</span>
                         )}
                       </td>
                       <td className="px-3.5 py-3 text-center whitespace-nowrap">
@@ -1068,23 +1086,29 @@ export function DailyTracker({
                           {canReviewTask(currentUser, task, users) && task.status === 'SUBMITTED' ? (
                             <button
                               onClick={() => onOpenReviewModal(task)}
-                              className="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-xs cursor-pointer"
+                              className="flex items-center space-x-1 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
+                              title="Phê duyệt báo cáo"
                             >
-                              Duyệt
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              <span>Duyệt</span>
                             </button>
                           ) : task.assignedTo.includes(currentUser.id) && task.status !== 'APPROVED' ? (
                             <button
                               onClick={() => onOpenReviewModal(task)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-xs cursor-pointer"
+                              className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer"
+                              title="Nộp báo cáo công việc"
                             >
-                              Nộp
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Nộp</span>
                             </button>
                           ) : (
                             <button
                               onClick={() => onOpenReviewModal(task)}
-                              className="text-slate-400 hover:text-blue-600 text-xs font-semibold cursor-pointer"
+                              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
+                              title="Bấm để xem chi tiết hồ sơ công việc & nộp báo cáo"
                             >
-                              Xem
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Xem</span>
                             </button>
                           )}
                         </div>
