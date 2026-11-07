@@ -303,7 +303,7 @@ export default function Home() {
         {/* Content Tabs Switcher */}
         {currentTab === 'tasks' ? (
           <DailyTracker
-            onOpenReportModal={(t) => setReportTask(t)}
+            onOpenReportModal={(t) => setReviewTask(t)}
             onOpenReviewModal={(t) => setReviewTask(t)}
           />
         ) : currentTab === 'planning' ? (
@@ -314,7 +314,7 @@ export default function Home() {
               setIsCreateOpen(true);
             }}
             onOpenReviewModal={(t) => setReviewTask(t)}
-            onOpenReportModal={(t) => setReportTask(t)}
+            onOpenReportModal={(t) => setReviewTask(t)}
           />
         ) : currentTab === 'schedule' ? (
           <ScheduleBoard />

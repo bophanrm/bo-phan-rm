@@ -63,6 +63,28 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
   const isApproved = task.status === 'APPROVED';
   const latestReport = task.reports && task.reports.length > 0 ? task.reports[task.reports.length - 1] : null;
 
+  // Resolve creator display name
+  const creatorUser = users.find((u) => u.id === task.createdBy);
+  const createdByNameDisplay = task.createdByName
+    ? getPersonalName(task.createdByName, true)
+    : creatorUser
+    ? getPersonalName(creatorUser.name, true)
+    : 'Ban Quản Lý';
+
+  // Resolve reviewer display names
+  const reviewerDisplayNames =
+    task.reviewerNames && task.reviewerNames.length > 0
+      ? task.reviewerNames.map((n) => getPersonalName(n, true)).join(' & ')
+      : 'Tống Trường Xa & Nguyễn Trần Hoàng Vũ';
+
+  // Resolve assigned display names
+  const assignedDisplayNames =
+    task.assignedToNames && task.assignedToNames.length > 0
+      ? task.assignedToNames.map((n) => getPersonalName(n, true))
+      : task.assignedTo
+          .map((id) => users.find((u) => u.id === id)?.name || id)
+          .map((n) => getPersonalName(n, true));
+
   // Handle Review action (Duyệt hoặc Yêu cầu sửa)
   const handleReviewAction = (status: 'ACCEPTED' | 'REVISION_NEEDED') => {
     if (!latestReport) return;
@@ -266,7 +288,7 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
                   <span>Người giao việc:</span>
                 </span>
                 <p className="font-bold text-slate-900 pl-5">
-                  {task.createdByName || 'Ban Quản Lý'}
+                  {createdByNameDisplay}
                   {task.createdAt && (
                     <span className="text-slate-500 font-normal text-[11px] block">
                       Giao lúc: {new Date(task.createdAt).toLocaleString('vi-VN')}
@@ -282,7 +304,7 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
                   <span>Nơi nhận báo cáo (Đồng nhận):</span>
                 </span>
                 <p className="font-bold text-amber-950 pl-5">
-                  {task.reviewerNames?.join(' & ') || 'Tống Trường Xa & Nguyễn Trần Hoàng Vũ'}
+                  {reviewerDisplayNames}
                 </p>
               </div>
 
@@ -290,15 +312,16 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
               <div className="space-y-1 sm:col-span-2">
                 <span className="text-slate-500 font-medium flex items-center space-x-1.5">
                   <Users className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Thành viên thực hiện ({task.assignedTo.length} người):</span>
+                  <span>Thành viên thực hiện ({assignedDisplayNames.length} người):</span>
                 </span>
                 <div className="pl-5 pt-0.5 flex flex-wrap gap-1.5">
-                  {(task.assignedToNames || []).map((name, idx) => (
+                  {assignedDisplayNames.map((name, idx) => (
                     <span
                       key={idx}
-                      className="px-2 py-0.5 bg-white border border-slate-200 rounded-lg text-slate-800 font-semibold text-xs shadow-2xs"
+                      className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-800 font-semibold text-xs shadow-2xs flex items-center space-x-1"
                     >
-                      {name}
+                      <span className="text-slate-400 text-[11px]">👤</span>
+                      <span>{name}</span>
                     </span>
                   ))}
                 </div>
@@ -675,6 +698,20 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
             </div>
           )}
 
+        </div>
+
+        {/* FOOTER ĐÓNG MODAL */}
+        <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+          <p className="text-[11px] text-slate-500 font-medium">
+            Hồ sơ chi tiết công việc • Đồng bộ tức thì
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition-colors cursor-pointer"
+          >
+            Đóng
+          </button>
         </div>
 
       </div>

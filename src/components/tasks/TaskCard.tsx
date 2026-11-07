@@ -95,12 +95,14 @@ export function TaskCard({ task, onOpenReportModal, onOpenReviewModal }: TaskCar
         )}
 
         {/* Title & Description */}
-        <h3 className="font-bold text-slate-900 text-base leading-snug tracking-tight mb-2">
-          {task.title}
-        </h3>
-        <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed mb-4">
-          {task.description}
-        </p>
+        <div onClick={() => onOpenReviewModal(task)} className="cursor-pointer group">
+          <h3 className="font-bold text-slate-900 text-base leading-snug tracking-tight mb-2 group-hover:text-blue-600 transition-colors">
+            {task.title}
+          </h3>
+          <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed mb-4">
+            {task.description}
+          </p>
+        </div>
       </div>
 
       <div>
@@ -179,8 +181,8 @@ export function TaskCard({ task, onOpenReportModal, onOpenReviewModal }: TaskCar
 
             {!isReviewer && isAssignedToMe && task.status !== 'APPROVED' && (
               <button
-                onClick={() => onOpenReportModal(task)}
-                className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl shadow-sm transition-all"
+                onClick={() => onOpenReviewModal(task)}
+                className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl shadow-sm transition-all cursor-pointer"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>{task.status === 'REJECTED' ? 'Nộp lại' : 'Nộp Báo Cáo'}</span>
@@ -188,10 +190,13 @@ export function TaskCard({ task, onOpenReportModal, onOpenReviewModal }: TaskCar
             )}
 
             {!isReviewer && task.status === 'APPROVED' && (
-              <span className="text-xs font-medium text-emerald-600 flex items-center space-x-1">
-                <CheckCircle className="w-4 h-4" />
-                <span>Đã duyệt xong</span>
-              </span>
+              <button
+                onClick={() => onOpenReviewModal(task)}
+                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg flex items-center space-x-1 transition-colors cursor-pointer"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Xem chi tiết</span>
+              </button>
             )}
           </div>
         </div>

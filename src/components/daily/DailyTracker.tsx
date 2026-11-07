@@ -901,8 +901,8 @@ export function DailyTracker({
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="font-bold text-slate-900 leading-snug">{task.title}</p>
+                      <td className="px-4 py-3 cursor-pointer group" onClick={() => onOpenReviewModal(task)}>
+                        <p className="font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors">{task.title}</p>
                         <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{task.description}</p>
                       </td>
                       <td className="px-4 py-3">
@@ -1074,7 +1074,7 @@ export function DailyTracker({
                             </button>
                           ) : task.assignedTo.includes(currentUser.id) && task.status !== 'APPROVED' ? (
                             <button
-                              onClick={() => onOpenReportModal(task)}
+                              onClick={() => onOpenReviewModal(task)}
                               className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-xs cursor-pointer"
                             >
                               Nộp
