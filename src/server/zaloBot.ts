@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 const SESSION_FILE_PATH = path.join(process.cwd(), '.zalo-session.json');
 
 export interface ZaloBotConfig {
+  enabled: boolean;
   groupId: string | null;
   groupName?: string | null;
   notifyOnNewTask: boolean;
@@ -42,6 +43,7 @@ class ZaloBotService {
   public errorMessage: string | null = null;
   public userInfo: { id: string; name: string; avatar?: string } | null = null;
   public config: ZaloBotConfig = {
+    enabled: true,
     groupId: null,
     groupName: null,
     notifyOnNewTask: true,

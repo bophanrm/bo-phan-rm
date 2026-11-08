@@ -36,6 +36,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
   const [groups, setGroups] = useState<ZaloGroupInfo[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [config, setConfig] = useState({
+    enabled: true,
     notifyOnNewTask: true,
     notifyDailyShiftReminder: true,
     notifyProjectDeadline: true,
@@ -56,6 +57,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
       setErrorMessage(data.errorMessage);
       if (data.config) {
         setConfig({
+          enabled: data.config.enabled ?? true,
           notifyOnNewTask: data.config.notifyOnNewTask ?? true,
           notifyDailyShiftReminder: data.config.notifyDailyShiftReminder ?? true,
           notifyProjectDeadline: data.config.notifyProjectDeadline ?? true,
@@ -324,16 +326,61 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
               </div>
 
               {/* Các thiết lập tự động gửi tin */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
-                <div className="flex items-center space-x-1.5 text-slate-800 font-bold text-xs uppercase tracking-wider">
-                  <Bell className="w-4 h-4 text-amber-600" />
-                  <span>Kịch Bản Tự Động Gửi Tin Nhắn</span>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+                
+                {/* CÔNG TẮC TỔNG (MASTER SWITCH) */}
+                <div className={`p-3 rounded-xl border flex items-center justify-between transition-colors ${
+                  config.enabled
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : 'bg-rose-50 border-rose-200'
+                }`}>
+                  <div className="space-y-0.5 pr-2">
+                    <div className="flex items-center space-x-1.5">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${config.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                      <span className={`text-xs font-black uppercase tracking-wider ${
+                        config.enabled ? 'text-emerald-950' : 'text-rose-950'
+                      }`}>
+                        {config.enabled ? 'Đang BẬT Gửi Tin Tự Động' : 'ĐÃ TẮT GỬI TIN TỰ ĐỘNG'}
+                      </span>
+                    </div>
+                    <p className={`text-[11px] leading-tight ${config.enabled ? 'text-emerald-800' : 'text-rose-800 font-medium'}`}>
+                      {config.enabled
+                        ? 'Hệ thống tự động gửi tin vào Zalo theo các kịch bản bên dưới.'
+                        : 'Bot tạm dừng 100% mọi tin tự động (Zalo Chị Nguyên vẫn được lưu phiên, không bị mất).'}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = { ...config, enabled: !config.enabled };
+                      setConfig(updated);
+                      fetch('/api/zalo/config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...updated, groupId: selectedGroupId }),
+                      });
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black shrink-0 transition-all shadow-xs cursor-pointer ${
+                      config.enabled
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    }`}
+                  >
+                    {config.enabled ? 'TẮT GỬI TIN' : 'BẬT LẠI NGAY'}
+                  </button>
                 </div>
 
-                <div className="space-y-2 text-xs">
+                <div className="flex items-center space-x-1.5 text-slate-800 font-bold text-xs uppercase tracking-wider pt-1 border-t border-slate-200/80">
+                  <Bell className="w-4 h-4 text-amber-600" />
+                  <span>Kịch Bản Chi Tiết (Bật/Tắt theo nhu cầu)</span>
+                </div>
+
+                <div className={`space-y-2 text-xs transition-opacity ${!config.enabled ? 'opacity-50 pointer-events-none' : ''}`}>
                   <label className="flex items-start space-x-2.5 cursor-pointer">
                     <input
                       type="checkbox"
+                      disabled={!config.enabled}
                       checked={config.notifyOnNewTask}
                       onChange={(e) => {
                         const updated = { ...config, notifyOnNewTask: e.target.checked };
@@ -355,6 +402,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                   <label className="flex items-start space-x-2.5 cursor-pointer">
                     <input
                       type="checkbox"
+                      disabled={!config.enabled}
                       checked={config.notifyDailyShiftReminder}
                       onChange={(e) => {
                         const updated = { ...config, notifyDailyShiftReminder: e.target.checked };
@@ -376,6 +424,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                   <label className="flex items-start space-x-2.5 cursor-pointer">
                     <input
                       type="checkbox"
+                      disabled={!config.enabled}
                       checked={config.notifyProjectDeadline}
                       onChange={(e) => {
                         const updated = { ...config, notifyProjectDeadline: e.target.checked };

@@ -3,7 +3,7 @@ import { zaloBot } from '@/server/zaloBot';
 
 export async function POST(req: Request) {
   try {
-    const { groupId, message } = await req.json();
+    const { groupId, message, type } = await req.json();
     const targetGroupId = groupId || zaloBot.config.groupId;
 
     if (!targetGroupId) {
@@ -11,6 +11,31 @@ export async function POST(req: Request) {
         { success: false, error: 'Chưa cấu hình hoặc chọn nhóm Zalo để gửi tin!' },
         { status: 400 }
       );
+    }
+
+    // Nếu không phải tin nhắn TEST thì phải tuân thủ triệt để cài đặt BẬT/TẮT của người dùng
+    if (type !== 'TEST') {
+      // 1. Kiểm tra Công Tắc Tổng (Master Switch)
+      if (zaloBot.config.enabled === false) {
+        console.log('[ZaloBot] ĐÃ CHẶN GỬI TIN: Toàn bộ tính năng gửi tin Zalo đang TẮT (enabled = false)');
+        return NextResponse.json({ success: true, skipped: true, reason: 'Bot Zalo đang tạm tắt' });
+      }
+
+      // 2. Kiểm tra theo từng loại thông báo
+      if (type === 'NEW_TASK' && zaloBot.config.notifyOnNewTask === false) {
+        console.log('[ZaloBot] ĐÃ CHẶN GỬI TIN: Đã tắt thông báo việc mới (notifyOnNewTask = false)');
+        return NextResponse.json({ success: true, skipped: true, reason: 'Thông báo việc mới đang tắt' });
+      }
+
+      if (type === 'DAILY_REMINDER' && zaloBot.config.notifyDailyShiftReminder === false) {
+        console.log('[ZaloBot] ĐÃ CHẶN GỬI TIN: Đã tắt nhắc nhở ca trực lúc 15h (notifyDailyShiftReminder = false)');
+        return NextResponse.json({ success: true, skipped: true, reason: 'Nhắc nhở ca trực đang tắt' });
+      }
+
+      if (type === 'PROJECT_REMINDER' && zaloBot.config.notifyProjectDeadline === false) {
+        console.log('[ZaloBot] ĐÃ CHẶN GỬI TIN: Đã tắt nhắc hạn dự án dài hạn (notifyProjectDeadline = false)');
+        return NextResponse.json({ success: true, skipped: true, reason: 'Nhắc nhở dự án đang tắt' });
+      }
     }
 
     if (!message || typeof message !== 'string') {
