@@ -3,6 +3,11 @@ import { zaloBot } from '@/server/zaloBot';
 
 export async function GET() {
   try {
+    // Nếu chưa ở trạng thái CONNECTED (ví dụ server vừa khởi động lại), tự động tải phiên đã lưu từ Supabase / File
+    if (zaloBot.status !== 'CONNECTED' && zaloBot.status !== 'GENERATING_QR' && zaloBot.status !== 'QR_READY' && zaloBot.status !== 'SCANNED') {
+      await zaloBot.loadSavedSession();
+    }
+
     let groups: any[] = [];
     if (zaloBot.status === 'CONNECTED') {
       groups = await zaloBot.getGroups();
