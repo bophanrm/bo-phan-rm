@@ -716,30 +716,35 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                         </div>
                       </div>
                     ) : currentTeamSupervisor ? (
-                      /* TRƯỜNG HỢP 1: TỔ CÓ GIÁM SÁT -> MẶC ĐỊNH LÀ GIÁM SÁT */
-                      <div className="bg-purple-50/70 border border-purple-200/90 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center space-x-1.5">
-                            <ShieldCheck className="w-4 h-4 text-purple-700 shrink-0" />
-                            <span className="font-bold text-xs text-purple-950">Giám sát hiện trường mặc định:</span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900">
-                              Cấp 3 • Giám Sát
-                            </span>
+                      /* TRƯỜNG HỢP 1: TỔ CÓ 1 GIÁM SÁT -> MẶC ĐỊNH LÀ GIÁM SÁT (TINH GỌN, SANG TRỌNG) */
+                      <div className="bg-purple-50/60 border border-purple-200/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
+                        <div className="flex items-center space-x-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 border border-purple-200/80">
+                            <ShieldCheck className="w-4 h-4" />
                           </div>
-                          <p className="text-[11px] text-purple-800">
-                            Mặc định chọn Giám Sát của tổ: <strong>{getPersonalName(currentTeamSupervisor.name, true)}</strong>
-                          </p>
+                          <div className="min-w-0">
+                            <div className="flex items-center space-x-1.5 flex-wrap">
+                              <span className="text-xs font-extrabold text-slate-900 whitespace-nowrap">
+                                Giám sát hiện trường:
+                              </span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200 whitespace-nowrap">
+                                Cấp 3 • Giám Sát
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-purple-900/80 mt-0.5 truncate font-medium">
+                              Mặc định: <strong className="text-purple-950 font-bold">{getPersonalName(currentTeamSupervisor.name, true)}</strong>
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="flex items-center space-x-1.5 shrink-0">
-                          <span className="text-[11px] text-slate-500 font-medium">Thay đổi:</span>
+                        <div className="shrink-0 w-full sm:w-auto">
                           <select
                             value={leadId}
                             onChange={(e) => setLeadId(e.target.value)}
-                            className="bg-white border border-purple-300 rounded-lg px-2.5 py-1 text-xs font-bold text-purple-950 focus:ring-2 focus:ring-purple-500 outline-none"
+                            className="w-full sm:w-auto bg-white border border-purple-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-purple-950 focus:ring-2 focus:ring-purple-500 outline-none shadow-2xs cursor-pointer"
                           >
                             <option value={currentTeamSupervisor.id}>
-                              ⭐ {getPersonalName(currentTeamSupervisor.name, true)} (Giám Sát Mặc Định)
+                              ⭐ {getPersonalName(currentTeamSupervisor.name, true)} (Giám Sát)
                             </option>
                             <optgroup label="Đổi sang thành viên khác trong tổ">
                               {currentTeamMembers
@@ -754,31 +759,36 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                         </div>
                       </div>
                     ) : (
-                      /* TRƯỜNG HỢP 2: TỔ KHÔNG CÓ GIÁM SÁT, NHƯNG CÓ TỔ TRƯỞNG -> MẶC ĐỊNH LÀ TỔ TRƯỞNG */
-                      <div className="bg-amber-50/70 border border-amber-200/90 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center space-x-1.5">
-                            <Star className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" />
-                            <span className="font-bold text-xs text-amber-950">Giám sát hiện trường mặc định:</span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-200 text-amber-900">
-                              Tổ Trưởng
-                            </span>
+                      /* TRƯỜNG HỢP 2: TỔ KHÔNG CÓ GIÁM SÁT, NHƯNG CÓ TỔ TRƯỞNG (TINH GỌN, SANG TRỌNG) */
+                      <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
+                        <div className="flex items-center space-x-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200/80">
+                            <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
                           </div>
-                          <p className="text-[11px] text-amber-800">
-                            Tổ không có Giám Sát. Mặc định chọn Tổ Trưởng: <strong>{getPersonalName(currentTeamLeader?.name, true)}</strong>
-                          </p>
+                          <div className="min-w-0">
+                            <div className="flex items-center space-x-1.5 flex-wrap">
+                              <span className="text-xs font-extrabold text-slate-900 whitespace-nowrap">
+                                Giám sát hiện trường:
+                              </span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap">
+                                Tổ Trưởng
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-amber-900/80 mt-0.5 truncate font-medium">
+                              Mặc định: <strong className="text-amber-950 font-bold">{getPersonalName(currentTeamLeader?.name, true)}</strong>
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="flex items-center space-x-1.5 shrink-0">
-                          <span className="text-[11px] text-slate-500 font-medium">Thay đổi:</span>
+                        <div className="shrink-0 w-full sm:w-auto">
                           <select
                             value={leadId}
                             onChange={(e) => setLeadId(e.target.value)}
-                            className="bg-white border border-amber-300 rounded-lg px-2.5 py-1 text-xs font-bold text-amber-950 focus:ring-2 focus:ring-amber-500 outline-none"
+                            className="w-full sm:w-auto bg-white border border-amber-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-950 focus:ring-2 focus:ring-amber-500 outline-none shadow-2xs cursor-pointer"
                           >
                             {currentTeamLeader && (
                               <option value={currentTeamLeader.id}>
-                                ⭐ {getPersonalName(currentTeamLeader.name, true)} (Tổ Trưởng Mặc Định)
+                                ⭐ {getPersonalName(currentTeamLeader.name, true)} (Tổ Trưởng)
                               </option>
                             )}
                             <optgroup label="Đổi sang thành viên khác trong tổ">
