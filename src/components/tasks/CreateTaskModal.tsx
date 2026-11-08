@@ -122,8 +122,9 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
     if (teams.length > 0 && teams[0]) {
       const t = teams[0];
       const members = t.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[];
-      const supervisor = members.find((m) => m.level === 'LEVEL_3_LEAD');
-      if (supervisor) return supervisor.id;
+      const supervisors = members.filter((m) => m.level === 'LEVEL_3_LEAD');
+      if (supervisors.length > 1) return ''; // Nếu có từ 2 giám sát -> Bắt buộc hỏi chọn
+      if (supervisors.length === 1) return supervisors[0].id;
       if (t.leaderId) {
         const leader = members.find((m) => m.id === t.leaderId);
         if (leader) return leader.id;
@@ -184,13 +185,16 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       setSelectedMemberIds(chosen);
 
       // Quy tắc phân công người giám sát hiện trường:
-      // 1. Mặc định là Giám Sát của tổ (Cấp 3 • LEVEL_3_LEAD)
-      // 2. Nếu tổ không có Giám Sát -> Mặc định là Tổ Trưởng (team.leaderId)
-      // 3. Nếu tổ không có cả Giám Sát lẫn Tổ Trưởng -> Để trống ('') để hiển thị thông báo yêu cầu chọn
+      // 1. Nếu tổ có từ 2 Giám Sát trở lên -> Để trống ('') để hiển thị thông báo hỏi chọn ai làm Giám Sát Hiện Trường
+      // 2. Nếu tổ có đúng 1 Giám Sát (Cấp 3 • LEVEL_3_LEAD) -> Mặc định là Giám Sát đó
+      // 3. Nếu tổ không có Giám Sát -> Mặc định là Tổ Trưởng (team.leaderId)
+      // 4. Nếu tổ không có cả Giám Sát lẫn Tổ Trưởng -> Để trống ('') để hiển thị thông báo yêu cầu chọn
       const members = team.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[];
-      const supervisor = members.find((m) => m.level === 'LEVEL_3_LEAD');
-      if (supervisor) {
-        setLeadId(supervisor.id);
+      const supervisors = members.filter((m) => m.level === 'LEVEL_3_LEAD');
+      if (supervisors.length > 1) {
+        setLeadId('');
+      } else if (supervisors.length === 1) {
+        setLeadId(supervisors[0].id);
       } else if (team.leaderId) {
         const leader = members.find((m) => m.id === team.leaderId);
         if (leader) {
@@ -235,12 +239,23 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       return;
     }
 
-    // Nếu giao theo tổ nhưng tổ không có cả Giám Sát lẫn Tổ Trưởng và người dùng chưa chọn ai làm Giám Sát Hiện Trường:
+    // Nếu giao theo tổ nhưng chưa chọn giám sát hiện trường:
     if (assignMode === 'TEAM' && !leadId) {
       const currentTeam = teams.find((t) => t.id === selectedTeamId);
-      alert(
-        `⚠️ Tổ "${currentTeam?.name || 'này'}" hiện chưa có Giám Sát và chưa bổ nhiệm Tổ Trưởng.\n\nVui lòng chọn một người làm Giám Sát Hiện Trường trước khi giao việc!`
-      );
+      const members = currentTeam
+        ? (currentTeam.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[])
+        : [];
+      const supervisors = members.filter((m) => m.level === 'LEVEL_3_LEAD');
+
+      if (supervisors.length > 1) {
+        alert(
+          `⚠️ Tổ "${currentTeam?.name || 'được chọn'}" hiện có ${supervisors.length} Giám Sát Ca.\n\nVui lòng chọn 1 Giám Sát làm Giám Sát Hiện Trường trước khi tiếp tục giao việc!`
+        );
+      } else {
+        alert(
+          `⚠️ Tổ "${currentTeam?.name || 'được chọn'}" hiện chưa có Giám Sát và chưa bổ nhiệm Tổ Trưởng.\n\nVui lòng chỉ định một người làm Giám Sát Hiện Trường trước khi giao việc!`
+        );
+      }
       return;
     }
 
@@ -576,16 +591,77 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
               const currentTeamMembers = currentTeam
                 ? (currentTeam.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[])
                 : [];
-              const currentTeamSupervisor = currentTeamMembers.find((m) => m.level === 'LEVEL_3_LEAD');
+              const teamSupervisors = currentTeamMembers.filter((m) => m.level === 'LEVEL_3_LEAD');
+              const hasMultipleSupervisors = assignMode === 'TEAM' && teamSupervisors.length > 1;
+              const currentTeamSupervisor = teamSupervisors.length === 1 ? teamSupervisors[0] : null;
               const currentTeamLeader = currentTeam?.leaderId
                 ? currentTeamMembers.find((m) => m.id === currentTeam.leaderId)
                 : null;
-              const isMissingSupervisorAndLeader = assignMode === 'TEAM' && !currentTeamSupervisor && !currentTeamLeader;
+              const isMissingSupervisorAndLeader = assignMode === 'TEAM' && teamSupervisors.length === 0 && !currentTeamLeader;
 
               return (
                 <div className="pt-2.5 border-t border-slate-200 space-y-2 text-xs">
                   {assignMode === 'TEAM' ? (
-                    isMissingSupervisorAndLeader ? (
+                    hasMultipleSupervisors ? (
+                      /* TRƯỜNG HỢP: TỔ CÓ TỪ 2 GIÁM SÁT TRỞ LÊN -> BẬT THÔNG BÁO HỎI CHỌN AI LÀM GIÁM SÁT HIỆN TRƯỜNG */
+                      <div className="bg-purple-50/90 border-2 border-purple-300 rounded-2xl p-3.5 space-y-2.5 shadow-xs animate-fade-in">
+                        <div className="flex items-start space-x-2 text-purple-950">
+                          <ShieldCheck className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+                          <div>
+                            <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                              <p className="font-extrabold text-xs text-purple-950">
+                                Tổ {currentTeam?.name} hiện có {teamSupervisors.length} Giám Sát Ca
+                              </p>
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900">
+                                {teamSupervisors.length} Giám Sát
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-purple-800 leading-relaxed mt-0.5">
+                              Vui lòng chọn 1 trong {teamSupervisors.length} Giám Sát để làm <strong>Giám sát hiện trường</strong> trực tiếp đôn đốc công việc này:
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <select
+                            required
+                            value={leadId}
+                            onChange={(e) => setLeadId(e.target.value)}
+                            className={`w-full bg-white border-2 rounded-xl px-3 py-2 text-xs font-bold transition-all outline-none ${
+                              !leadId
+                                ? 'border-purple-400 text-purple-900 ring-2 ring-purple-200'
+                                : 'border-purple-600 text-purple-950 ring-1 ring-purple-600'
+                            }`}
+                          >
+                            <option value="">
+                              -- ⚠️ HÃY CHỌN 1 GIÁM SÁT HIỆN TRƯỜNG TRONG {teamSupervisors.length} GIÁM SÁT --
+                            </option>
+                            <optgroup label={`Các Giám Sát Ca (Cấp 3) Trong ${currentTeam?.name || 'Tổ'}`}>
+                              {teamSupervisors.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  ⭐ {getPersonalName(s.name, true)} {s.employeeId ? `[${s.employeeId}]` : ''}
+                                </option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="Hoặc Chỉ Định Thành Viên Khác Trong Tổ">
+                              {currentTeamMembers
+                                .filter((m) => m.level !== 'LEVEL_3_LEAD')
+                                .map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    👤 {getPersonalName(m.name, true)} {m.employeeId ? `[${m.employeeId}]` : ''}
+                                  </option>
+                                ))}
+                            </optgroup>
+                          </select>
+                          {!leadId && (
+                            <p className="text-[11px] font-bold text-purple-700 mt-1 flex items-center gap-1">
+                              <AlertCircle className="w-3.5 h-3.5 text-purple-600" />
+                              <span>Vui lòng chọn 1 Giám Sát trước khi tiếp tục giao việc!</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : isMissingSupervisorAndLeader ? (
                       /* TRƯỜNG HỢP 3: TỔ KHÔNG CÓ CẢ GIÁM SÁT LẪN TỔ TRƯỞNG -> HIỂN THỊ THÔNG BÁO HỎI CHỌN */
                       <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-3.5 space-y-2.5 shadow-xs animate-fade-in">
                         <div className="flex items-start space-x-2 text-amber-950">
