@@ -242,36 +242,55 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                   <span>Chọn Nhóm Zalo Nhận Thông Báo</span>
                 </div>
 
-                {groups.length > 0 ? (
-                  <select
-                    value={selectedGroupId}
-                    onChange={(e) => {
-                      setSelectedGroupId(e.target.value);
-                      handleSaveConfig(e.target.value);
-                    }}
-                    className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
-                  >
-                    <option value="">-- Chọn nhóm Zalo bộ phận --</option>
-                    {groups.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name} {g.totalMember ? `(${g.totalMember} thành viên)` : ''}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Nhập ID nhóm Zalo (ví dụ: g123456789)"
+                {groups.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600">Chọn từ danh sách nhóm Zalo đã tìm thấy:</label>
+                    <select
                       value={selectedGroupId}
-                      onChange={(e) => setSelectedGroupId(e.target.value)}
-                      className="w-full text-xs bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800"
-                    />
-                    <p className="text-[11px] text-slate-500">
-                      💡 Mẹo: Thêm tài khoản Zalo của Chị Nguyên vào nhóm chung của Bộ Phận RM rồi bấm "Làm mới danh sách nhóm".
-                    </p>
+                      onChange={(e) => {
+                        setSelectedGroupId(e.target.value);
+                        handleSaveConfig(e.target.value);
+                      }}
+                      className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="">-- Bấm vào đây để chọn nhóm --</option>
+                      {groups.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name} {g.totalMember ? `(${g.totalMember} thành viên)` : ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[11px] font-bold text-slate-600 flex items-center justify-between">
+                    <span>{groups.length > 0 ? 'Hoặc nhập / dán trực tiếp ID nhóm Zalo:' : 'Nhập / dán trực tiếp ID nhóm Zalo:'}</span>
+                    {selectedGroupId && <span className="text-[10px] text-emerald-600 font-bold">Đã chọn: {selectedGroupId}</span>}
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      placeholder="Dán dãy số ID nhóm (ví dụ: 8294719284719284)"
+                      value={selectedGroupId}
+                      onChange={(e) => setSelectedGroupId(e.target.value.trim())}
+                      className="flex-1 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSaveConfig(selectedGroupId)}
+                      className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold shrink-0 transition-colors"
+                    >
+                      Lưu ID
+                    </button>
+                  </div>
+                  <div className="bg-blue-50/80 border border-blue-200/80 rounded-lg p-2 text-[11px] text-blue-900 space-y-1">
+                    <p className="font-semibold text-blue-950">📌 Cách lấy ID nhóm trong 5 giây:</p>
+                    <p>1. Vào web <strong>chat.zalo.me</strong> trên máy tính & bấm vào nhóm chat.</p>
+                    <p>2. Nhìn lên link trình duyệt có dạng: <code className="bg-white px-1 py-0.5 rounded text-blue-800 font-mono text-[10px]">chat.zalo.me/g/<strong>8294719284719284</strong></code></p>
+                    <p>3. Copy dãy số ở cuối link đó dán vào ô trên rồi bấm <strong>Lưu ID</strong>.</p>
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-between pt-1">
                   <button

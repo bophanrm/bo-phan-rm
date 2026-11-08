@@ -1,6 +1,7 @@
 import { Zalo, ThreadType, LoginQRCallbackEventType } from 'zca-js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { supabase } from '@/lib/supabase';
 
 // File lưu phiên đăng nhập Zalo Bot trên máy chủ
 const SESSION_FILE_PATH = path.join(process.cwd(), '.zalo-session.json');
@@ -55,28 +56,49 @@ class ZaloBotService {
     this.loadSavedSession();
   }
 
-  // Tải cấu hình và phiên đã lưu từ trước
-  public loadSavedSession() {
+  // Tải cấu hình và phiên đã lưu từ trước (Hỗ trợ cả File cục bộ và Supabase Cloud)
+  public async loadSavedSession() {
     try {
+      let data: ZaloSessionData | null = null;
+
+      // 1. Kiểm tra file cục bộ trước
       if (fs.existsSync(SESSION_FILE_PATH)) {
         const raw = fs.readFileSync(SESSION_FILE_PATH, 'utf-8');
-        const data: ZaloSessionData = JSON.parse(raw);
-        if (data && data.cookie && data.imei) {
-          if (data.userInfo) this.userInfo = data.userInfo;
-          if (data.config) this.config = { ...this.config, ...data.config };
-          // Thử khôi phục phiên ngầm
-          this.reconnect(data).catch((err) => {
-            console.error('[ZaloBot] Failed to auto reconnect with saved session:', err.message);
-          });
+        data = JSON.parse(raw);
+      }
+
+      // 2. Nếu file không có hoặc trên cloud serverless, kiểm tra Supabase
+      if (!data) {
+        const { data: cloudRow } = await supabase
+          .from('app_sync_store')
+          .select('value')
+          .eq('key', 'zalo_session')
+          .maybeSingle();
+
+        if (cloudRow?.value) {
+          data = cloudRow.value;
+          // Ghi lại ra file nếu môi trường cho phép
+          try {
+            fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+          } catch (e) {
+            // ignore
+          }
         }
+      }
+
+      if (data && data.cookie && data.imei) {
+        if (data.userInfo) this.userInfo = data.userInfo;
+        if (data.config) this.config = { ...this.config, ...data.config };
+        // Khôi phục phiên ngầm
+        await this.reconnect(data);
       }
     } catch (err: any) {
       console.warn('[ZaloBot] Cannot read saved session:', err.message);
     }
   }
 
-  // Lưu phiên và cấu hình vào file
-  private saveSession(credentials: { cookie: any; imei: string; userAgent: string }) {
+  // Lưu phiên và cấu hình vào file & Supabase Cloud
+  private async saveSession(credentials: { cookie: any; imei: string; userAgent: string }) {
     try {
       const data: ZaloSessionData = {
         cookie: credentials.cookie,
@@ -85,15 +107,28 @@ class ZaloBotService {
         userInfo: this.userInfo || undefined,
         config: this.config,
       };
-      fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-      console.log('[ZaloBot] Saved session successfully to', SESSION_FILE_PATH);
+
+      try {
+        fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+      } catch (e) {
+        // ignore
+      }
+
+      // Đồng bộ lên Supabase Cloud
+      await supabase.from('app_sync_store').upsert({
+        key: 'zalo_session',
+        value: data,
+        updated_at: new Date().toISOString(),
+      });
+
+      console.log('[ZaloBot] Saved session successfully to file & cloud');
     } catch (err: any) {
       console.error('[ZaloBot] Failed to save session:', err.message);
     }
   }
 
   // Cập nhật cấu hình (Nhóm Zalo, các nút bật/tắt)
-  public updateConfig(newConfig: Partial<ZaloBotConfig>) {
+  public async updateConfig(newConfig: Partial<ZaloBotConfig>) {
     this.config = { ...this.config, ...newConfig };
     try {
       if (fs.existsSync(SESSION_FILE_PATH)) {
@@ -102,6 +137,11 @@ class ZaloBotService {
         data.config = this.config;
         fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
       }
+      await supabase.from('app_sync_store').upsert({
+        key: 'zalo_config',
+        value: this.config,
+        updated_at: new Date().toISOString(),
+      });
     } catch (e) {
       // ignore
     }
@@ -222,33 +262,47 @@ class ZaloBotService {
 
     try {
       const res = await this.api.getAllGroups();
-      if (!res || !res.gridList) {
-        return [];
-      }
+      console.log('[ZaloBot] getAllGroups raw response:', JSON.stringify(res));
 
-      // res.gridList là danh sách các group
-      const groups: ZaloGroupInfo[] = [];
-      const gridList = res.gridList || [];
-      const groupInfoMap = res.groupInfoMap || {};
-
-      for (const gid of gridList) {
-        const info = groupInfoMap[gid];
-        if (info) {
-          groups.push({
-            id: gid,
-            name: info.name || `Nhóm ${gid}`,
-            totalMember: info.totalMember,
-            avatar: info.avt,
-          });
-        } else {
-          groups.push({
-            id: gid,
-            name: `Nhóm ${gid}`,
-          });
+      let groupIds: string[] = [];
+      if (res) {
+        if (Array.isArray(res.gridList)) {
+          groupIds = res.gridList;
+        } else if (res.gridVerMap && typeof res.gridVerMap === 'object') {
+          groupIds = Object.keys(res.gridVerMap);
+        } else if (Array.isArray(res)) {
+          groupIds = res;
         }
       }
 
-      return groups;
+      console.log(`[ZaloBot] Extracted ${groupIds.length} group IDs:`, groupIds);
+
+      if (groupIds.length === 0) {
+        return [];
+      }
+
+      // Lấy chi tiết thông tin các nhóm bằng getGroupInfo
+      try {
+        const infoRes = await this.api.getGroupInfo(groupIds);
+        console.log('[ZaloBot] getGroupInfo raw response keys:', infoRes ? Object.keys(infoRes) : null);
+        const gridInfoMap = infoRes?.gridInfoMap || {};
+
+        return groupIds.map((gid) => {
+          const info = gridInfoMap[gid];
+          return {
+            id: String(gid),
+            name: info?.name || `Nhóm ${gid}`,
+            totalMember: info?.totalMember || (Array.isArray(info?.memberIds) ? info.memberIds.length : undefined),
+            avatar: info?.avt,
+          };
+        });
+      } catch (errInfo: any) {
+        console.warn('[ZaloBot] getGroupInfo failed, falling back to ID list:', errInfo.message);
+        return groupIds.map((gid) => ({
+          id: String(gid),
+          name: `Nhóm ${gid}`,
+        }));
+      }
     } catch (err: any) {
       console.error('[ZaloBot] Failed to get groups:', err.message);
       return [];
