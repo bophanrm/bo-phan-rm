@@ -127,8 +127,38 @@ class ZaloBotService {
     }
   }
 
+  // Giải mã link nhóm Zalo (ví dụ https://zalo.me/g/qxgadv733) thành ID nhóm thực tế
+  public async resolveGroupLink(linkOrCode: string): Promise<{ groupId: string; name?: string } | null> {
+    if (!this.api) return null;
+    try {
+      const fullLink = linkOrCode.startsWith('http') ? linkOrCode : `https://zalo.me/g/${linkOrCode}`;
+      console.log('[ZaloBot] Resolving group link:', fullLink);
+      const res = await this.api.getGroupLinkInfo({ link: fullLink });
+      console.log('[ZaloBot] getGroupLinkInfo result:', JSON.stringify(res));
+      if (res && res.groupId) {
+        return {
+          groupId: String(res.groupId),
+          name: res.name || undefined,
+        };
+      }
+    } catch (e: any) {
+      console.error('[ZaloBot] Failed to resolve group link:', e.message);
+    }
+    return null;
+  }
+
   // Cập nhật cấu hình (Nhóm Zalo, các nút bật/tắt)
   public async updateConfig(newConfig: Partial<ZaloBotConfig>) {
+    if (newConfig.groupId && (newConfig.groupId.includes('zalo.me') || !/^\d+$/.test(newConfig.groupId))) {
+      const resolved = await this.resolveGroupLink(newConfig.groupId);
+      if (resolved) {
+        newConfig.groupId = resolved.groupId;
+        if (resolved.name) {
+          newConfig.groupName = resolved.name;
+        }
+      }
+    }
+
     this.config = { ...this.config, ...newConfig };
     try {
       if (fs.existsSync(SESSION_FILE_PATH)) {

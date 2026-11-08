@@ -112,7 +112,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
     const groupName = groups.find((g) => g.id === targetGroupId)?.name || null;
 
     try {
-      await fetch('/api/zalo/config', {
+      const res = await fetch('/api/zalo/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -121,6 +121,10 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
           ...config,
         }),
       });
+      const data = await res.json();
+      if (data?.config?.groupId) {
+        setSelectedGroupId(data.config.groupId);
+      }
       fetchStatus();
     } catch (err) {
       console.error('Lỗi lưu cấu hình:', err);
@@ -265,13 +269,13 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
 
                 <div className="space-y-1.5 pt-1">
                   <label className="text-[11px] font-bold text-slate-600 flex items-center justify-between">
-                    <span>{groups.length > 0 ? 'Hoặc nhập / dán trực tiếp ID nhóm Zalo:' : 'Nhập / dán trực tiếp ID nhóm Zalo:'}</span>
-                    {selectedGroupId && <span className="text-[10px] text-emerald-600 font-bold">Đã chọn: {selectedGroupId}</span>}
+                    <span>Dán đường link nhóm hoặc ID nhóm:</span>
+                    {selectedGroupId && <span className="text-[10px] text-emerald-600 font-bold">Đã lưu: {selectedGroupId}</span>}
                   </label>
                   <div className="flex space-x-2">
                     <input
                       type="text"
-                      placeholder="Dán dãy số ID nhóm (ví dụ: 8294719284719284)"
+                      placeholder="Dán link (https://zalo.me/g/qxgadv733) hoặc ID nhóm"
                       value={selectedGroupId}
                       onChange={(e) => setSelectedGroupId(e.target.value.trim())}
                       className="flex-1 text-xs font-mono font-bold bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -279,16 +283,14 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                     <button
                       type="button"
                       onClick={() => handleSaveConfig(selectedGroupId)}
-                      className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold shrink-0 transition-colors"
+                      className="px-3.5 py-2 bg-[#0068FF] hover:bg-[#0052cc] text-white rounded-lg text-xs font-bold shrink-0 transition-colors shadow-xs"
                     >
-                      Lưu ID
+                      Lưu Nhóm
                     </button>
                   </div>
-                  <div className="bg-blue-50/80 border border-blue-200/80 rounded-lg p-2 text-[11px] text-blue-900 space-y-1">
-                    <p className="font-semibold text-blue-950">📌 Cách lấy ID nhóm trong 5 giây:</p>
-                    <p>1. Vào web <strong>chat.zalo.me</strong> trên máy tính & bấm vào nhóm chat.</p>
-                    <p>2. Nhìn lên link trình duyệt có dạng: <code className="bg-white px-1 py-0.5 rounded text-blue-800 font-mono text-[10px]">chat.zalo.me/g/<strong>8294719284719284</strong></code></p>
-                    <p>3. Copy dãy số ở cuối link đó dán vào ô trên rồi bấm <strong>Lưu ID</strong>.</p>
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-[11px] text-emerald-900 flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Hệ thống hỗ trợ tự động giải mã đường link <strong>https://zalo.me/g/...</strong> thành ID nhóm chuẩn!</span>
                   </div>
                 </div>
 
