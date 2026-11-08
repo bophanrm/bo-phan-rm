@@ -26,6 +26,11 @@ import {
 import { getPersonalName } from '@/utils/nameHelper';
 import { calculateShiftTimes } from '@/utils/shiftHelper';
 import { supabase } from '@/lib/supabase';
+import {
+  notifyNewTaskToZalo,
+  notifyDailyShiftReminderToZalo,
+  notifyProjectDeadlineReminderToZalo,
+} from '@/utils/zaloHelper';
 
 // Predefined Team Groups / Tổ Đội chính thức
 export const INITIAL_TEAMS: TeamGroup[] = [
@@ -1121,8 +1126,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const checkDailyTaskReminders = () => {
       const now = new Date();
       const todayStr = now.toISOString().split('T')[0];
+      const overdueDailyTasksForZalo: Task[] = [];
 
       tasks.forEach((t) => {
+        // Xử lý nhắc nhở dự án dài hạn (Chưa xong và gần đến hạn trong vòng 1-3 ngày)
+        if (!t.isDaily && t.status !== 'APPROVED' && !t.isManagementOnly) {
+          const dueTimestamp = new Date(t.reportDeadline || t.dueDate).getTime();
+          const diffDays = Math.ceil((dueTimestamp - now.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays >= 0 && diffDays <= 2) {
+            const projectZaloKey = `zalo-project-remind-${t.id}-${todayStr}`;
+            if (!localStorage.getItem(projectZaloKey)) {
+              localStorage.setItem(projectZaloKey, 'sent');
+              notifyProjectDeadlineReminderToZalo(t, users, diffDays);
+            }
+          }
+          return;
+        }
+
         if (!t.isDaily) return;
         // Bỏ qua nếu đã được duyệt hoặc đã nộp đang chờ duyệt
         if (t.status === 'APPROVED' || t.status === 'SUBMITTED') return;
@@ -1137,6 +1157,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const reminderTime = new Date(deadline.getTime() - 60 * 60 * 1000);
 
         if (now >= reminderTime) {
+          overdueDailyTasksForZalo.push(t);
           t.assignedTo.forEach((assigneeId) => {
             const notifKey = `remind-daily-${t.id}-${assigneeId}-${todayStr}`;
             setNotifications((prev) => {
@@ -1157,12 +1178,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           });
         }
       });
+
+      // Tự động bắn thông báo nhắc việc tổng hợp 15:00 vào Nhóm Zalo (Mỗi ngày gửi 1 lần duy nhất)
+      if (overdueDailyTasksForZalo.length > 0) {
+        const dailyZaloKey = `zalo-daily-remind-${todayStr}`;
+        if (!localStorage.getItem(dailyZaloKey)) {
+          localStorage.setItem(dailyZaloKey, 'sent');
+          notifyDailyShiftReminderToZalo(overdueDailyTasksForZalo, users);
+        }
+      }
     };
 
     checkDailyTaskReminders();
     const interval = setInterval(checkDailyTaskReminders, 30000);
     return () => clearInterval(interval);
-  }, [tasks]);
+  }, [tasks, users]);
 
   const updateShifts = (newShifts: WorkShiftAssignment[]) => {
     setShifts(newShifts);
@@ -1604,6 +1634,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     updateNotifications([...leadNotifs, ...createdNotifs, ...notifications]);
+
+    // Tự động bắn thông báo công việc mới vào Nhóm Zalo chung (nếu bot đã kết nối)
+    notifyNewTaskToZalo(newTask, users, currentUser);
   };
 
   // Submit report (Gửi về CÙNG LÚC cho Trưởng phòng VÀ Thư ký)

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { NotificationDrawer } from '../notifications/NotificationDrawer';
 import { BackupDrawer } from '../backup/BackupDrawer';
+import { ZaloBotModal } from '../zalo/ZaloBotModal';
 import { getPersonalName } from '@/utils/nameHelper';
 import { canAssignProject as checkCanAssignProject, canAssignAnyTask, canViewTask } from '@/utils/permissions';
 
@@ -34,6 +35,7 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
   const { currentUser, setCurrentUser, users, tasks, unreadCount, unreadMessagesCount } = useApp();
   const [showNotifs, setShowNotifs] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
+  const [showZaloBot, setShowZaloBot] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
 
   const canAssign = canAssignAnyTask(currentUser);
@@ -140,6 +142,20 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
                 </span>
               )}
             </button>
+
+            {/* Nút Cấu hình Zalo Bot - Hiển thị cho Admin, Cấp 1, Cấp 2 */}
+            {(currentUser.role === 'ADMIN' || currentUser.level === 'LEVEL_1_MANAGER' || currentUser.level === 'LEVEL_2_SECRETARY') && (
+              <button
+                onClick={() => setShowZaloBot(true)}
+                title="Cấu hình Bot Zalo tự động nhắc việc (Tài khoản Chị Nguyên)"
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-blue-50 text-[#0068FF] hover:bg-blue-100 flex items-center space-x-1.5 font-bold text-xs transition-all border border-blue-200"
+              >
+                <span className="w-4 h-4 rounded-md bg-[#0068FF] text-white flex items-center justify-center font-black text-[10px]">
+                  Z
+                </span>
+                <span className="hidden sm:inline text-xs font-bold">Bot Zalo</span>
+              </button>
+            )}
 
             {/* Nút sao lưu thủ công - CHỈ hiển thị trên tài khoản Quản trị viên (ADMIN) */}
             {currentUser.role === 'ADMIN' && (
@@ -328,6 +344,9 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
 
       {/* Backup Drawer */}
       <BackupDrawer isOpen={showBackup} onClose={() => setShowBackup(false)} />
+
+      {/* Zalo Bot Modal */}
+      <ZaloBotModal isOpen={showZaloBot} onClose={() => setShowZaloBot(false)} />
     </>
   );
 }
