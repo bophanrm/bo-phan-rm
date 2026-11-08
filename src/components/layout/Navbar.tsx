@@ -143,11 +143,11 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
               )}
             </button>
 
-            {/* Nút Cấu hình Zalo Bot - Hiển thị cho Admin, Cấp 1, Cấp 2 */}
-            {(currentUser.role === 'ADMIN' || currentUser.level === 'LEVEL_1_MANAGER' || currentUser.level === 'LEVEL_2_SECRETARY') && (
+            {/* Nút Cấu hình Zalo Bot - CHỈ hiển thị trên tài khoản Quản trị viên (ADMIN) */}
+            {currentUser.role === 'ADMIN' && (
               <button
                 onClick={() => setShowZaloBot(true)}
-                title="Cấu hình Bot Zalo tự động nhắc việc (Tài khoản Chị Nguyên)"
+                title="Cấu hình Bot Zalo tự động nhắc việc (Chỉ Quản trị viên)"
                 className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-blue-50 text-[#0068FF] hover:bg-blue-100 flex items-center space-x-1.5 font-bold text-xs transition-all border border-blue-200"
               >
                 <span className="w-4 h-4 rounded-md bg-[#0068FF] text-white flex items-center justify-center font-black text-[10px]">
