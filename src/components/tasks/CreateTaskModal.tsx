@@ -2,8 +2,23 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { X, Calendar, Clock, Users, UserCheck, PlusCircle, CheckSquare, Layers, Shield, BellRing } from 'lucide-react';
-import { Priority, StaffLevel } from '@/types';
+import {
+  X,
+  Calendar,
+  Clock,
+  Users,
+  UserCheck,
+  PlusCircle,
+  CheckSquare,
+  Layers,
+  Shield,
+  BellRing,
+  ShieldCheck,
+  Star,
+  AlertTriangle,
+  AlertCircle,
+} from 'lucide-react';
+import { Priority, StaffLevel, User } from '@/types';
 import { canAssignProject as checkCanAssignProject, canAssignToTarget, STAFF_LEVEL_LABELS, getLevelRank } from '@/utils/permissions';
 import { getPersonalName } from '@/utils/nameHelper';
 import { calculateShiftTimes } from '@/utils/shiftHelper';
@@ -102,7 +117,21 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
     }
     return assignableUsers.slice(0, 1).map((u) => u.id);
   });
-  const [leadId, setLeadId] = useState<string>(initialAssigneeId || selectedMemberIds[0] || '');
+  const [leadId, setLeadId] = useState<string>(() => {
+    if (initialAssigneeId) return initialAssigneeId;
+    if (teams.length > 0 && teams[0]) {
+      const t = teams[0];
+      const members = t.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[];
+      const supervisor = members.find((m) => m.level === 'LEVEL_3_LEAD');
+      if (supervisor) return supervisor.id;
+      if (t.leaderId) {
+        const leader = members.find((m) => m.id === t.leaderId);
+        if (leader) return leader.id;
+      }
+      return '';
+    }
+    return '';
+  });
 
   // Reviewers: Mặc định báo cáo gửi đồng thời cho Quản lý (Cấp 1) và Điều phối (Cấp 2)
   const defaultReviewerIds = users
@@ -153,7 +182,25 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       const valid = team.memberIds.filter((id) => assignableUsers.some((u) => u.id === id));
       const chosen = valid.length > 0 ? valid : team.memberIds;
       setSelectedMemberIds(chosen);
-      setLeadId(chosen[0] || '');
+
+      // Quy tắc phân công người giám sát hiện trường:
+      // 1. Mặc định là Giám Sát của tổ (Cấp 3 • LEVEL_3_LEAD)
+      // 2. Nếu tổ không có Giám Sát -> Mặc định là Tổ Trưởng (team.leaderId)
+      // 3. Nếu tổ không có cả Giám Sát lẫn Tổ Trưởng -> Để trống ('') để hiển thị thông báo yêu cầu chọn
+      const members = team.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[];
+      const supervisor = members.find((m) => m.level === 'LEVEL_3_LEAD');
+      if (supervisor) {
+        setLeadId(supervisor.id);
+      } else if (team.leaderId) {
+        const leader = members.find((m) => m.id === team.leaderId);
+        if (leader) {
+          setLeadId(leader.id);
+        } else {
+          setLeadId('');
+        }
+      } else {
+        setLeadId('');
+      }
     }
   };
 
@@ -185,6 +232,15 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
 
     if (selectedMemberIds.length === 0) {
       alert('Vui lòng chọn ít nhất 1 người hoặc 1 tổ thực hiện.');
+      return;
+    }
+
+    // Nếu giao theo tổ nhưng tổ không có cả Giám Sát lẫn Tổ Trưởng và người dùng chưa chọn ai làm Giám Sát Hiện Trường:
+    if (assignMode === 'TEAM' && !leadId) {
+      const currentTeam = teams.find((t) => t.id === selectedTeamId);
+      alert(
+        `⚠️ Tổ "${currentTeam?.name || 'này'}" hiện chưa có Giám Sát và chưa bổ nhiệm Tổ Trưởng.\n\nVui lòng chọn một người làm Giám Sát Hiện Trường trước khi giao việc!`
+      );
       return;
     }
 
@@ -515,51 +571,211 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
             )}
 
             {/* Chọn Giám Sát Hiện Trường / Đầu Mối Chính */}
-            {selectedMemberIds.length > 0 && (
-              <div className="pt-2.5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs">
-                <div className="flex items-center space-x-1.5">
-                  <span className="text-slate-700 font-bold">Giám sát hiện trường / Đầu mối chính:</span>
-                  <span className="text-[10px] text-slate-400">(Tùy chọn)</span>
-                </div>
-                <select
-                  value={leadId}
-                  onChange={(e) => setLeadId(e.target.value)}
-                  className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">
-                    {selectedMemberIds.length === 1
-                      ? `-- Mặc định (${getPersonalName(users.find((u) => u.id === selectedMemberIds[0])?.name, false)}) --`
-                      : '-- Tự động (Người đầu tiên) --'}
-                  </option>
-                  <optgroup label="Cấp 3 • Giám Sát Hiện Trường">
-                    {users
-                      .filter((u) => u.level === 'LEVEL_3_LEAD')
-                      .map((u) => (
-                        <option key={u.id} value={u.id}>
-                          ⭐ {getPersonalName(u.name, false)}
-                        </option>
-                      ))}
-                  </optgroup>
-                  {selectedMemberIds.length > 1 && (
-                    <optgroup label="Nhân Sự Trong Nhóm Được Giao">
-                      {selectedMemberIds
-                        .filter((id) => {
-                          const u = users.find((user) => user.id === id);
-                          return u?.level !== 'LEVEL_3_LEAD';
-                        })
-                        .map((id) => {
-                          const u = users.find((user) => user.id === id);
-                          return (
-                            <option key={id} value={id}>
-                              👤 {getPersonalName(u?.name, false)}
+            {selectedMemberIds.length > 0 && (() => {
+              const currentTeam = assignMode === 'TEAM' ? teams.find((t) => t.id === selectedTeamId) : null;
+              const currentTeamMembers = currentTeam
+                ? (currentTeam.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[])
+                : [];
+              const currentTeamSupervisor = currentTeamMembers.find((m) => m.level === 'LEVEL_3_LEAD');
+              const currentTeamLeader = currentTeam?.leaderId
+                ? currentTeamMembers.find((m) => m.id === currentTeam.leaderId)
+                : null;
+              const isMissingSupervisorAndLeader = assignMode === 'TEAM' && !currentTeamSupervisor && !currentTeamLeader;
+
+              return (
+                <div className="pt-2.5 border-t border-slate-200 space-y-2 text-xs">
+                  {assignMode === 'TEAM' ? (
+                    isMissingSupervisorAndLeader ? (
+                      /* TRƯỜNG HỢP 3: TỔ KHÔNG CÓ CẢ GIÁM SÁT LẪN TỔ TRƯỞNG -> HIỂN THỊ THÔNG BÁO HỎI CHỌN */
+                      <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-3.5 space-y-2.5 shadow-xs animate-fade-in">
+                        <div className="flex items-start space-x-2 text-amber-950">
+                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-extrabold text-xs text-amber-950">
+                              Tổ {currentTeam?.name} chưa có Giám Sát & chưa bổ nhiệm Tổ Trưởng!
+                            </p>
+                            <p className="text-[11px] text-amber-800 leading-relaxed mt-0.5">
+                              Hệ thống yêu cầu chỉ định 1 nhân sự làm <strong>Giám sát hiện trường</strong> để chỉ đạo & đôn đốc công việc này:
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <select
+                            required
+                            value={leadId}
+                            onChange={(e) => setLeadId(e.target.value)}
+                            className={`w-full bg-white border-2 rounded-xl px-3 py-2 text-xs font-bold transition-all outline-none ${
+                              !leadId
+                                ? 'border-amber-400 text-amber-900 ring-2 ring-amber-200'
+                                : 'border-blue-500 text-blue-900 ring-1 ring-blue-500'
+                            }`}
+                          >
+                            <option value="">
+                              -- ⚠️ BẮT BUỘC: HÃY CHỌN NGƯỜI LÀM GIÁM SÁT HIỆN TRƯỜNG --
                             </option>
-                          );
-                        })}
-                    </optgroup>
+                            <optgroup label={`Nhân Sự Trong ${currentTeam?.name || 'Tổ'}`}>
+                              {currentTeamMembers.map((m) => (
+                                <option key={m.id} value={m.id}>
+                                  👤 {getPersonalName(m.name, true)} {m.employeeId ? `[${m.employeeId}]` : ''}
+                                </option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="Hoặc Cử Giám Sát Ca (Cấp 3) Khác">
+                              {users
+                                .filter((u) => u.level === 'LEVEL_3_LEAD')
+                                .map((u) => (
+                                  <option key={u.id} value={u.id}>
+                                    ⭐ {getPersonalName(u.name, true)} [Giám Sát Ca]
+                                  </option>
+                                ))}
+                            </optgroup>
+                          </select>
+                          {!leadId && (
+                            <p className="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1">
+                              <AlertCircle className="w-3.5 h-3.5" />
+                              <span>Vui lòng chọn người phụ trách hiện trường trước khi tiếp tục giao việc!</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : currentTeamSupervisor ? (
+                      /* TRƯỜNG HỢP 1: TỔ CÓ GIÁM SÁT -> MẶC ĐỊNH LÀ GIÁM SÁT */
+                      <div className="bg-purple-50/70 border border-purple-200/90 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center space-x-1.5">
+                            <ShieldCheck className="w-4 h-4 text-purple-700 shrink-0" />
+                            <span className="font-bold text-xs text-purple-950">Giám sát hiện trường mặc định:</span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900">
+                              Cấp 3 • Giám Sát
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-purple-800">
+                            Mặc định chọn Giám Sát của tổ: <strong>{getPersonalName(currentTeamSupervisor.name, true)}</strong>
+                          </p>
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 shrink-0">
+                          <span className="text-[11px] text-slate-500 font-medium">Thay đổi:</span>
+                          <select
+                            value={leadId}
+                            onChange={(e) => setLeadId(e.target.value)}
+                            className="bg-white border border-purple-300 rounded-lg px-2.5 py-1 text-xs font-bold text-purple-950 focus:ring-2 focus:ring-purple-500 outline-none"
+                          >
+                            <option value={currentTeamSupervisor.id}>
+                              ⭐ {getPersonalName(currentTeamSupervisor.name, true)} (Giám Sát Mặc Định)
+                            </option>
+                            <optgroup label="Đổi sang thành viên khác trong tổ">
+                              {currentTeamMembers
+                                .filter((m) => m.id !== currentTeamSupervisor.id)
+                                .map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    👤 {getPersonalName(m.name, true)}
+                                  </option>
+                                ))}
+                            </optgroup>
+                          </select>
+                        </div>
+                      </div>
+                    ) : (
+                      /* TRƯỜNG HỢP 2: TỔ KHÔNG CÓ GIÁM SÁT, NHƯNG CÓ TỔ TRƯỞNG -> MẶC ĐỊNH LÀ TỔ TRƯỞNG */
+                      <div className="bg-amber-50/70 border border-amber-200/90 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center space-x-1.5">
+                            <Star className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" />
+                            <span className="font-bold text-xs text-amber-950">Giám sát hiện trường mặc định:</span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-200 text-amber-900">
+                              Tổ Trưởng
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-amber-800">
+                            Tổ không có Giám Sát. Mặc định chọn Tổ Trưởng: <strong>{getPersonalName(currentTeamLeader?.name, true)}</strong>
+                          </p>
+                        </div>
+
+                        <div className="flex items-center space-x-1.5 shrink-0">
+                          <span className="text-[11px] text-slate-500 font-medium">Thay đổi:</span>
+                          <select
+                            value={leadId}
+                            onChange={(e) => setLeadId(e.target.value)}
+                            className="bg-white border border-amber-300 rounded-lg px-2.5 py-1 text-xs font-bold text-amber-950 focus:ring-2 focus:ring-amber-500 outline-none"
+                          >
+                            {currentTeamLeader && (
+                              <option value={currentTeamLeader.id}>
+                                ⭐ {getPersonalName(currentTeamLeader.name, true)} (Tổ Trưởng Mặc Định)
+                              </option>
+                            )}
+                            <optgroup label="Đổi sang thành viên khác trong tổ">
+                              {currentTeamMembers
+                                .filter((m) => m.id !== currentTeamLeader?.id)
+                                .map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    👤 {getPersonalName(m.name, true)}
+                                  </option>
+                                ))}
+                            </optgroup>
+                            <optgroup label="Cử Giám Sát Ca (Cấp 3) Khác">
+                              {users
+                                .filter((u) => u.level === 'LEVEL_3_LEAD')
+                                .map((u) => (
+                                  <option key={u.id} value={u.id}>
+                                    🛡️ {getPersonalName(u.name, true)}
+                                  </option>
+                                ))}
+                            </optgroup>
+                          </select>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    /* GIAO THEO CUSTOM SELECTION (TÙY CHỌN NHIỀU NHÂN SỰ) */
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-slate-700 font-bold">Giám sát hiện trường / Đầu mối chính:</span>
+                        <span className="text-[10px] text-slate-400">(Tùy chọn)</span>
+                      </div>
+                      <select
+                        value={leadId}
+                        onChange={(e) => setLeadId(e.target.value)}
+                        className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">
+                          {selectedMemberIds.length === 1
+                            ? `-- Mặc định (${getPersonalName(users.find((u) => u.id === selectedMemberIds[0])?.name, false)}) --`
+                            : '-- Tự động (Người đầu tiên) --'}
+                        </option>
+                        <optgroup label="Cấp 3 • Giám Sát Hiện Trường">
+                          {users
+                            .filter((u) => u.level === 'LEVEL_3_LEAD')
+                            .map((u) => (
+                              <option key={u.id} value={u.id}>
+                                ⭐ {getPersonalName(u.name, false)}
+                              </option>
+                            ))}
+                        </optgroup>
+                        {selectedMemberIds.length > 1 && (
+                          <optgroup label="Nhân Sự Trong Nhóm Được Giao">
+                            {selectedMemberIds
+                              .filter((id) => {
+                                const u = users.find((user) => user.id === id);
+                                return u?.level !== 'LEVEL_3_LEAD';
+                              })
+                              .map((id) => {
+                                const u = users.find((user) => user.id === id);
+                                return (
+                                  <option key={id} value={id}>
+                                    👤 {getPersonalName(u?.name, false)}
+                                  </option>
+                                );
+                              })}
+                          </optgroup>
+                        )}
+                      </select>
+                    </div>
                   )}
-                </select>
-              </div>
-            )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Priority & Deadlines (Đối chiếu trực tiếp với ca trực của người được giao) */}
