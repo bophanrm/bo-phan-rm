@@ -4971,10 +4971,10 @@
       "id": "shift-user-1794029487288-2026-11-09",
       "date": "2026-11-09",
       "userId": "user-1794029487288",
-      "shiftId": "CA_3",
+      "shiftId": "OFF",
       "userName": "Nguyễn Minh Trí",
       "isHalfDay": false,
-      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "updatedAt": "2026-11-08T14:59:18.264Z",
       "assignedBy": "user-1794028728863"
     },
     {
@@ -5041,10 +5041,10 @@
       "id": "shift-user-1794029518886-2026-11-09",
       "date": "2026-11-09",
       "userId": "user-1794029518886",
-      "shiftId": "OFF",
+      "shiftId": "CA_3",
       "userName": "Trần Hoàng Minh",
       "isHalfDay": false,
-      "updatedAt": "2026-11-07T10:29:14.189Z",
+      "updatedAt": "2026-11-08T14:59:18.264Z",
       "assignedBy": "user-1794028728863"
     },
     {
