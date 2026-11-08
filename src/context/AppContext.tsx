@@ -1130,7 +1130,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       tasks.forEach((t) => {
         // Xử lý nhắc nhở dự án dài hạn (Chưa xong và gần đến hạn trong vòng 1-3 ngày)
-        if (!t.isDaily && t.status !== 'APPROVED' && !t.isManagementOnly) {
+        if (!t.isDaily && t.status !== 'APPROVED' && !t.isManagementOnly && !t.isDirectToStaff) {
           const dueTimestamp = new Date(t.reportDeadline || t.dueDate).getTime();
           const diffDays = Math.ceil((dueTimestamp - now.getTime()) / (1000 * 60 * 60 * 24));
           if (diffDays >= 0 && diffDays <= 2) {
@@ -1157,7 +1157,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const reminderTime = new Date(deadline.getTime() - 60 * 60 * 1000);
 
         if (now >= reminderTime) {
-          overdueDailyTasksForZalo.push(t);
+          if (!t.isManagementOnly && !t.isDirectToStaff) {
+            overdueDailyTasksForZalo.push(t);
+          }
           t.assignedTo.forEach((assigneeId) => {
             const notifKey = `remind-daily-${t.id}-${assigneeId}-${todayStr}`;
             setNotifications((prev) => {
@@ -1605,18 +1607,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const createdNotifs: NotificationItem[] = validAssignees.map((memberId, idx) => ({
       id: `notif-${Date.now()}-${idx}`,
       userId: memberId,
-      title: taskData.teamName ? `Việc mới giao cho [${taskData.teamName}]!` : 'Bạn có công việc mới được giao!',
-      message: `${getPersonalName(currentUser.name)} vừa giao việc: "${taskData.title}". Hạn nộp báo cáo: ${new Date(
-        taskData.reportDeadline
-      ).toLocaleDateString('vi-VN')}.`,
+      title: taskData.isDirectToStaff
+        ? '🔒 Ban Quản Lý (Cấp 1) giao việc riêng cho bạn'
+        : taskData.teamName
+        ? `Việc mới giao cho [${taskData.teamName}]!`
+        : 'Bạn có công việc mới được giao!',
+      message: taskData.isDirectToStaff
+        ? `${getPersonalName(currentUser.name)} vừa giao việc riêng trực tiếp: "${taskData.title}". Báo cáo hoàn thành sẽ nộp trực tiếp cho Cấp 1 phê duyệt.`
+        : `${getPersonalName(currentUser.name)} vừa giao việc: "${taskData.title}". Hạn nộp báo cáo: ${new Date(
+            taskData.reportDeadline
+          ).toLocaleDateString('vi-VN')}.`,
       taskId: newTask.id,
       isRead: false,
       createdAt: new Date().toISOString(),
     }));
 
     // Điểm 1 (Cách A): Nếu người giao là Cấp 2 (Điều Phối), gửi thêm thông báo cho các Tổ trưởng (Cấp 3 Lead) phụ trách của tổ đó
+    // Lưu ý: Không gửi nếu là việc nội bộ BQL hoặc việc riêng trực tiếp (isDirectToStaff)
     const leadNotifs: NotificationItem[] = [];
-    if (!taskData.isManagementOnly && (currentUser.level === 'LEVEL_2_SECRETARY' || currentUser.role === 'SECRETARY')) {
+    if (!taskData.isManagementOnly && !taskData.isDirectToStaff && (currentUser.level === 'LEVEL_2_SECRETARY' || currentUser.role === 'SECRETARY')) {
       taskData.reviewers?.forEach((reviewerId, idx) => {
         const reviewerUser = users.find((u) => u.id === reviewerId);
         if (reviewerUser?.level === 'LEVEL_3_LEAD' && !taskData.assignedTo.includes(reviewerId)) {

@@ -251,7 +251,7 @@ export default function Home() {
               <div>
                 <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 uppercase tracking-wider">Đã hoàn thành</p>
                 <h3 className="text-lg sm:text-xl font-bold text-emerald-600 leading-tight">
-                  {tasks.filter((t) => t.status === 'APPROVED').length}
+                  {visibleTasks.filter((t) => t.status === 'APPROVED').length}
                 </h3>
               </div>
             </div>

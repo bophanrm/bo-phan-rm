@@ -271,6 +271,7 @@ export interface Task {
   priority: Priority;
   isDaily?: boolean; // Việc hằng ngày do Thư ký/Trưởng phòng giao
   isManagementOnly?: boolean; // Công việc nội bộ Ban Quản Lý (chỉ Cấp 1 thấy)
+  isDirectToStaff?: boolean; // Cấp 1 giao việc riêng không thông qua giám sát (chỉ Cấp 1 và nhân viên được giao thấy, báo cáo thẳng Cấp 1)
   timeSlot?: 'MORNING' | 'AFTERNOON' | 'FULL_DAY'; // Khung giờ thực hiện trong ngày
   startDate: string; // ISO string
   dueDate: string; // ISO string

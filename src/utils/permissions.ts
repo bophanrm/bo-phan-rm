@@ -217,6 +217,20 @@ export function canManageTeams(user?: User | null): boolean {
 }
 
 /**
+ * Kiểm tra xem người dùng có thuộc Ban Quản Lý (Cấp 1) hay không.
+ */
+export function isLevel1Manager(user?: User | null): boolean {
+  if (!user) return false;
+  return (
+    user.id === 'user-tong-truong-xa' ||
+    user.id === 'user-nguyen-tran-hoang-vu' ||
+    user.level === 'LEVEL_1_MANAGER' ||
+    user.role === 'ADMIN' ||
+    user.role === 'MANAGER'
+  );
+}
+
+/**
  * Kiểm tra xem một nhân sự có thuộc Cấp 4 (Nhân Viên) hay không.
  */
 export function isLevel4Staff(user?: User | null): boolean {
@@ -250,6 +264,12 @@ export function canReviewTask(user?: User | null, task?: Task | null, allUsers?:
   // 1. Không bao giờ được tự duyệt công việc được giao cho chính bản thân mình làm (kể cả Cấp 1)
   if (task.assignedTo.includes(user.id)) {
     return false;
+  }
+
+  // Cơ chế Cấp 1 giao việc riêng không thông qua giám sát:
+  // CHỈ CÓ Cấp 1 (Ban Quản Lý) mới có quyền duyệt báo cáo. Cấp 2 và Cấp 3 KHÔNG ĐƯỢC DUYỆT.
+  if (task.isDirectToStaff) {
+    return isLevel1Manager(user);
   }
 
   // 2. Cấp 1 (Quản Lý: Anh Xa, Anh Vũ): Toàn quyền duyệt tất cả công việc trong hệ thống
@@ -322,6 +342,11 @@ export function canDirectlyExtendTask(user?: User | null, task?: Task | null, al
 
   // Cấp 4 (Nhân Viên) không có quyền tự thay đổi hạn chót công việc
   if (isLevel4Staff(user)) return false;
+
+  // Nếu là công việc Cấp 1 giao riêng trực tiếp không qua giám sát: chỉ Cấp 1 có quyền thay đổi hạn
+  if (task.isDirectToStaff) {
+    return isLevel1Manager(user);
+  }
 
   // Cấp 1 có toàn quyền
   if (
@@ -464,16 +489,18 @@ export function canApproveExtensionRequest(user?: User | null, task?: Task | nul
 export function canViewTask(user?: User | null, task?: Task | null, allUsers?: User[]): boolean {
   if (!user || !task) return false;
 
-  const isLevel1 =
-    user.id === 'user-tong-truong-xa' ||
-    user.id === 'user-nguyen-tran-hoang-vu' ||
-    user.level === 'LEVEL_1_MANAGER' ||
-    user.role === 'ADMIN' ||
-    user.role === 'MANAGER';
+  const isLevel1 = isLevel1Manager(user);
 
   // Điểm 4: Công việc nội bộ Ban Quản Lý -> CHỈ Cấp 1 thấy
   if (task.isManagementOnly) {
     return isLevel1;
+  }
+
+  // Cơ chế Cấp 1 giao việc riêng không thông qua giám sát:
+  // Lúc này CHỈ CÓ Cấp 1 (Ban Quản Lý) và chính nhân viên được giao việc (task.assignedTo.includes(user.id)) mới nhìn thấy.
+  // Nhân viên giám sát (Cấp 3), Tổ trưởng, Điều phối (Cấp 2) hoàn toàn KHÔNG THẤY!
+  if (task.isDirectToStaff) {
+    return isLevel1 || task.assignedTo.includes(user.id);
   }
 
   // 1. Cấp 1 & Cấp 2 thấy tất cả các công việc thông thường

@@ -74,8 +74,13 @@ export function TaskCard({ task, onOpenReportModal, onOpenReviewModal }: TaskCar
       <div>
         {/* Header Badges */}
         <div className="flex items-center justify-between gap-2 mb-2.5">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             {getPriorityBadge()}
+            {task.isDirectToStaff && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 flex items-center gap-1">
+                <span>🔒 Việc riêng Cấp 1</span>
+              </span>
+            )}
             {isOverdue && (
               <span className="flex items-center space-x-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
                 <AlertTriangle className="w-3 h-3" />
@@ -135,7 +140,9 @@ export function TaskCard({ task, onOpenReportModal, onOpenReviewModal }: TaskCar
               <span>Nơi nhận báo cáo:</span>
             </span>
             <span className="font-semibold text-amber-800 truncate max-w-[160px]">
-              {task.reviewerNames && task.reviewerNames.length > 0
+              {task.isDirectToStaff
+                ? 'Ban Quản Lý (Cấp 1 duyệt)'
+                : task.reviewerNames && task.reviewerNames.length > 0
                 ? task.reviewerNames.map((n) => getPersonalName(n)).join(' & ')
                 : 'Trưởng phòng & Nhân Viên Điều Phối'}
             </span>

@@ -19,7 +19,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Priority, StaffLevel, User } from '@/types';
-import { canAssignProject as checkCanAssignProject, canAssignToTarget, STAFF_LEVEL_LABELS, getLevelRank } from '@/utils/permissions';
+import { canAssignProject as checkCanAssignProject, canAssignToTarget, STAFF_LEVEL_LABELS, getLevelRank, isLevel1Manager } from '@/utils/permissions';
 import { getPersonalName } from '@/utils/nameHelper';
 import { calculateShiftTimes } from '@/utils/shiftHelper';
 
@@ -36,6 +36,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
 
   // Chỉ có Anh Xa và Anh Vũ mới có quyền giao dự án & công việc dài hạn
   const canAssignProject = checkCanAssignProject(currentUser);
+  const isLevel1 = isLevel1Manager(currentUser);
 
   // Danh sách nhân sự mà currentUser có quyền giao việc theo phân tầng cấp bậc
   const assignableUsers = users.filter(
@@ -98,6 +99,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
 
   const [isDaily, setIsDaily] = useState<boolean>(!canAssignProject || (initialIsDaily ?? true));
   const [isManagementOnly, setIsManagementOnly] = useState<boolean>(false);
+  const [isDirectToStaff, setIsDirectToStaff] = useState<boolean>(false);
   const [dailyDate, setDailyDate] = useState<string>(
     initialDueDate ? initialDueDate.slice(0, 10) : new Date().toISOString().slice(0, 10)
   );
@@ -231,8 +233,8 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       return;
     }
 
-    // Nếu giao theo tổ nhưng chưa chọn giám sát hiện trường:
-    if (assignMode === 'TEAM' && !leadId) {
+    // Nếu giao theo tổ nhưng chưa chọn giám sát hiện trường (và không phải việc riêng bỏ qua giám sát):
+    if (assignMode === 'TEAM' && !leadId && !isDirectToStaff) {
       const currentTeam = teams.find((t) => t.id === selectedTeamId);
       const members = currentTeam
         ? (currentTeam.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[])
@@ -256,7 +258,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       return u ? getPersonalName(u.name, false) : id;
     });
 
-    // Mặc định luôn báo cáo đồng thời cho Cấp 1 & Cấp 2 (nếu là việc nội bộ Ban Quản Lý thì chỉ Cấp 1) - Quản trị viên không duyệt
+    // Mặc định luôn báo cáo đồng thời cho Cấp 1 & Cấp 2 (nếu là việc nội bộ Ban Quản Lý hoặc việc riêng thì chỉ Cấp 1) - Quản trị viên không duyệt
     const level1UserIds = users
       .filter((u) => u.role !== 'ADMIN' && (u.level === 'LEVEL_1_MANAGER' || u.role === 'MANAGER'))
       .map((u) => u.id);
@@ -264,40 +266,56 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       .filter((u) => u.level === 'LEVEL_2_SECRETARY' || u.role === 'SECRETARY')
       .map((u) => u.id);
 
-    let finalReviewerIds = isManagementOnly
-      ? [...level1UserIds]
-      : Array.from(new Set([...level1UserIds, ...level2UserIds]));
+    let finalReviewerIds: string[] = [];
 
-    if (finalReviewerIds.length === 0) {
-      finalReviewerIds = [currentUser.id];
-    }
-
-    // Điểm 1 (Cách A): Nếu Cấp 2 (Điều Phối) giao việc cho Cấp 4, tự động bổ sung Tổ Trưởng (Cấp 3) của tổ đó vào danh sách đồng nhận & duyệt sơ bộ
-    if (currentUser.level === 'LEVEL_2_SECRETARY' || currentUser.role === 'SECRETARY') {
-      selectedMemberIds.forEach((mId) => {
-        const memberTeam = teams.find((tm) => tm.memberIds.includes(mId));
-        if (memberTeam) {
-          const lead = users.find((u) => u.id === memberTeam.leaderId || (u.level === 'LEVEL_3_LEAD' && memberTeam.memberIds.includes(u.id)));
-          if (lead && !finalReviewerIds.includes(lead.id)) {
-            finalReviewerIds.push(lead.id);
-          }
-        }
-      });
-    }
-
-    // Nếu người giao việc là Cấp 3 (Tổ trưởng / Giám sát), tự động đưa chính mình lên đầu danh sách nhận báo cáo (nếu mình không phải người làm)
-    if (currentUser.level === 'LEVEL_3_LEAD') {
-      if (!finalReviewerIds.includes(currentUser.id) && !selectedMemberIds.includes(currentUser.id)) {
+    if (isDirectToStaff) {
+      // Cơ chế mới: Giao việc riêng trực tiếp cho nhân viên không thông qua giám sát
+      // Báo cáo gửi THẲNG cho Ban Quản Lý (Cấp 1) phê duyệt
+      finalReviewerIds = level1UserIds.length > 0 ? [...level1UserIds] : [currentUser.id];
+      if (!finalReviewerIds.includes(currentUser.id)) {
         finalReviewerIds.unshift(currentUser.id);
+      }
+    } else if (isManagementOnly) {
+      finalReviewerIds = [...level1UserIds];
+      if (finalReviewerIds.length === 0) {
+        finalReviewerIds = [currentUser.id];
+      }
+    } else {
+      finalReviewerIds = Array.from(new Set([...level1UserIds, ...level2UserIds]));
+      if (finalReviewerIds.length === 0) {
+        finalReviewerIds = [currentUser.id];
       }
     }
 
-    const effectiveLeadId = leadId || selectedMemberIds[0];
-    const leadUser = users.find((u) => u.id === effectiveLeadId);
+    // Chỉ bổ sung Giám sát (Cấp 3) vào danh sách nhận báo cáo nếu KHÔNG PHẢI việc riêng trực tiếp (isDirectToStaff)
+    if (!isDirectToStaff && !isManagementOnly) {
+      // Điểm 1 (Cách A): Nếu Cấp 2 (Điều Phối) giao việc cho Cấp 4, tự động bổ sung Tổ Trưởng (Cấp 3) của tổ đó vào danh sách đồng nhận & duyệt sơ bộ
+      if (currentUser.level === 'LEVEL_2_SECRETARY' || currentUser.role === 'SECRETARY') {
+        selectedMemberIds.forEach((mId) => {
+          const memberTeam = teams.find((tm) => tm.memberIds.includes(mId));
+          if (memberTeam) {
+            const lead = users.find((u) => u.id === memberTeam.leaderId || (u.level === 'LEVEL_3_LEAD' && memberTeam.memberIds.includes(u.id)));
+            if (lead && !finalReviewerIds.includes(lead.id)) {
+              finalReviewerIds.push(lead.id);
+            }
+          }
+        });
+      }
 
-    // Nếu chỉ định Cấp 3 khác làm Giám sát hiện trường (effectiveLeadId), bổ sung người đó vào danh sách nhận báo cáo & duyệt sơ bộ
-    if (effectiveLeadId && !finalReviewerIds.includes(effectiveLeadId) && !selectedMemberIds.includes(effectiveLeadId)) {
-      finalReviewerIds.push(effectiveLeadId);
+      // Nếu người giao việc là Cấp 3 (Tổ trưởng / Giám sát), tự động đưa chính mình lên đầu danh sách nhận báo cáo (nếu mình không phải người làm)
+      if (currentUser.level === 'LEVEL_3_LEAD') {
+        if (!finalReviewerIds.includes(currentUser.id) && !selectedMemberIds.includes(currentUser.id)) {
+          finalReviewerIds.unshift(currentUser.id);
+        }
+      }
+
+      const effectiveLeadId = leadId || selectedMemberIds[0];
+      const leadUser = users.find((u) => u.id === effectiveLeadId);
+
+      // Nếu chỉ định Cấp 3 khác làm Giám sát hiện trường (effectiveLeadId), bổ sung người đó vào danh sách nhận báo cáo & duyệt sơ bộ
+      if (effectiveLeadId && !finalReviewerIds.includes(effectiveLeadId) && !selectedMemberIds.includes(effectiveLeadId)) {
+        finalReviewerIds.push(effectiveLeadId);
+      }
     }
 
     const reviewerNames = finalReviewerIds.map((id) => {
@@ -324,14 +342,17 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       computedReport = shiftCalc.reportDeadlineIso; // Hạn nộp báo cáo hoàn thành theo đúng giờ hết ca trực
     }
 
+    const effectiveLead = !isDirectToStaff ? (leadId || selectedMemberIds[0]) : undefined;
+    const leadUserObj = effectiveLead ? users.find((u) => u.id === effectiveLead) : undefined;
+
     createTask({
       title: title.trim(),
       description: description.trim(),
       assignedTo: selectedMemberIds,
       assignedToNames: assignedNames,
       teamName: chosenTeam?.name || (selectedMemberIds.length > 1 ? `Nhóm phối hợp (${selectedMemberIds.length} người)` : undefined),
-      leadId: leadId || selectedMemberIds[0],
-      leadName: getPersonalName(leadUser?.name || assignedNames[0], false),
+      leadId: effectiveLead,
+      leadName: effectiveLead ? getPersonalName(leadUserObj?.name || assignedNames[0], false) : undefined,
       reviewers: finalReviewerIds,
       reviewerNames,
       createdBy: currentUser.id,
@@ -339,6 +360,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       priority,
       isDaily,
       isManagementOnly: canAssignProject ? isManagementOnly : false,
+      isDirectToStaff: isLevel1 ? isDirectToStaff : false,
       timeSlot: isDaily ? 'FULL_DAY' : undefined,
       startDate: computedStart,
       dueDate: computedDue,
@@ -404,13 +426,48 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                 </button>
               </div>
 
+              {/* Chức năng mới: Cấp 1 giao việc riêng không qua giám sát */}
+              <div className="space-y-1.5">
+                <label className={`flex items-center space-x-2.5 p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
+                  isDirectToStaff
+                    ? 'bg-purple-50/90 border-purple-300 text-purple-950 shadow-xs'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-purple-50/50'
+                }`}>
+                  <input
+                    type="checkbox"
+                    checked={isDirectToStaff}
+                    onChange={(e) => {
+                      setIsDirectToStaff(e.target.checked);
+                      if (e.target.checked) {
+                        setIsManagementOnly(false);
+                      }
+                    }}
+                    className="w-4 h-4 text-purple-600 rounded border-purple-300 focus:ring-purple-500 cursor-pointer"
+                  />
+                  <div className="flex items-center space-x-1.5">
+                    <UserCheck className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span>Giao việc riêng cho nhân viên (Không qua Giám sát & Báo cáo thẳng Cấp 1)</span>
+                  </div>
+                </label>
+                {isDirectToStaff && (
+                  <p className="text-[11px] text-purple-900 bg-purple-50/90 p-2.5 rounded-lg border border-purple-200 leading-relaxed font-medium">
+                    🔒 <strong>Bảo mật việc riêng:</strong> Chỉ có nhân viên được chọn và Ban Quản Lý (Cấp 1) mới nhìn thấy công việc này. Giám sát ca, Tổ trưởng và Điều phối hoàn toàn không thấy. Nhân viên sẽ gửi báo cáo trực tiếp cho Cấp 1 phê duyệt. Không gửi thông báo ra nhóm Zalo chung.
+                  </p>
+                )}
+              </div>
+
               {/* Điểm 4: Tùy chọn việc nội bộ Ban Quản Lý (Bảo mật - chỉ Cấp 1 xem) */}
               <div className="space-y-1.5">
                 <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-indigo-50/80 border border-indigo-200 text-xs font-semibold text-indigo-950 cursor-pointer transition-all hover:bg-indigo-100/70">
                   <input
                     type="checkbox"
                     checked={isManagementOnly}
-                    onChange={(e) => setIsManagementOnly(e.target.checked)}
+                    onChange={(e) => {
+                      setIsManagementOnly(e.target.checked);
+                      if (e.target.checked) {
+                        setIsDirectToStaff(false);
+                      }
+                    }}
                     className="w-4 h-4 text-indigo-600 rounded border-indigo-300 focus:ring-indigo-500 cursor-pointer"
                   />
                   <div className="flex items-center space-x-1.5">
@@ -654,7 +711,20 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
             )}
 
             {/* Chọn Giám Sát Hiện Trường / Đầu Mối Chính */}
-            {selectedMemberIds.length > 0 && (() => {
+            {selectedMemberIds.length > 0 && (
+              isDirectToStaff ? (
+                <div className="pt-2.5 border-t border-slate-200">
+                  <div className="bg-purple-50/80 border border-purple-200 rounded-xl p-3 flex items-center space-x-2.5 text-xs text-purple-950">
+                    <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0" />
+                    <div>
+                      <p className="font-bold">Không qua Giám sát hiện trường (Trực tiếp Cấp 1)</p>
+                      <p className="text-[11px] text-purple-800">
+                        Nhân viên sẽ nhận nhiệm vụ và gửi báo cáo nghiệm thu trực tiếp cho Ban Quản Lý (Cấp 1) phê duyệt.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (() => {
               const currentTeam = assignMode === 'TEAM' ? teams.find((t) => t.id === selectedTeamId) : null;
               const currentTeamMembers = currentTeam
                 ? (currentTeam.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[])
@@ -929,7 +999,8 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                   )}
                 </div>
               );
-            })()}
+            })()
+          )}
           </div>
 
           {/* Priority & Deadlines (Đối chiếu trực tiếp với ca trực của người được giao) */}

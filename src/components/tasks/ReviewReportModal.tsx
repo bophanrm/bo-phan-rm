@@ -110,10 +110,11 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
     : 'Ban Quản Lý';
 
   // Resolve reviewer display names
-  const reviewerDisplayNames =
-    task.reviewerNames && task.reviewerNames.length > 0
-      ? task.reviewerNames.map((n) => getPersonalName(n, true)).join(' & ')
-      : 'Tống Trường Xa & Nguyễn Trần Hoàng Vũ';
+  const reviewerDisplayNames = task.isDirectToStaff
+    ? 'Ban Quản Lý (Cấp 1 duyệt trực tiếp)'
+    : task.reviewerNames && task.reviewerNames.length > 0
+    ? task.reviewerNames.map((n) => getPersonalName(n, true)).join(' & ')
+    : 'Tống Trường Xa & Nguyễn Trần Hoàng Vũ';
 
   // Resolve assigned display names
   const assignedDisplayNames =
@@ -310,6 +311,18 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
 
         {/* MODAL BODY (Cuộn linh hoạt) */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-sm">
+
+          {task.isDirectToStaff && (
+            <div className="bg-purple-50/90 border border-purple-200 rounded-2xl p-3.5 flex items-center space-x-2.5 text-xs text-purple-950">
+              <span className="text-lg">🔒</span>
+              <div>
+                <p className="font-bold text-purple-950">Công việc riêng Ban Quản Lý (Cấp 1):</p>
+                <p className="text-[11px] text-purple-800 leading-relaxed mt-0.5">
+                  Nhiệm vụ được giao trực tiếp cho nhân viên, không thông qua Giám sát hiện trường. Báo cáo nghiệm thu sẽ do Ban Quản Lý (Cấp 1) trực tiếp phê duyệt.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* ==================================================== */}
           {/* KHỐI 1: BẢNG HỒ SƠ & THÔNG TIN CHI TIẾT CÔNG VIỆC    */}

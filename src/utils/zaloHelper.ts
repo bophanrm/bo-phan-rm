@@ -26,8 +26,8 @@ export async function sendZaloMessage(
  */
 export async function notifyNewTaskToZalo(task: Task, users: User[], creatorUser?: User) {
   try {
-    // Không gửi các công việc riêng của Ban Quản Lý (Cấp 1) ra ngoài nhóm chung
-    if (task.isManagementOnly) return;
+    // Không gửi các công việc riêng của Ban Quản Lý (Cấp 1) hoặc việc riêng không qua giám sát ra ngoài nhóm chung
+    if (task.isManagementOnly || task.isDirectToStaff) return;
 
     const assignees = users
       .filter((u) => task.assignedTo.includes(u.id))
@@ -83,8 +83,12 @@ export async function notifyDailyShiftReminderToZalo(unsubmittedTasks: Task[], u
   try {
     if (!unsubmittedTasks || unsubmittedTasks.length === 0) return;
 
+    // Lọc bỏ các công việc nội bộ và việc riêng không qua giám sát để bảo mật
+    const safeTasks = unsubmittedTasks.filter((t) => !t.isManagementOnly && !t.isDirectToStaff);
+    if (safeTasks.length === 0) return;
+
     let taskListText = '';
-    unsubmittedTasks.slice(0, 10).forEach((t, idx) => {
+    safeTasks.slice(0, 10).forEach((t, idx) => {
       const assignees = users
         .filter((u) => t.assignedTo.includes(u.id))
         .map((u) => `@${getPersonalName(u.name, true)}`)
@@ -92,8 +96,8 @@ export async function notifyDailyShiftReminderToZalo(unsubmittedTasks: Task[], u
       taskListText += `${idx + 1}. ${t.title} (${assignees})\n`;
     });
 
-    if (unsubmittedTasks.length > 10) {
-      taskListText += `... và ${unsubmittedTasks.length - 10} công việc khác.\n`;
+    if (safeTasks.length > 10) {
+      taskListText += `... và ${safeTasks.length - 10} công việc khác.\n`;
     }
 
     const message = 
@@ -117,6 +121,9 @@ ${taskListText.trim()}
  */
 export async function notifyProjectDeadlineReminderToZalo(task: Task, users: User[], daysLeft: number) {
   try {
+    // Không gửi công việc nội bộ BQL hoặc việc riêng không qua giám sát ra Zalo
+    if (task.isManagementOnly || task.isDirectToStaff) return;
+
     const assignees = users
       .filter((u) => task.assignedTo.includes(u.id))
       .map((u) => `@${getPersonalName(u.name, true)}`)
