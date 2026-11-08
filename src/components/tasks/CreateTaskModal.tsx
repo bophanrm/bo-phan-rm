@@ -111,11 +111,8 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teams[0]?.id || '');
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(() => {
     if (initialAssigneeId) return [initialAssigneeId];
-    if (teams[0]?.memberIds) {
-      const valid = teams[0].memberIds.filter((id) => assignableUsers.some((u) => u.id === id));
-      return valid.length > 0 ? valid : teams[0].memberIds;
-    }
-    return assignableUsers.slice(0, 1).map((u) => u.id);
+    // Không tự động tick chọn nhân viên, để người giao việc tự chọn
+    return [];
   });
   const [leadId, setLeadId] = useState<string>(() => {
     if (initialAssigneeId) return initialAssigneeId;
@@ -178,12 +175,11 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
   // Change team selection
   const handleTeamChange = (teamId: string) => {
     setSelectedTeamId(teamId);
+    // Không tự động tick chọn nhân viên để người giao việc tự chọn
+    setSelectedMemberIds([]);
+
     const team = teams.find((t) => t.id === teamId);
     if (team) {
-      const valid = team.memberIds.filter((id) => assignableUsers.some((u) => u.id === id));
-      const chosen = valid.length > 0 ? valid : team.memberIds;
-      setSelectedMemberIds(chosen);
-
       // Quy tắc phân công người giám sát hiện trường:
       // 1. Nếu tổ có từ 2 Giám Sát trở lên -> Để trống ('') để hiển thị thông báo hỏi chọn ai làm Giám Sát Hiện Trường
       // 2. Nếu tổ có đúng 1 Giám Sát (Cấp 3 • LEVEL_3_LEAD) -> Mặc định là Giám Sát đó
@@ -208,13 +204,9 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
     }
   };
 
-  // Toggle member checkbox in custom mode
+  // Toggle member checkbox in custom / team mode
   const handleToggleMember = (userId: string) => {
     if (selectedMemberIds.includes(userId)) {
-      if (selectedMemberIds.length === 1) {
-        alert('Cần có ít nhất 1 người thực hiện công việc.');
-        return;
-      }
       const updated = selectedMemberIds.filter((id) => id !== userId);
       setSelectedMemberIds(updated);
       if (leadId === userId) {
@@ -235,7 +227,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
     }
 
     if (selectedMemberIds.length === 0) {
-      alert('Vui lòng chọn ít nhất 1 người hoặc 1 tổ thực hiện.');
+      alert('⚠️ Bạn chưa chọn nhân viên thực hiện! Vui lòng tick chọn ít nhất 1 nhân viên trước khi giao việc.');
       return;
     }
 
@@ -498,34 +490,103 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
               )}
             </div>
 
-            {assignMode === 'TEAM' ? (
-              <div className="space-y-2">
-                <select
-                  value={selectedTeamId}
-                  onChange={(e) => handleTeamChange(e.target.value)}
-                  className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  {teams.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      📁 {t.name} ({t.memberIds.length} thành viên)
-                    </option>
-                  ))}
-                </select>
+            {assignMode === 'TEAM' ? (() => {
+              const currentTeam = teams.find((t) => t.id === selectedTeamId);
+              const teamMembers = currentTeam
+                ? (currentTeam.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[])
+                : [];
+              return (
+                <div className="space-y-3">
+                  <select
+                    value={selectedTeamId}
+                    onChange={(e) => handleTeamChange(e.target.value)}
+                    className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    {teams.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        📁 {t.name} ({t.memberIds.length} thành viên)
+                      </option>
+                    ))}
+                  </select>
 
-                <p className="text-[11px] text-slate-500">
-                  Thành viên phân công trong tổ:{' '}
-                  <span className="font-semibold text-slate-700">
-                    {selectedMemberIds
-                      .map((id) => {
-                        const u = users.find((user) => user.id === id);
-                        return u ? getPersonalName(u.name, false) : null;
-                      })
-                      .filter(Boolean)
-                      .join(', ')}
-                  </span>
-                </p>
-              </div>
-            ) : (
+                  {/* Danh sách thành viên trong tổ để người giao tự tick chọn */}
+                  <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                      <span className="text-[11px] font-bold text-slate-700">
+                        Chọn nhân viên thực hiện ({selectedMemberIds.length}/{teamMembers.length} đã chọn):
+                      </span>
+                      <div className="flex items-center space-x-2 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allValid = teamMembers.map((m) => m.id);
+                            setSelectedMemberIds(allValid);
+                          }}
+                          className="text-blue-600 hover:underline font-bold cursor-pointer"
+                        >
+                          Chọn tất cả
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedMemberIds([])}
+                          className="text-slate-500 hover:underline font-medium cursor-pointer"
+                        >
+                          Bỏ chọn
+                        </button>
+                      </div>
+                    </div>
+
+                    {teamMembers.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic py-2 text-center">Tổ chưa có thành viên nào.</p>
+                    ) : (
+                      <div className="space-y-1 max-h-44 overflow-y-auto pr-1">
+                        {teamMembers.map((staff) => {
+                          const isChecked = selectedMemberIds.includes(staff.id);
+                          const levelInfo = staff.level ? STAFF_LEVEL_LABELS[staff.level] : null;
+                          return (
+                            <label
+                              key={staff.id}
+                              className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition-all ${
+                                isChecked
+                                  ? 'bg-blue-50/80 border-blue-300 text-blue-900 font-semibold'
+                                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => handleToggleMember(staff.id)}
+                                  className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                />
+                                <span>{getPersonalName(staff.name, false)}</span>
+                              </div>
+                              <div className="flex items-center space-x-1.5">
+                                {levelInfo && (
+                                  <span
+                                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${levelInfo.badgeColor}`}
+                                  >
+                                    {levelInfo.short}
+                                  </span>
+                                )}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedMemberIds.length === 0 && (
+                    <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center space-x-2">
+                      <span className="text-base">⚠️</span>
+                      <span>Chưa có nhân viên nào được chọn. Vui lòng tick chọn người thực hiện trước khi giao việc.</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })() : (
               <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
                 {groupedAssignableUsers.length === 0 ? (
                   <p className="text-xs text-slate-500 italic p-3 text-center bg-white rounded-xl border border-dashed border-slate-200">
@@ -581,6 +642,13 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                       </div>
                     </div>
                   ))
+                )}
+
+                {selectedMemberIds.length === 0 && (
+                  <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center space-x-2">
+                    <span className="text-base">⚠️</span>
+                    <span>Chưa có nhân viên nào được chọn. Vui lòng tick chọn ít nhất 1 người thực hiện.</span>
+                  </div>
                 )}
               </div>
             )}
