@@ -14,12 +14,21 @@ import {
   LogOut,
   Smartphone,
   ShieldCheck,
+  Droplets,
+  Clock,
+  UserCheck,
 } from 'lucide-react';
 
 interface ZaloGroupInfo {
   id: string;
   name: string;
   totalMember?: number;
+  avatar?: string;
+}
+
+interface ZaloFriendInfo {
+  id: string;
+  name: string;
   avatar?: string;
 }
 
@@ -34,6 +43,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<{ id: string; name: string; avatar?: string } | null>(null);
   const [groups, setGroups] = useState<ZaloGroupInfo[]>([]);
+  const [friends, setFriends] = useState<ZaloFriendInfo[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [config, setConfig] = useState({
     enabled: true,
@@ -42,9 +52,22 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
     notifyProjectDeadline: true,
   });
 
+  const [wellConfig, setWellConfig] = useState({
+    enabled: false,
+    time: '00:05',
+    sendToUser: true,
+    targetUserId: '',
+    targetUserName: '',
+    sendToGroup: false,
+    targetGroupId: '',
+    targetGroupName: '',
+  });
+
   const [loading, setLoading] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [sendingWellTest, setSendingWellTest] = useState(false);
+  const [wellTestResult, setWellTestResult] = useState<string | null>(null);
 
   // Lấy trạng thái hiện tại từ server
   const fetchStatus = async () => {
@@ -65,12 +88,72 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
         if (data.config.groupId) {
           setSelectedGroupId(data.config.groupId);
         }
+        if (data.config.wellReport) {
+          setWellConfig({
+            enabled: data.config.wellReport.enabled ?? false,
+            time: data.config.wellReport.time || '00:05',
+            sendToUser: data.config.wellReport.sendToUser ?? true,
+            targetUserId: data.config.wellReport.targetUserId || '',
+            targetUserName: data.config.wellReport.targetUserName || '',
+            sendToGroup: data.config.wellReport.sendToGroup ?? false,
+            targetGroupId: data.config.wellReport.targetGroupId || '',
+            targetGroupName: data.config.wellReport.targetGroupName || '',
+          });
+        }
       }
       if (data.groups && Array.isArray(data.groups)) {
         setGroups(data.groups);
       }
+      if (data.friends && Array.isArray(data.friends)) {
+        setFriends(data.friends);
+      }
     } catch (err: any) {
       console.error('Lỗi lấy trạng thái Zalo Bot:', err);
+    }
+  };
+
+  // Cập nhật cấu hình báo cáo giếng
+  const handleSaveWellConfig = async (newWellConfig: any) => {
+    setWellConfig(newWellConfig);
+    try {
+      await fetch('/api/zalo/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...config,
+          groupId: selectedGroupId,
+          wellReport: newWellConfig,
+        }),
+      });
+    } catch (e) {
+      console.error('Lỗi lưu cấu hình báo cáo giếng:', e);
+    }
+  };
+
+  // Gửi thử báo cáo giếng
+  const handleSendWellTest = async () => {
+    setSendingWellTest(true);
+    setWellTestResult(null);
+    try {
+      const res = await fetch('/api/zalo/well-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: wellConfig.sendToUser && wellConfig.sendToGroup ? 'BOTH' : wellConfig.sendToUser ? 'USER' : 'GROUP',
+          targetUserId: wellConfig.targetUserId,
+          targetGroupId: wellConfig.targetGroupId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWellTestResult(`✅ Đã gửi báo cáo thành công! Tổng sản lượng 24h: ${data.data.totalVolume} m³.`);
+      } else {
+        setWellTestResult(`❌ Lỗi gửi: ${data.error}`);
+      }
+    } catch (err: any) {
+      setWellTestResult(`❌ Lỗi kết nối: ${err.message}`);
+    } finally {
+      setSendingWellTest(false);
     }
   };
 
@@ -442,6 +525,200 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                       <p className="text-[11px] text-slate-500">Tự động nhắc nhở trước hạn nộp 1 ngày và ngày kết thúc dự án.</p>
                     </div>
                   </label>
+                </div>
+
+                {/* PHÂN HỆ MỚI: BÁO CÁO KHAI THÁC NƯỚC GIẾNG KHOAN (24H) */}
+                <div className="pt-3 border-t border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="p-1.5 rounded-lg bg-cyan-100 text-cyan-800">
+                        <Droplets className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                          Báo Cáo Khai Thác Nước Giếng 24h
+                        </h4>
+                        <p className="text-[11px] text-slate-500">
+                          Tự động đăng nhập web quan trắc & tổng hợp m³ mỗi giếng trong 24h
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSaveWellConfig({ ...wellConfig, enabled: !wellConfig.enabled })}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all shadow-xs cursor-pointer ${
+                        wellConfig.enabled
+                          ? 'bg-cyan-600 hover:bg-cyan-700 text-white'
+                          : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                      }`}
+                    >
+                      {wellConfig.enabled ? 'ĐANG BẬT' : 'ĐANG TẮT'}
+                    </button>
+                  </div>
+
+                  {wellConfig.enabled && (
+                    <div className="p-3.5 bg-cyan-50/70 border border-cyan-200 rounded-2xl space-y-3 animate-fade-in text-xs">
+                      {/* Cài đặt giờ gửi */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-cyan-200/70">
+                        <div className="space-y-0.5">
+                          <label className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-cyan-700" />
+                            <span>Giờ gửi báo cáo tự động:</span>
+                          </label>
+                          <p className="text-[10px] text-slate-500">Khung giờ hệ thống chốt số liệu 24h để gửi tin</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="time"
+                            value={wellConfig.time}
+                            onChange={(e) => handleSaveWellConfig({ ...wellConfig, time: e.target.value })}
+                            className="bg-white border border-cyan-300 rounded-lg px-2.5 py-1 font-bold text-cyan-950 text-xs outline-none focus:ring-2 focus:ring-cyan-500"
+                          />
+                          <div className="flex items-center space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSaveWellConfig({ ...wellConfig, time: '00:05' })}
+                              className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                                wellConfig.time === '00:05' ? 'bg-cyan-600 text-white' : 'bg-white border border-cyan-300 text-cyan-800 hover:bg-cyan-50'
+                              }`}
+                            >
+                              00:05 (Đêm)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveWellConfig({ ...wellConfig, time: '07:00' })}
+                              className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                                wellConfig.time === '07:00' ? 'bg-cyan-600 text-white' : 'bg-white border border-cyan-300 text-cyan-800 hover:bg-cyan-50'
+                              }`}
+                            >
+                              07:00 (Sáng)
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tùy chọn 1: Gửi qua Zalo cá nhân */}
+                      <div className="space-y-2 p-2.5 bg-white rounded-xl border border-cyan-200/80">
+                        <label className="flex items-start space-x-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={wellConfig.sendToUser}
+                            onChange={(e) => handleSaveWellConfig({ ...wellConfig, sendToUser: e.target.checked })}
+                            className="mt-0.5 rounded text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-bold text-slate-900">1. Gửi qua Zalo cá nhân (Chat riêng 1:1)</span>
+                            <p className="text-[11px] text-slate-500">
+                              Chỉ gửi trực tiếp vào Zalo người được chọn, không chia sẻ ra nhóm chung.
+                            </p>
+                          </div>
+                        </label>
+
+                        {wellConfig.sendToUser && (
+                          <div className="pl-6 pt-1 space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-700">
+                              Chọn tài khoản Zalo nhận tin:
+                            </label>
+                            <select
+                              value={wellConfig.targetUserId || ''}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
+                                const f = friends.find((item) => item.id === selectedId);
+                                handleSaveWellConfig({
+                                  ...wellConfig,
+                                  targetUserId: selectedId,
+                                  targetUserName: f?.name || '',
+                                });
+                              }}
+                              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-cyan-500"
+                            >
+                              <option value="">-- Click chọn tài khoản trong danh bạ Zalo Bot --</option>
+                              {friends.map((f) => (
+                                <option key={f.id} value={f.id}>
+                                  👤 {f.name} {f.id ? `(ID: ${f.id})` : ''}
+                                </option>
+                              ))}
+                            </select>
+                            <p className="text-[10px] text-slate-500 italic">
+                              * Danh bạ tự động lấy từ các liên hệ / bạn bè mà Zalo Bot (Chị Nguyên) có thể nhắn tin trực tiếp.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tùy chọn 2: Gửi vào Nhóm Zalo */}
+                      <div className="space-y-2 p-2.5 bg-white rounded-xl border border-cyan-200/80">
+                        <label className="flex items-start space-x-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={wellConfig.sendToGroup}
+                            onChange={(e) => handleSaveWellConfig({ ...wellConfig, sendToGroup: e.target.checked })}
+                            className="mt-0.5 rounded text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-bold text-slate-900">2. Gửi vào Nhóm Zalo (Group chat)</span>
+                            <p className="text-[11px] text-slate-500">
+                              Gửi số liệu khai thác vào nhóm làm việc chung để các bộ phận cùng nắm.
+                            </p>
+                          </div>
+                        </label>
+
+                        {wellConfig.sendToGroup && (
+                          <div className="pl-6 pt-1 space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-700">
+                              Chọn nhóm Zalo nhận tin:
+                            </label>
+                            <select
+                              value={wellConfig.targetGroupId || selectedGroupId || ''}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
+                                const g = groups.find((item) => item.id === selectedId);
+                                handleSaveWellConfig({
+                                  ...wellConfig,
+                                  targetGroupId: selectedId,
+                                  targetGroupName: g?.name || '',
+                                });
+                              }}
+                              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-cyan-500"
+                            >
+                              <option value="">-- Chọn nhóm Zalo nhận báo cáo --</option>
+                              {groups.map((g) => (
+                                <option key={g.id} value={g.id}>
+                                  📁 {g.name} ({g.totalMember || 0} thành viên)
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Nút gửi thử & thông báo kết quả */}
+                      <div className="pt-2 border-t border-cyan-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="text-[11px] text-cyan-900 font-medium">
+                          {wellTestResult && <p className="font-bold">{wellTestResult}</p>}
+                        </div>
+                        <button
+                          type="button"
+                          disabled={sendingWellTest || (!wellConfig.sendToUser && !wellConfig.sendToGroup)}
+                          onClick={handleSendWellTest}
+                          className="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
+                        >
+                          {sendingWellTest ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Đang cào dữ liệu & gửi...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-3.5 h-3.5" />
+                              <span>Tra Cứu & Gửi Thử Ngay</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

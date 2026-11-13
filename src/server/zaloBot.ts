@@ -2,9 +2,22 @@ import { Zalo, ThreadType, LoginQRCallbackEventType } from 'zca-js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { supabase } from '@/lib/supabase';
+import { QuantracService } from './quantracService';
 
 // File lưu phiên đăng nhập Zalo Bot trên máy chủ
 const SESSION_FILE_PATH = path.join(process.cwd(), '.zalo-session.json');
+
+export interface ZaloWellReportConfig {
+  enabled: boolean;
+  time: string; // Giờ gửi định kỳ mỗi ngày, vd: "00:05", "07:00"
+  sendToUser: boolean; // Gửi đến Zalo cá nhân
+  targetUserId: string | null; // ID Zalo cá nhân
+  targetUserName?: string | null; // Tên hiển thị người nhận
+  sendToGroup: boolean; // Gửi vào nhóm Zalo
+  targetGroupId: string | null; // ID nhóm nhận
+  targetGroupName?: string | null; // Tên nhóm nhận
+  lastSentDate?: string | null; // Ngày đã gửi gần nhất (YYYY-MM-DD)
+}
 
 export interface ZaloBotConfig {
   enabled: boolean;
@@ -13,6 +26,7 @@ export interface ZaloBotConfig {
   notifyOnNewTask: boolean;
   notifyDailyShiftReminder: boolean;
   notifyProjectDeadline: boolean;
+  wellReport?: ZaloWellReportConfig;
 }
 
 export interface ZaloGroupInfo {
@@ -49,13 +63,29 @@ class ZaloBotService {
     notifyOnNewTask: true,
     notifyDailyShiftReminder: true,
     notifyProjectDeadline: true,
+    wellReport: {
+      enabled: false,
+      time: '00:05',
+      sendToUser: true,
+      targetUserId: null,
+      targetUserName: null,
+      sendToGroup: false,
+      targetGroupId: null,
+      targetGroupName: null,
+      lastSentDate: null,
+    },
   };
 
   private loginPromise: Promise<any> | null = null;
   private qrAbortController: AbortController | null = null;
+  private schedulerInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.loadSavedSession();
+    // Bật bộ lập lịch kiểm tra gửi báo cáo giếng ngầm định kỳ
+    this.schedulerInterval = setInterval(() => {
+      this.checkAndTriggerWellReport();
+    }, 30000);
   }
 
   // Tải cấu hình và phiên đã lưu từ trước (Hỗ trợ cả File cục bộ và Supabase Cloud)
@@ -389,6 +419,83 @@ class ZaloBotService {
     } catch (err: any) {
       console.error('[ZaloBot] Error sending message:', err.message);
       return { success: false, error: err.message };
+    }
+  }
+
+  // Gửi tin nhắn cá nhân (1:1 chat)
+  public async sendDirectMessage(userId: string, messageText: string): Promise<{ success: boolean; error?: string }> {
+    if (this.status !== 'CONNECTED' || !this.api) {
+      return { success: false, error: 'Zalo Bot chưa được kết nối' };
+    }
+
+    try {
+      await this.api.sendMessage(
+        { msg: messageText },
+        userId,
+        ThreadType.User
+      );
+      console.log(`[ZaloBot] Sent direct message to user ${userId} successfully!`);
+      return { success: true };
+    } catch (err: any) {
+      console.error('[ZaloBot] Error sending direct message:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  // Lấy danh sách bạn bè / danh bạ Zalo
+  public async getFriendsList(): Promise<{ id: string; name: string; avatar?: string }[]> {
+    if (this.status !== 'CONNECTED' || !this.api) return [];
+    try {
+      const friends = await this.api.getAllFriends();
+      if (!Array.isArray(friends)) return [];
+      return friends.map((f: any) => ({
+        id: String(f.userId || f.id),
+        name: f.displayName || f.zaloName || f.name || 'Người dùng Zalo',
+        avatar: f.avatar || f.avatarUrl || f.avt || undefined,
+      }));
+    } catch (err: any) {
+      console.error('[ZaloBot] Failed to get friends list:', err.message);
+      return [];
+    }
+  }
+
+  // Bộ lập lịch ngầm kiểm tra và gửi báo cáo giếng đúng giờ
+  public async checkAndTriggerWellReport() {
+    try {
+      if (this.status !== 'CONNECTED' || !this.api) return;
+      if (!this.config.wellReport?.enabled) return;
+
+      const now = new Date();
+      const vnTime = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(now);
+      const todayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
+
+      const targetTime = this.config.wellReport.time || '00:05';
+      if (vnTime === targetTime && this.config.wellReport.lastSentDate !== todayVnStr) {
+        console.log(`[ZaloBot] Đến giờ tự động gửi báo cáo giếng (${vnTime}) ngày ${todayVnStr}!`);
+        this.config.wellReport.lastSentDate = todayVnStr;
+        await this.updateConfig({ wellReport: this.config.wellReport });
+
+        // Crawl số liệu 24h
+        const report = await QuantracService.get24hWellData(todayVnStr);
+        const msg = QuantracService.formatZaloMessage(report);
+
+        // Gửi Zalo cá nhân nếu bật
+        if (this.config.wellReport.sendToUser && this.config.wellReport.targetUserId) {
+          await this.sendDirectMessage(this.config.wellReport.targetUserId, msg);
+        }
+
+        // Gửi Nhóm Zalo nếu bật
+        if (this.config.wellReport.sendToGroup && this.config.wellReport.targetGroupId) {
+          await this.sendGroupMessage(this.config.wellReport.targetGroupId, msg);
+        }
+      }
+    } catch (err: any) {
+      console.error('[ZaloBot] Error in checkAndTriggerWellReport:', err.message);
     }
   }
 

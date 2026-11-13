@@ -9,8 +9,10 @@ export async function GET() {
     }
 
     let groups: any[] = [];
+    let friends: any[] = [];
     if (zaloBot.status === 'CONNECTED') {
       groups = await zaloBot.getGroups();
+      friends = await zaloBot.getFriendsList();
     }
 
     return NextResponse.json({
@@ -20,6 +22,7 @@ export async function GET() {
       config: zaloBot.config,
       errorMessage: zaloBot.errorMessage,
       groups,
+      friends,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
