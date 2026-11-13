@@ -1192,9 +1192,9 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                                       return `🔹 ${w.wellName}: Đã đạt định mức (Không cần mở)\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³`;
                                     }
                                     if (w.status === 'RUN_NOW') {
-                                      return `🔹 ${w.wellName}: Cần mở ngay (Lưu lượng: ${w.luuLuongPerHour} m³/h)\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³ (~${w.soGioCanBom} giờ)`;
+                                      return `🔹 ${w.wellName}: Cần mở ngay\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³ (~${w.soGioCanBom} giờ)`;
                                     }
-                                    return `🔹 ${w.wellName}: Thời gian mở giếng lúc ${w.displayTime}\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³ (Lưu lượng: ${w.luuLuongPerHour} m³/h)`;
+                                    return `🔹 ${w.wellName}: Thời gian mở giếng lúc ${w.displayTime}\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³`;
                                   })
                                   .join('\n\n') +
                                 `\n━━━━━━━━━━━━━━━━━━━━\n` +
