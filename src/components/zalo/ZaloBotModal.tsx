@@ -17,7 +17,22 @@ import {
   Droplets,
   Clock,
   UserCheck,
+  CalendarClock,
+  Calculator,
+  Sliders,
+  Save,
+  Eye,
+  Info,
 } from 'lucide-react';
+
+const DEFAULT_SCHEDULE_WELLS = [
+  { wellId: 1, wellName: 'Giếng G1', enabled: true, dinhMuc: 450, luuLuongPerHour: 72, delayMinutes: 0 },
+  { wellId: 2, wellName: 'Giếng G2', enabled: true, dinhMuc: 480, luuLuongPerHour: 85, delayMinutes: 0 },
+  { wellId: 3, wellName: 'Giếng G3', enabled: true, dinhMuc: 480, luuLuongPerHour: 66, delayMinutes: 0 },
+  { wellId: 4, wellName: 'Giếng G4', enabled: true, dinhMuc: 480, luuLuongPerHour: 13, delayMinutes: 0 },
+  { wellId: 5, wellName: 'Giếng G5', enabled: true, dinhMuc: 650, luuLuongPerHour: 79, delayMinutes: 0 },
+  { wellId: 6, wellName: 'Giếng G6', enabled: false, dinhMuc: 480, luuLuongPerHour: 50, delayMinutes: 0 },
+];
 
 interface ZaloGroupInfo {
   id: string;
@@ -63,11 +78,29 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
     targetGroupName: '',
   });
 
+  const [scheduleConfig, setScheduleConfig] = useState({
+    enabled: false,
+    time: '18:30',
+    sendToUser: true,
+    targetUserId: '',
+    targetUserName: '',
+    sendToGroup: false,
+    targetGroupId: '',
+    targetGroupName: '',
+    wells: DEFAULT_SCHEDULE_WELLS,
+  });
+
   const [loading, setLoading] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [sendingWellTest, setSendingWellTest] = useState(false);
   const [wellTestResult, setWellTestResult] = useState<string | null>(null);
+
+  const [schedulePreview, setSchedulePreview] = useState<any | null>(null);
+  const [loadingSchedulePreview, setLoadingSchedulePreview] = useState(false);
+  const [sendingScheduleTest, setSendingScheduleTest] = useState(false);
+  const [scheduleTestResult, setScheduleTestResult] = useState<string | null>(null);
+  const [scheduleSaveSuccess, setScheduleSaveSuccess] = useState(false);
 
   // Lấy trạng thái hiện tại từ server
   const fetchStatus = async () => {
@@ -100,6 +133,25 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
             targetGroupName: data.config.wellReport.targetGroupName || '',
           });
         }
+        if (data.config.wellSchedule) {
+          const loadedWells = (data.config.wellSchedule.wells && data.config.wellSchedule.wells.length > 0)
+            ? data.config.wellSchedule.wells
+            : DEFAULT_SCHEDULE_WELLS;
+          setScheduleConfig({
+            enabled: data.config.wellSchedule.enabled ?? false,
+            time: data.config.wellSchedule.time || '18:30',
+            sendToUser: data.config.wellSchedule.sendToUser ?? true,
+            targetUserId: data.config.wellSchedule.targetUserId || '',
+            targetUserName: data.config.wellSchedule.targetUserName || '',
+            sendToGroup: data.config.wellSchedule.sendToGroup ?? false,
+            targetGroupId: data.config.wellSchedule.targetGroupId || '',
+            targetGroupName: data.config.wellSchedule.targetGroupName || '',
+            wells: loadedWells,
+          });
+          if (data.config.wellSchedule.enabled) {
+            fetchSchedulePreview(loadedWells);
+          }
+        }
       }
       if (data.groups && Array.isArray(data.groups)) {
         setGroups(data.groups);
@@ -123,6 +175,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
           ...config,
           groupId: selectedGroupId,
           wellReport: newWellConfig,
+          wellSchedule: scheduleConfig,
         }),
       });
     } catch (e) {
@@ -154,6 +207,85 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
       setWellTestResult(`❌ Lỗi kết nối: ${err.message}`);
     } finally {
       setSendingWellTest(false);
+    }
+  };
+
+  // Tính toán xem trước lịch mở giếng hôm nay
+  const fetchSchedulePreview = async (wellsToPreview?: any) => {
+    setLoadingSchedulePreview(true);
+    try {
+      const wellsParam = encodeURIComponent(JSON.stringify(wellsToPreview || scheduleConfig.wells));
+      const res = await fetch(`/api/zalo/well-schedule?wells=${wellsParam}`);
+      const data = await res.json();
+      if (data.success) {
+        setSchedulePreview(data.data);
+      }
+    } catch (e) {
+      console.error('Lỗi tính toán xem trước lịch mở giếng:', e);
+    } finally {
+      setLoadingSchedulePreview(false);
+    }
+  };
+
+  // Lưu cấu hình lịch mở giếng & bảng thông số
+  const handleSaveScheduleConfig = async (newScheduleConfig: any) => {
+    setScheduleConfig(newScheduleConfig);
+    try {
+      await fetch('/api/zalo/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...config,
+          groupId: selectedGroupId,
+          wellReport: wellConfig,
+          wellSchedule: newScheduleConfig,
+        }),
+      });
+      setScheduleSaveSuccess(true);
+      setTimeout(() => setScheduleSaveSuccess(false), 3000);
+      fetchSchedulePreview(newScheduleConfig.wells);
+    } catch (e) {
+      console.error('Lỗi lưu cấu hình lịch mở giếng:', e);
+    }
+  };
+
+  // Cập nhật thông số một giếng (định mức, lưu lượng, độ trễ)
+  const handleWellParamChange = (wellId: number, field: string, value: any) => {
+    const updatedWells = scheduleConfig.wells.map((w) => {
+      if (w.wellId === wellId) {
+        return { ...w, [field]: value };
+      }
+      return w;
+    });
+    setScheduleConfig((prev) => ({ ...prev, wells: updatedWells }));
+  };
+
+  // Gửi thử lịch mở giếng
+  const handleSendScheduleTest = async () => {
+    setSendingScheduleTest(true);
+    setScheduleTestResult(null);
+    try {
+      const res = await fetch('/api/zalo/well-schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: scheduleConfig.sendToUser && scheduleConfig.sendToGroup ? 'BOTH' : scheduleConfig.sendToUser ? 'USER' : 'GROUP',
+          targetUserId: scheduleConfig.targetUserId,
+          targetGroupId: scheduleConfig.targetGroupId,
+          wells: scheduleConfig.wells,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScheduleTestResult('✅ Đã tính toán và gửi lịch mở giếng thành công vào Zalo!');
+        fetchSchedulePreview();
+      } else {
+        setScheduleTestResult(`❌ Gửi thất bại: ${data.error || 'Lỗi không xác định'}`);
+      }
+    } catch (err: any) {
+      setScheduleTestResult(`❌ Lỗi kết nối: ${err.message}`);
+    } finally {
+      setSendingScheduleTest(false);
     }
   };
 
@@ -204,6 +336,8 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
           groupId: targetGroupId || null,
           groupName,
           ...config,
+          wellReport: wellConfig,
+          wellSchedule: scheduleConfig,
         }),
       });
       const data = await res.json();
@@ -713,6 +847,386 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                             <>
                               <Send className="w-3.5 h-3.5" />
                               <span>Tra Cứu & Gửi Thử Ngay</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* PHÂN HỆ MỚI: BẢNG TÍNH & LỊCH MỞ GIẾNG TỰ ĐỘNG (LẬP LỊCH CA ĐÊM) */}
+                <div className="pt-3 border-t border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="p-1.5 rounded-lg bg-amber-100 text-amber-800">
+                        <CalendarClock className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <span>Lịch Mở Giếng Tự Động (Theo Bảng Tính)</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-100 text-amber-900 font-bold">Mới</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-500">
+                          Tự động tính giờ mở giếng ban đêm theo định mức m³ & lưu lượng bơm gửi qua Zalo
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSaveScheduleConfig({ ...scheduleConfig, enabled: !scheduleConfig.enabled })}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all shadow-xs cursor-pointer ${
+                        scheduleConfig.enabled
+                          ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                          : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                      }`}
+                    >
+                      {scheduleConfig.enabled ? 'ĐANG BẬT' : 'ĐANG TẮT'}
+                    </button>
+                  </div>
+
+                  {scheduleConfig.enabled && (
+                    <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-3.5 animate-fade-in text-xs">
+                      {/* Cài đặt giờ gửi */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-amber-200/70">
+                        <div className="space-y-0.5">
+                          <label className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-amber-700" />
+                            <span>Giờ gửi lịch mở giếng tự động:</span>
+                          </label>
+                          <p className="text-[10px] text-slate-500">
+                            Khung giờ chốt dữ liệu quan trắc trong ngày để tính giờ mở giếng ban đêm
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="time"
+                            value={scheduleConfig.time}
+                            onChange={(e) => handleSaveScheduleConfig({ ...scheduleConfig, time: e.target.value })}
+                            className="bg-white border border-amber-300 rounded-lg px-2.5 py-1 font-bold text-amber-950 text-xs outline-none focus:ring-2 focus:ring-amber-500"
+                          />
+                          <div className="flex items-center space-x-1">
+                            {['18:00', '18:30', '19:00', '19:30'].map((t) => (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => handleSaveScheduleConfig({ ...scheduleConfig, time: t })}
+                                className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                                  scheduleConfig.time === t
+                                    ? 'bg-amber-600 text-white'
+                                    : 'bg-white border border-amber-300 text-amber-800 hover:bg-amber-50'
+                                }`}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tùy chọn 1: Gửi qua Zalo cá nhân */}
+                      <div className="space-y-2 p-2.5 bg-white rounded-xl border border-amber-200/80">
+                        <label className="flex items-start space-x-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={scheduleConfig.sendToUser}
+                            onChange={(e) => handleSaveScheduleConfig({ ...scheduleConfig, sendToUser: e.target.checked })}
+                            className="mt-0.5 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-bold text-slate-900">1. Gửi qua Zalo cá nhân (Chat riêng 1:1)</span>
+                            <p className="text-[11px] text-slate-500">
+                              Chỉ gửi lịch mở giếng cho Admin hoặc người phụ trách ca trực.
+                            </p>
+                          </div>
+                        </label>
+
+                        {scheduleConfig.sendToUser && (
+                          <div className="pl-6 pt-1 space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-700">
+                              Chọn tài khoản Zalo nhận lịch mở giếng:
+                            </label>
+                            <select
+                              value={scheduleConfig.targetUserId || ''}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
+                                const f = friends.find((item) => item.id === selectedId);
+                                handleSaveScheduleConfig({
+                                  ...scheduleConfig,
+                                  targetUserId: selectedId,
+                                  targetUserName: f?.name || '',
+                                });
+                              }}
+                              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500"
+                            >
+                              <option value="">-- Click chọn tài khoản trong danh bạ Zalo Bot --</option>
+                              {friends.map((f) => (
+                                <option key={f.id} value={f.id}>
+                                  👤 {f.name} {f.id ? `(ID: ${f.id})` : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tùy chọn 2: Gửi vào Nhóm Zalo */}
+                      <div className="space-y-2 p-2.5 bg-white rounded-xl border border-amber-200/80">
+                        <label className="flex items-start space-x-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={scheduleConfig.sendToGroup}
+                            onChange={(e) => handleSaveScheduleConfig({ ...scheduleConfig, sendToGroup: e.target.checked })}
+                            className="mt-0.5 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-bold text-slate-900">2. Gửi vào Nhóm Zalo (Group chat)</span>
+                            <p className="text-[11px] text-slate-500">
+                              Gửi lịch mở giếng vào nhóm làm việc chung để toàn bộ nhân viên ca trực cùng nắm.
+                            </p>
+                          </div>
+                        </label>
+
+                        {scheduleConfig.sendToGroup && (
+                          <div className="pl-6 pt-1 space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-700">
+                              Chọn nhóm Zalo nhận lịch:
+                            </label>
+                            <select
+                              value={scheduleConfig.targetGroupId || selectedGroupId || ''}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
+                                const g = groups.find((item) => item.id === selectedId);
+                                handleSaveScheduleConfig({
+                                  ...scheduleConfig,
+                                  targetGroupId: selectedId,
+                                  targetGroupName: g?.name || '',
+                                });
+                              }}
+                              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-500"
+                            >
+                              <option value="">-- Chọn nhóm Zalo nhận lịch mở giếng --</option>
+                              {groups.map((g) => (
+                                <option key={g.id} value={g.id}>
+                                  📁 {g.name} ({g.totalMember || 0} thành viên)
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* BẢNG THÔNG SỐ ĐỊNH MỨC & ĐỘ TRỄ TỪNG GIẾNG */}
+                      <div className="p-3 bg-white rounded-xl border border-amber-200/90 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-1.5">
+                            <Sliders className="w-4 h-4 text-amber-700" />
+                            <span className="font-extrabold text-slate-900 text-xs">
+                              Cài Đặt Định Mức (m³), Lưu Lượng & Độ Trễ Từng Giếng
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveScheduleConfig(scheduleConfig)}
+                            className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] shadow-xs flex items-center space-x-1 cursor-pointer transition-colors"
+                          >
+                            <Save className="w-3 h-3" />
+                            <span>{scheduleSaveSuccess ? 'Đã lưu thành công!' : 'Lưu Thông Số'}</span>
+                          </button>
+                        </div>
+
+                        {/* Ghi chú bảo mật về độ trễ */}
+                        <div className="bg-amber-50/90 border border-amber-300/80 rounded-lg p-2 text-[11px] text-amber-950 flex items-start space-x-2">
+                          <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                          <div className="space-y-0.5">
+                            <p className="font-bold">Cơ chế bảo mật Độ Trễ (+phút):</p>
+                            <p className="text-[10px] text-amber-900 leading-relaxed">
+                              Độ trễ giúp Admin điều chỉnh dời thời gian mở giếng (ví dụ hệ thống tính 22:16, đặt trễ 20 phút $\rightarrow$ thông báo mở lúc <strong>22:36</strong>).
+                              Thông báo gửi qua Zalo <strong>hoàn toàn KHÔNG ghi chú cộng thêm số phút này</strong>, đảm bảo bảo mật và bảo toàn quy trình nội bộ của Admin.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Bảng nhập liệu cho từng giếng */}
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="bg-slate-100 text-[10px] font-extrabold uppercase text-slate-700 border-b border-slate-200">
+                                <th className="p-2">Giếng</th>
+                                <th className="p-2 text-center">Áp Dụng</th>
+                                <th className="p-2">Định Mức (m³)</th>
+                                <th className="p-2">Lưu Lượng/1h (m³/h)</th>
+                                <th className="p-2">Độ Trễ (+phút)</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-[11px]">
+                              {scheduleConfig.wells.map((well) => (
+                                <tr key={well.wellId} className={`hover:bg-amber-50/40 transition-colors ${!well.enabled ? 'opacity-50 bg-slate-50' : ''}`}>
+                                  <td className="p-2 font-bold text-slate-900 whitespace-nowrap">
+                                    {well.wellName}
+                                  </td>
+                                  <td className="p-2 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={well.enabled}
+                                      onChange={(e) => handleWellParamChange(well.wellId, 'enabled', e.target.checked)}
+                                      className="rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+                                    />
+                                  </td>
+                                  <td className="p-2">
+                                    <div className="flex items-center space-x-1">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="10"
+                                        value={well.dinhMuc}
+                                        onChange={(e) => handleWellParamChange(well.wellId, 'dinhMuc', parseFloat(e.target.value) || 0)}
+                                        className="w-20 bg-slate-50 border border-slate-300 rounded px-2 py-1 font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none text-right"
+                                      />
+                                      <span className="text-[10px] text-slate-500">m³</span>
+                                    </div>
+                                  </td>
+                                  <td className="p-2">
+                                    <div className="flex items-center space-x-1">
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        value={well.luuLuongPerHour}
+                                        onChange={(e) => handleWellParamChange(well.wellId, 'luuLuongPerHour', parseFloat(e.target.value) || 1)}
+                                        className="w-16 bg-slate-50 border border-slate-300 rounded px-2 py-1 font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none text-right"
+                                      />
+                                      <span className="text-[10px] text-slate-500">m³/h</span>
+                                    </div>
+                                  </td>
+                                  <td className="p-2">
+                                    <div className="flex items-center space-x-1">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="5"
+                                        value={well.delayMinutes}
+                                        onChange={(e) => handleWellParamChange(well.wellId, 'delayMinutes', parseInt(e.target.value, 10) || 0)}
+                                        className="w-16 bg-amber-50 border border-amber-300 rounded px-2 py-1 font-black text-amber-900 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none text-right"
+                                      />
+                                      <span className="text-[10px] font-bold text-amber-800">phút</span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* KHUNG XEM TRƯỚC BẢNG TÍNH & TIN NHẮN MẪU */}
+                      <div className="p-3 bg-white rounded-xl border border-amber-200/90 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-1.5">
+                            <Calculator className="w-4 h-4 text-amber-700" />
+                            <span className="font-extrabold text-slate-900 text-xs">
+                              Bảng Tính Thực Tế Hôm Nay (Quan Trắc Trực Tuyến)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => fetchSchedulePreview()}
+                            disabled={loadingSchedulePreview}
+                            className="px-2.5 py-1 text-[11px] font-bold text-amber-800 hover:text-amber-950 bg-amber-100 hover:bg-amber-200 rounded-lg flex items-center space-x-1 cursor-pointer transition-colors"
+                          >
+                            <RefreshCw className={`w-3 h-3 ${loadingSchedulePreview ? 'animate-spin' : ''}`} />
+                            <span>{loadingSchedulePreview ? 'Đang tính...' : 'Tính toán lại'}</span>
+                          </button>
+                        </div>
+
+                        {schedulePreview && (
+                          <div className="space-y-3">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left border-collapse">
+                                <thead>
+                                  <tr className="bg-slate-100 text-[10px] font-extrabold uppercase text-slate-700 border-b border-slate-200">
+                                    <th className="p-1.5">Giếng</th>
+                                    <th className="p-1.5 text-right">Đã Khai Thác</th>
+                                    <th className="p-1.5 text-right">Định Mức</th>
+                                    <th className="p-1.5 text-right">Còn Lại</th>
+                                    <th className="p-1.5 text-center">Giờ Lý Thuyết</th>
+                                    <th className="p-1.5 text-center font-black text-amber-900">Giờ Báo Zalo</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 text-[11px]">
+                                  {schedulePreview.wells
+                                    .filter((w: any) => w.enabled)
+                                    .map((w: any) => (
+                                      <tr key={w.wellId} className="hover:bg-slate-50">
+                                        <td className="p-1.5 font-bold text-slate-900">{w.wellName}</td>
+                                        <td className="p-1.5 text-right font-medium text-slate-700">{w.daKhaiThac} m³</td>
+                                        <td className="p-1.5 text-right font-medium text-slate-700">{w.dinhMuc} m³</td>
+                                        <td className="p-1.5 text-right font-bold text-slate-900">{w.conLai} m³</td>
+                                        <td className="p-1.5 text-center font-mono text-slate-500 text-[10px]">
+                                          {w.thoiGianMoLyThuyet !== '--' ? w.thoiGianMoLyThuyet.slice(0, 5) : '--'}
+                                        </td>
+                                        <td className="p-1.5 text-center font-mono font-black text-amber-900 bg-amber-50/80 rounded">
+                                          {w.displayTime}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* Khung mô phỏng tin nhắn Zalo sẽ nhận */}
+                            <div className="bg-slate-900 text-slate-100 rounded-xl p-3 font-mono text-[11px] whitespace-pre-wrap leading-relaxed shadow-inner">
+                              <div className="text-[10px] text-amber-400 font-bold mb-1 uppercase tracking-wider flex items-center gap-1">
+                                <Eye className="w-3 h-3" />
+                                <span>Xem trước tin nhắn sẽ gửi vào Zalo:</span>
+                              </div>
+                              {schedulePreview ? (
+                                `⏰ [BỘ PHẬN RM] LỊCH MỞ GIẾNG TỰ ĐỘNG\n` +
+                                `━━━━━━━━━━━━━━━━━━━━\n` +
+                                `📅 Ngày: ${schedulePreview.dateStr} (Chốt số liệu quan trắc lúc ${schedulePreview.cutOffTimeStr})\n\n` +
+                                schedulePreview.wells
+                                  .filter((w: any) => w.enabled)
+                                  .map((w: any) => {
+                                    if (w.status === 'QUOTA_REACHED') {
+                                      return `🔹 ${w.wellName}: Đã đạt định mức (Không cần mở)\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³`;
+                                    }
+                                    if (w.status === 'RUN_NOW') {
+                                      return `🔹 ${w.wellName}: Cần mở ngay (Lưu lượng: ${w.luuLuongPerHour} m³/h)\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³ (~${w.soGioCanBom} giờ)`;
+                                    }
+                                    return `🔹 ${w.wellName}: Thời gian mở giếng lúc ${w.displayTime}\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³ (Lưu lượng: ${w.luuLuongPerHour} m³/h)`;
+                                  })
+                                  .join('\n\n') +
+                                `\n━━━━━━━━━━━━━━━━━━━━\n` +
+                                `📌 Đề nghị nhân viên ca trực theo dõi và vận hành giếng theo đúng lịch trên.`
+                              ) : (
+                                'Chưa có dữ liệu tính toán.'
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Nút gửi thử & thông báo kết quả */}
+                      <div className="pt-2 border-t border-amber-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="text-[11px] text-amber-900 font-medium">
+                          {scheduleTestResult && <p className="font-bold">{scheduleTestResult}</p>}
+                        </div>
+                        <button
+                          type="button"
+                          disabled={sendingScheduleTest || (!scheduleConfig.sendToUser && !scheduleConfig.sendToGroup)}
+                          onClick={handleSendScheduleTest}
+                          className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
+                        >
+                          {sendingScheduleTest ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Đang tính toán & gửi Zalo...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-3.5 h-3.5" />
+                              <span>⚡ Tính Toán & Gửi Thử Lịch Mở Giếng</span>
                             </>
                           )}
                         </button>

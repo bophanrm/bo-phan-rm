@@ -12,6 +12,49 @@ export interface WellDataResult {
   mucNuocLatest?: number | null;
 }
 
+export interface WellScheduleConfigItem {
+  wellId: number;
+  wellName: string;
+  enabled: boolean;
+  dinhMuc: number; // m³ định mức trong ngày
+  luuLuongPerHour: number; // m³/h lưu lượng bơm trung bình
+  delayMinutes: number; // phút độ trễ cộng thêm (ẩn trên thông báo)
+}
+
+export interface WellScheduleCalculationResult {
+  wellId: number;
+  wellName: string;
+  enabled: boolean;
+  startTong: number | null;
+  endTong: number | null;
+  daKhaiThac: number;
+  dinhMuc: number;
+  conLai: number;
+  luuLuongPerHour: number;
+  delayMinutes: number;
+  soGioCanBom: number; // đơn vị giờ
+  thoiGianMoLyThuyet: string; // "HH:mm:ss"
+  thoiGianMoThucTe: string; // "HH:mm:ss" (đã cộng delay)
+  displayTime: string; // "HH:mm" hoặc "Mở ngay" hoặc "Đã đạt định mức"
+  status: 'SCHEDULED' | 'RUN_NOW' | 'QUOTA_REACHED' | 'NO_DATA';
+}
+
+export interface DailyWellScheduleSummary {
+  dateStr: string;
+  cutOffTimeStr: string;
+  wells: WellScheduleCalculationResult[];
+  generatedAt: string;
+}
+
+export const DEFAULT_WELL_SCHEDULE_CONFIGS: WellScheduleConfigItem[] = [
+  { wellId: 1, wellName: 'Giếng G1', enabled: true, dinhMuc: 450, luuLuongPerHour: 72, delayMinutes: 0 },
+  { wellId: 2, wellName: 'Giếng G2', enabled: true, dinhMuc: 480, luuLuongPerHour: 85, delayMinutes: 0 },
+  { wellId: 3, wellName: 'Giếng G3', enabled: true, dinhMuc: 480, luuLuongPerHour: 66, delayMinutes: 0 },
+  { wellId: 4, wellName: 'Giếng G4', enabled: true, dinhMuc: 480, luuLuongPerHour: 13, delayMinutes: 0 },
+  { wellId: 5, wellName: 'Giếng G5', enabled: true, dinhMuc: 650, luuLuongPerHour: 79, delayMinutes: 0 },
+  { wellId: 6, wellName: 'Giếng G6', enabled: false, dinhMuc: 480, luuLuongPerHour: 50, delayMinutes: 0 },
+];
+
 export interface DailyWellReportSummary {
   dateStr: string;
   startTimeStr: string;
@@ -218,5 +261,253 @@ ${wellLines}
 ━━━━━━━━━━━━━━━━━━━━
 📊 TỔNG KHAI THÁC: ${report.totalVolume.toLocaleString('vi-VN')} m³
 ⏱️ Cập nhật: ${updateTimeStr}`;
+  }
+
+  /**
+   * Tính toán lịch mở giếng tự động dựa trên bảng tính và số liệu cào trực tiếp
+   */
+  public static async calculateWellSchedule(
+    wellConfigs?: WellScheduleConfigItem[],
+    dateStr?: string
+  ): Promise<DailyWellScheduleSummary> {
+    const configs = wellConfigs && wellConfigs.length > 0 ? wellConfigs : DEFAULT_WELL_SCHEDULE_CONFIGS;
+    const targetDate = dateStr || new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
+
+    const cookie = await this.login();
+
+    const qPayload = new URLSearchParams();
+    qPayload.append('chonthoigian', '120');
+    qPayload.append('date_start', targetDate);
+    qPayload.append('date_end', targetDate);
+    qPayload.append('view_data', '1');
+    for (const g of ['golf-g1-', 'golf-g2-', 'golf-g3-', 'golf-g4-', 'golf-g5-', 'golf-g6-']) {
+      for (const p of ['LUULUONG', 'TONGLUULUONG', 'MUCNUOC']) {
+        qPayload.append(g + '[]', p);
+      }
+    }
+    for (const s of ['0', '1', '2']) {
+      qPayload.append('dn-status[]', s);
+    }
+
+    const statResp = await fetch(`${this.BASE_URL}/statistic`, {
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Cookie: cookie,
+        Referer: `${this.BASE_URL}/statistic`,
+      },
+      body: qPayload.toString(),
+      cache: 'no-store',
+    });
+
+    const html = await statResp.text();
+    const tableMatch = html.match(/<table class="tblThongke[^"]*"[\s\S]*?<\/table>/);
+    if (!tableMatch) {
+      throw new Error('Không tìm thấy bảng dữ liệu quan trắc cho ngày ' + targetDate);
+    }
+
+    const rows = tableMatch[0].match(/<tr[\s\S]*?<\/tr>/g) || [];
+    const records: { timeStr: string; wells: Record<number, { luu_luong: number | null; tong_luu_luong: number | null; muc_nuoc: number | null }> }[] = [];
+
+    for (const r of rows.slice(1)) {
+      const cells = (r.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g) || []).map((c) =>
+        c.replace(/<[^>]+>/g, '').trim().replace(/&nbsp;/g, '')
+      );
+      if (cells.length < 25) continue;
+
+      const timeStr = cells[0];
+      const wells: Record<number, { luu_luong: number | null; tong_luu_luong: number | null; muc_nuoc: number | null }> = {};
+
+      for (let w = 1; w <= 6; w++) {
+        const idx = 1 + (w - 1) * 4;
+        const parseVal = (v: string) => {
+          if (!v || v === '-') return null;
+          const n = parseFloat(v.replace(/,/g, ''));
+          return isNaN(n) ? null : n;
+        };
+
+        wells[w] = {
+          luu_luong: parseVal(cells[idx]),
+          tong_luu_luong: parseVal(cells[idx + 1]),
+          muc_nuoc: parseVal(cells[idx + 2]),
+        };
+      }
+      records.push({ timeStr, wells });
+    }
+
+    if (records.length === 0) {
+      throw new Error(`Ngày ${targetDate} chưa có bản ghi dữ liệu quan trắc nào.`);
+    }
+
+    const first = records[0];
+    const last = records[records.length - 1];
+    const cutOffTime = last.timeStr.split(' ')[1] || '18:00';
+    const [cHour, cMin] = cutOffTime.split(':').map((v) => parseInt(v, 10) || 0);
+    const cutOffHourFraction = cHour + cMin / 60;
+
+    const toTimeString = (h: number): string => {
+      let val = h;
+      while (val < 0) val += 24;
+      while (val >= 24) val -= 24;
+      const totalSec = Math.round(val * 3600);
+      const hours = Math.floor(totalSec / 3600) % 24;
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+
+    const toDisplayTime = (h: number): string => {
+      let val = h;
+      while (val < 0) val += 24;
+      while (val >= 24) val -= 24;
+      const totalSec = Math.round(val * 3600);
+      const hours = Math.floor(totalSec / 3600) % 24;
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    };
+
+    const results: WellScheduleCalculationResult[] = [];
+
+    for (const conf of configs) {
+      const wId = conf.wellId;
+      const startVal = first.wells[wId]?.tong_luu_luong ?? null;
+      const endVal = last.wells[wId]?.tong_luu_luong ?? null;
+
+      let daKhaiThac = 0;
+      if (startVal !== null && endVal !== null && endVal >= startVal) {
+        daKhaiThac = Math.round((endVal - startVal) * 100) / 100;
+      }
+
+      const dinhMuc = conf.dinhMuc;
+      const flowRate = conf.luuLuongPerHour > 0 ? conf.luuLuongPerHour : 70;
+      const delayMin = conf.delayMinutes || 0;
+      const conLai = Math.max(0, Math.round((dinhMuc - daKhaiThac) * 100) / 100);
+
+      if (!conf.enabled) {
+        results.push({
+          wellId: wId,
+          wellName: conf.wellName,
+          enabled: false,
+          startTong: startVal,
+          endTong: endVal,
+          daKhaiThac,
+          dinhMuc,
+          conLai,
+          luuLuongPerHour: flowRate,
+          delayMinutes: delayMin,
+          soGioCanBom: 0,
+          thoiGianMoLyThuyet: '--',
+          thoiGianMoThucTe: '--',
+          displayTime: 'Đang tắt cấu hình',
+          status: 'NO_DATA',
+        });
+        continue;
+      }
+
+      if (conLai <= 0) {
+        results.push({
+          wellId: wId,
+          wellName: conf.wellName,
+          enabled: true,
+          startTong: startVal,
+          endTong: endVal,
+          daKhaiThac,
+          dinhMuc,
+          conLai: 0,
+          luuLuongPerHour: flowRate,
+          delayMinutes: delayMin,
+          soGioCanBom: 0,
+          thoiGianMoLyThuyet: '--',
+          thoiGianMoThucTe: '--',
+          displayTime: 'Đã đạt định mức (Không cần mở)',
+          status: 'QUOTA_REACHED',
+        });
+        continue;
+      }
+
+      const soGioCanBom = Math.round((conLai / flowRate) * 100) / 100;
+      const lyThuyetHours = 24.0 - (conLai / flowRate);
+      const thucTeHours = lyThuyetHours + (delayMin / 60.0);
+
+      const strLyThuyet = toTimeString(lyThuyetHours);
+      const strThucTe = toTimeString(thucTeHours);
+      const shortThucTe = toDisplayTime(thucTeHours);
+
+      let status: 'SCHEDULED' | 'RUN_NOW' = 'SCHEDULED';
+      let displayTime = shortThucTe;
+
+      // Nếu số giờ cần bơm quá lớn (>24h) hoặc giờ mở tính toán sớm hơn thời điểm chốt số liệu hiện tại
+      if (soGioCanBom >= 24 || (lyThuyetHours < cutOffHourFraction && lyThuyetHours >= 0)) {
+        status = 'RUN_NOW';
+        displayTime = `Mở ngay (${shortThucTe})`;
+      }
+
+      results.push({
+        wellId: wId,
+        wellName: conf.wellName,
+        enabled: true,
+        startTong: startVal,
+        endTong: endVal,
+        daKhaiThac,
+        dinhMuc,
+        conLai,
+        luuLuongPerHour: flowRate,
+        delayMinutes: delayMin,
+        soGioCanBom,
+        thoiGianMoLyThuyet: strLyThuyet,
+        thoiGianMoThucTe: strThucTe,
+        displayTime,
+        status,
+      });
+    }
+
+    return {
+      dateStr: targetDate,
+      cutOffTimeStr: cutOffTime,
+      wells: results,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Định dạng tin nhắn gửi lịch mở giếng qua Zalo (Tuyệt đối KHÔNG hiển thị số phút độ trễ)
+   */
+  public static formatWellScheduleMessage(schedule: DailyWellScheduleSummary): string {
+    const [y, m, d] = schedule.dateStr.split('-');
+    const displayDate = `${d}/${m}/${y}`;
+
+    const now = new Date();
+    const updateTimeStr = new Intl.DateTimeFormat('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(now);
+
+    const activeWells = schedule.wells.filter((w) => w.enabled);
+
+    const lines = activeWells
+      .map((w) => {
+        if (w.status === 'QUOTA_REACHED') {
+          return `🔹 ${w.wellName}: Đã đạt định mức (Không cần mở)\n   • Đã khai thác: ${w.daKhaiThac.toLocaleString('vi-VN')} m³ / Định mức: ${w.dinhMuc.toLocaleString('vi-VN')} m³`;
+        }
+        if (w.status === 'RUN_NOW') {
+          return `🔹 ${w.wellName}: Cần mở ngay (Lưu lượng: ${w.luuLuongPerHour} m³/h)\n   • Đã khai thác: ${w.daKhaiThac.toLocaleString('vi-VN')} m³ / Định mức: ${w.dinhMuc.toLocaleString('vi-VN')} m³\n   • Còn lại: ${w.conLai.toLocaleString('vi-VN')} m³ (~${w.soGioCanBom} giờ)`;
+        }
+        return `🔹 ${w.wellName}: Thời gian mở giếng lúc ${w.displayTime}\n   • Đã khai thác: ${w.daKhaiThac.toLocaleString('vi-VN')} m³ / Định mức: ${w.dinhMuc.toLocaleString('vi-VN')} m³\n   • Còn lại: ${w.conLai.toLocaleString('vi-VN')} m³ (Lưu lượng: ${w.luuLuongPerHour} m³/h)`;
+      })
+      .join('\n\n');
+
+    return `⏰ [BỘ PHẬN RM] LỊCH MỞ GIẾNG TỰ ĐỘNG
+━━━━━━━━━━━━━━━━━━━━
+📅 Ngày: ${displayDate} (Chốt số liệu quan trắc lúc ${schedule.cutOffTimeStr})
+
+${lines}
+━━━━━━━━━━━━━━━━━━━━
+📌 Đề nghị nhân viên ca trực theo dõi và vận hành giếng theo đúng lịch trên.
+⏱️ Hệ thống tính toán tự động lúc ${updateTimeStr}`;
   }
 }

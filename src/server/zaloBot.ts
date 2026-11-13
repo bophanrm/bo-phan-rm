@@ -2,7 +2,7 @@ import { Zalo, ThreadType, LoginQRCallbackEventType } from 'zca-js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { supabase } from '@/lib/supabase';
-import { QuantracService } from './quantracService';
+import { QuantracService, WellScheduleConfigItem, DEFAULT_WELL_SCHEDULE_CONFIGS } from './quantracService';
 
 // File lưu phiên đăng nhập Zalo Bot trên máy chủ
 const SESSION_FILE_PATH = path.join(process.cwd(), '.zalo-session.json');
@@ -19,6 +19,19 @@ export interface ZaloWellReportConfig {
   lastSentDate?: string | null; // Ngày đã gửi gần nhất (YYYY-MM-DD)
 }
 
+export interface ZaloWellScheduleConfig {
+  enabled: boolean;
+  time: string; // Giờ gửi tự động mỗi ngày, vd: "18:30"
+  sendToUser: boolean; // Gửi đến Zalo cá nhân
+  targetUserId: string | null; // ID Zalo cá nhân
+  targetUserName?: string | null; // Tên hiển thị người nhận
+  sendToGroup: boolean; // Gửi vào nhóm Zalo
+  targetGroupId: string | null; // ID nhóm nhận
+  targetGroupName?: string | null; // Tên nhóm nhận
+  lastSentDate?: string | null; // Ngày đã gửi gần nhất (YYYY-MM-DD)
+  wells: WellScheduleConfigItem[]; // Bảng thông số định mức, lưu lượng và độ trễ từng giếng
+}
+
 export interface ZaloBotConfig {
   enabled: boolean;
   groupId: string | null;
@@ -27,6 +40,7 @@ export interface ZaloBotConfig {
   notifyDailyShiftReminder: boolean;
   notifyProjectDeadline: boolean;
   wellReport?: ZaloWellReportConfig;
+  wellSchedule?: ZaloWellScheduleConfig;
 }
 
 export interface ZaloGroupInfo {
@@ -74,6 +88,18 @@ class ZaloBotService {
       targetGroupName: null,
       lastSentDate: null,
     },
+    wellSchedule: {
+      enabled: false,
+      time: '18:30',
+      sendToUser: true,
+      targetUserId: null,
+      targetUserName: null,
+      sendToGroup: false,
+      targetGroupId: null,
+      targetGroupName: null,
+      lastSentDate: null,
+      wells: DEFAULT_WELL_SCHEDULE_CONFIGS,
+    },
   };
 
   private loginPromise: Promise<any> | null = null;
@@ -82,9 +108,10 @@ class ZaloBotService {
 
   constructor() {
     this.loadSavedSession();
-    // Bật bộ lập lịch kiểm tra gửi báo cáo giếng ngầm định kỳ
+    // Bật bộ lập lịch kiểm tra gửi báo cáo giếng & lịch mở giếng ngầm định kỳ
     this.schedulerInterval = setInterval(() => {
       this.checkAndTriggerWellReport();
+      this.checkAndTriggerWellSchedule();
     }, 30000);
   }
 
@@ -496,6 +523,49 @@ class ZaloBotService {
       }
     } catch (err: any) {
       console.error('[ZaloBot] Error in checkAndTriggerWellReport:', err.message);
+    }
+  }
+
+  // Bộ lập lịch ngầm kiểm tra và gửi LỊCH MỞ GIẾNG tự động theo bảng tính
+  public async checkAndTriggerWellSchedule() {
+    try {
+      if (this.status !== 'CONNECTED' || !this.api) return;
+      if (!this.config.wellSchedule?.enabled) return;
+
+      const now = new Date();
+      const vnTime = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(now);
+      const todayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
+
+      const targetTime = this.config.wellSchedule.time || '18:30';
+      if (vnTime === targetTime && this.config.wellSchedule.lastSentDate !== todayVnStr) {
+        console.log(`[ZaloBot] Đến giờ tự động gửi LỊCH MỞ GIẾNG (${vnTime}) ngày ${todayVnStr}!`);
+        this.config.wellSchedule.lastSentDate = todayVnStr;
+        await this.updateConfig({ wellSchedule: this.config.wellSchedule });
+
+        // Tính toán lịch mở giếng dựa trên số liệu hiện tại & cấu hình của Admin
+        const schedule = await QuantracService.calculateWellSchedule(
+          this.config.wellSchedule.wells,
+          todayVnStr
+        );
+        const msg = QuantracService.formatWellScheduleMessage(schedule);
+
+        // Gửi Zalo cá nhân nếu bật
+        if (this.config.wellSchedule.sendToUser && this.config.wellSchedule.targetUserId) {
+          await this.sendDirectMessage(this.config.wellSchedule.targetUserId, msg);
+        }
+
+        // Gửi Nhóm Zalo nếu bật
+        if (this.config.wellSchedule.sendToGroup && this.config.wellSchedule.targetGroupId) {
+          await this.sendGroupMessage(this.config.wellSchedule.targetGroupId, msg);
+        }
+      }
+    } catch (err: any) {
+      console.error('[ZaloBot] Error in checkAndTriggerWellSchedule:', err.message);
     }
   }
 
