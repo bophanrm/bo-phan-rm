@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const date = searchParams.get('date') || undefined;
     const data = await QuantracService.get24hWellData(date);
-    const previewMessage = QuantracService.formatZaloMessage(data);
+    const previewMessage = QuantracService.formatZaloMessage(data, zaloBot.config.wellSchedule?.wells);
     return NextResponse.json({ success: true, data, previewMessage });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const { targetType, targetUserId, targetGroupId, date } = body;
 
     const data = await QuantracService.get24hWellData(date);
-    const message = QuantracService.formatZaloMessage(data);
+    const message = QuantracService.formatZaloMessage(data, zaloBot.config.wellSchedule?.wells);
 
     const results: { user?: any; group?: any } = {};
 

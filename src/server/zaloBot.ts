@@ -509,7 +509,7 @@ class ZaloBotService {
 
         // Crawl số liệu 24h
         const report = await QuantracService.get24hWellData(todayVnStr);
-        const msg = QuantracService.formatZaloMessage(report);
+        const msg = QuantracService.formatZaloMessage(report, this.config.wellSchedule?.wells);
 
         // Gửi Zalo cá nhân nếu bật
         if (this.config.wellReport.sendToUser && this.config.wellReport.targetUserId) {

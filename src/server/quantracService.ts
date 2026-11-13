@@ -230,7 +230,10 @@ export class QuantracService {
   /**
    * Định dạng tin nhắn gửi qua Zalo
    */
-  public static formatZaloMessage(report: DailyWellReportSummary): string {
+  public static formatZaloMessage(
+    report: DailyWellReportSummary,
+    wellConfigs?: WellScheduleConfigItem[]
+  ): string {
     const [y, m, d] = report.dateStr.split('-');
     const displayDate = `${d}/${m}/${y}`;
 
@@ -244,12 +247,27 @@ export class QuantracService {
       year: 'numeric',
     }).format(now);
 
+    const defaultDinhMucMap: Record<number, number> = {
+      1: 450,
+      2: 480,
+      3: 480,
+      4: 480,
+      5: 650,
+      6: 480,
+    };
+
+    const configs = wellConfigs && wellConfigs.length > 0 ? wellConfigs : DEFAULT_WELL_SCHEDULE_CONFIGS;
+    const quotaMap: Record<number, number> = { ...defaultDinhMucMap };
+    for (const conf of configs) {
+      if (conf.wellId && conf.dinhMuc) {
+        quotaMap[conf.wellId] = conf.dinhMuc;
+      }
+    }
+
     const wellLines = report.wells
       .map((w) => {
-        if (w.volume > 0) {
-          return `🔹 ${w.wellName}: ${w.volume.toLocaleString('vi-VN')} m³`;
-        }
-        return `🔹 ${w.wellName}: 0 m³ (Không khai thác)`;
+        const dinhMuc = quotaMap[w.wellId] || 480;
+        return `🔹 ${w.wellName}: ${w.volume.toLocaleString('vi-VN')} m³ / Định mức: ${dinhMuc.toLocaleString('vi-VN')} m³`;
       })
       .join('\n');
 
