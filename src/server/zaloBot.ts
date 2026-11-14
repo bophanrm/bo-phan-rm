@@ -3,6 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { supabase } from '@/lib/supabase';
 import { QuantracService, WellScheduleConfigItem, DEFAULT_WELL_SCHEDULE_CONFIGS } from './quantracService';
+import { calculateShiftTimes } from '@/utils/shiftHelper';
+import { getPersonalName } from '@/utils/nameHelper';
+import { ShiftInfo } from '@/types';
 
 // File lưu phiên đăng nhập Zalo Bot trên máy chủ
 const SESSION_FILE_PATH = path.join(process.cwd(), '.zalo-session.json');
@@ -629,6 +632,137 @@ class ZaloBotService {
       }
     } catch (err: any) {
       console.error('[ZaloBot] Error in checkAndTriggerWellSchedule:', err.message);
+    }
+  }
+
+  // Bộ lập lịch ngầm kiểm tra và gửi NHẮC NHỞ CA TRỰC trước khi hết ca 60 phút
+  public async checkAndTriggerShiftReminders() {
+    try {
+      if (this.status !== 'CONNECTED' || !this.api) return;
+      if (this.config.enabled === false || this.config.notifyDailyShiftReminder === false) return;
+      if (!this.config.groupId) return;
+
+      const now = new Date();
+      const todayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
+
+      const { data: rows } = await supabase
+        .from('app_sync_store')
+        .select('key, value')
+        .in('key', ['tasks', 'shifts', 'shifts_config', 'users', 'zalo_shift_remind_history']);
+
+      const tasks: any[] = (rows?.find((r) => r.key === 'tasks')?.value as any[]) || [];
+      const shifts: any[] = (rows?.find((r) => r.key === 'shifts')?.value as any[]) || [];
+      const shiftsConfigList: ShiftInfo[] = (rows?.find((r) => r.key === 'shifts_config')?.value as ShiftInfo[]) || [];
+      const users: any[] = (rows?.find((r) => r.key === 'users')?.value as any[]) || [];
+      const remindHistory: Record<string, string> = (rows?.find((r) => r.key === 'zalo_shift_remind_history')?.value as Record<string, string>) || {};
+
+      const shiftsConfigMap: Record<string, ShiftInfo> = shiftsConfigList.reduce((acc, s) => {
+        acc[s.id] = s;
+        return acc;
+      }, {} as Record<string, ShiftInfo>);
+
+      // Gom nhóm các việc chưa nộp theo ca trực
+      const shiftReminderGroups: Record<
+        string,
+        {
+          shiftInfo: ShiftInfo;
+          reminderTimeText: string;
+          endTimeText: string;
+          tasksWithAssignees: { task: any; assignees: any[] }[];
+        }
+      > = {};
+
+      tasks.forEach((t) => {
+        if (!t.isDaily) return;
+        if (t.isManagementOnly || t.isDirectToStaff) return;
+        if (t.status === 'APPROVED' || t.status === 'SUBMITTED') return;
+        if (t.reports && t.reports.some((r: any) => r.status === 'ACCEPTED' || r.status === 'PENDING_REVIEW')) return;
+
+        const taskDate = new Date(t.reportDeadline || t.dueDate || t.createdAt);
+        const taskDateVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(taskDate);
+        if (taskDateVnStr !== todayVnStr) return;
+
+        const assignees: string[] = t.assignedTo || [];
+        assignees.forEach((assigneeId) => {
+          const userObj = users.find((u) => u.id === assigneeId);
+          const userShift = shifts.find((s) => s.userId === assigneeId && s.date === todayVnStr);
+          const shiftId = userShift?.shiftId || 'HANH_CHINH';
+
+          if (shiftId === 'OFF' || shiftId === 'OFF_HALF') return;
+
+          const shiftCalc = calculateShiftTimes(shiftId, now, shiftsConfigMap);
+          const reminderDate = new Date(shiftCalc.reminderDateIso);
+          const deadlineDate = new Date(shiftCalc.dueDateIso);
+
+          // Đến giờ nhắc (trước hết ca 60 phút) và không quá 6 tiếng sau khi ca hết
+          const isDue = now >= reminderDate && now.getTime() - deadlineDate.getTime() <= 6 * 3600 * 1000;
+          if (isDue) {
+            if (!shiftReminderGroups[shiftId]) {
+              shiftReminderGroups[shiftId] = {
+                shiftInfo: shiftCalc.shiftInfo,
+                reminderTimeText: shiftCalc.formattedReminderText,
+                endTimeText: shiftCalc.formattedDeadlineText,
+                tasksWithAssignees: [],
+              };
+            }
+            const group = shiftReminderGroups[shiftId];
+            let existing = group.tasksWithAssignees.find((item) => item.task.id === t.id);
+            if (!existing) {
+              existing = { task: t, assignees: [] };
+              group.tasksWithAssignees.push(existing);
+            }
+            if (userObj && !existing.assignees.some((u) => u.id === userObj.id)) {
+              existing.assignees.push(userObj);
+            }
+          }
+        });
+      });
+
+      let updatedHistory = false;
+      for (const [shiftId, group] of Object.entries(shiftReminderGroups)) {
+        if (group.tasksWithAssignees.length === 0) continue;
+
+        const shiftKey = `${shiftId}-${todayVnStr}`;
+        if (remindHistory[shiftKey] === todayVnStr) continue;
+
+        let taskListText = '';
+        group.tasksWithAssignees.slice(0, 10).forEach((entry, idx) => {
+          const assigneesText =
+            entry.assignees.length > 0
+              ? entry.assignees.map((u) => `@${getPersonalName(u.name, true)}`).join(', ')
+              : 'Chưa phân công';
+          taskListText += `${idx + 1}. ${entry.task.title} (${assigneesText})\n`;
+        });
+
+        if (group.tasksWithAssignees.length > 10) {
+          taskListText += `... và ${group.tasksWithAssignees.length - 10} công việc khác.\n`;
+        }
+
+        const message = 
+`⏰ [BỘ PHẬN RM] NHẮC NHỞ HẠN NỘP CA TRỰC (${group.shiftInfo.name}: ${group.shiftInfo.timeRange})
+━━━━━━━━━━━━━━━━━━━━
+Đã đến ${group.reminderTimeText} (còn 60 phút nữa kết thúc ca làm việc ${group.endTimeText}).
+Hiện tại hệ thống ghi nhận các công việc sau CHƯA GỬI BÁO CÁO hoàn thành:
+
+${taskListText.trim()}
+━━━━━━━━━━━━━━━━━━━━
+👉 Các anh vui lòng chụp ảnh nghiệm thu và gửi báo cáo hoàn thành trên hệ thống trước ${group.endTimeText}!`;
+
+        console.log(`[ZaloBot] Gửi tin nhắc nhở ca trực ${shiftId} (${group.reminderTimeText}) cho nhóm ${this.config.groupId}`);
+        await this.sendGroupMessage(this.config.groupId, message);
+        remindHistory[shiftKey] = todayVnStr;
+        updatedHistory = true;
+      }
+
+      if (updatedHistory) {
+        await supabase.from('app_sync_store').upsert({
+          key: 'zalo_shift_remind_history',
+          value: remindHistory,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (err: any) {
+      console.error('[ZaloBot] Error in checkAndTriggerShiftReminders:', err.message);
     }
   }
 

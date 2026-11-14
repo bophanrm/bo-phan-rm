@@ -77,38 +77,78 @@ export async function notifyNewTaskToZalo(task: Task, users: User[], creatorUser
 }
 
 /**
- * Format và gửi tin nhắc nhở lúc 15:00 hằng ngày cho các công việc chưa nộp báo cáo
+ * Format và gửi tin nhắc nhở trước khi hết ca trực 60 phút theo ca làm việc của từng nhân viên
  */
-export async function notifyDailyShiftReminderToZalo(unsubmittedTasks: Task[], users: User[]) {
+export async function notifyDailyShiftReminderToZalo(
+  unsubmittedItems:
+    | {
+        task: Task;
+        assignees?: User[];
+      }[]
+    | Task[],
+  users: User[],
+  shiftInfo?: {
+    name: string;
+    timeRange: string;
+    reminderTime: string;
+    endTime: string;
+  }
+) {
   try {
-    if (!unsubmittedTasks || unsubmittedTasks.length === 0) return;
+    if (!unsubmittedItems || unsubmittedItems.length === 0) return;
 
-    // Lọc bỏ các công việc nội bộ và việc riêng không qua giám sát để bảo mật
-    const safeTasks = unsubmittedTasks.filter((t) => !t.isManagementOnly && !t.isDirectToStaff);
-    if (safeTasks.length === 0) return;
+    // Chuẩn hoá danh sách task và assignees
+    const normalizedTasks: { task: Task; assignees: User[] }[] = [];
 
-    let taskListText = '';
-    safeTasks.slice(0, 10).forEach((t, idx) => {
-      const assignees = users
-        .filter((u) => t.assignedTo.includes(u.id))
-        .map((u) => `@${getPersonalName(u.name, true)}`)
-        .join(', ');
-      taskListText += `${idx + 1}. ${t.title} (${assignees})\n`;
+    unsubmittedItems.forEach((item) => {
+      if ('task' in item) {
+        if (!item.task.isManagementOnly && !item.task.isDirectToStaff) {
+          normalizedTasks.push({
+            task: item.task,
+            assignees: item.assignees && item.assignees.length > 0
+              ? item.assignees
+              : users.filter((u) => item.task.assignedTo.includes(u.id)),
+          });
+        }
+      } else {
+        const t = item as Task;
+        if (!t.isManagementOnly && !t.isDirectToStaff) {
+          normalizedTasks.push({
+            task: t,
+            assignees: users.filter((u) => t.assignedTo.includes(u.id)),
+          });
+        }
+      }
     });
 
-    if (safeTasks.length > 10) {
-      taskListText += `... và ${safeTasks.length - 10} công việc khác.\n`;
+    if (normalizedTasks.length === 0) return;
+
+    let taskListText = '';
+    normalizedTasks.slice(0, 10).forEach((entry, idx) => {
+      const assigneesText =
+        entry.assignees.length > 0
+          ? entry.assignees.map((u) => `@${getPersonalName(u.name, true)}`).join(', ')
+          : 'Chưa phân công';
+      taskListText += `${idx + 1}. ${entry.task.title} (${assigneesText})\n`;
+    });
+
+    if (normalizedTasks.length > 10) {
+      taskListText += `... và ${normalizedTasks.length - 10} công việc khác.\n`;
     }
 
+    const shiftHeader = shiftInfo ? ` (${shiftInfo.name}: ${shiftInfo.timeRange})` : '';
+    const reminderTimeStr = shiftInfo?.reminderTime || '15:00';
+    const endTimeStr = shiftInfo?.endTime || '16:00';
+
     const message = 
-`⏰ [BỘ PHẬN RM] NHẮC NHỞ HẠN NỘP CA TRỰC (15:00)
+`⏰ [BỘ PHẬN RM] NHẮC NHỞ HẠN NỘP CA TRỰC${shiftHeader}
 ━━━━━━━━━━━━━━━━━━━━
-Đã đến 15:00 (còn 1 tiếng kết thúc ca trực 16:00).
+Đã đến ${reminderTimeStr} (còn 60 phút nữa kết thúc ca làm việc ${endTimeStr}).
 Hiện tại hệ thống ghi nhận các công việc sau CHƯA GỬI BÁO CÁO hoàn thành:
 
 ${taskListText.trim()}
 ━━━━━━━━━━━━━━━━━━━━
-👉 Các anh vui lòng chụp ảnh nghiệm thu và gửi báo cáo hoàn thành trên hệ thống trước 16:00!`;
+👉 Các anh vui lòng chụp ảnh nghiệm thu và gửi báo cáo hoàn thành trên hệ thống trước ${endTimeStr}!`;
 
     await sendZaloMessage(message, undefined, 'DAILY_REMINDER');
   } catch (error) {

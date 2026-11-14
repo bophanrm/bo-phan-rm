@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import {
   User,
   Task,
@@ -706,6 +706,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [scheduleApprovals, setScheduleApprovals] = useState<Record<string, WeekScheduleApproval>>({});
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+  // Bảng tra cứu cấu hình ca làm việc
+  const shiftsConfigMap: Record<string, ShiftInfo> = useMemo(() => {
+    return shiftsConfig.reduce((acc, s) => {
+      acc[s.id] = s;
+      return acc;
+    }, {} as Record<string, ShiftInfo>);
+  }, [shiftsConfig]);
+
+  // Helper tính ngày chuẩn theo múi giờ Việt Nam (YYYY-MM-DD)
+  const getTodayDateString = (d: Date = new Date()): string => {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(d);
+    } catch {
+      return d.toISOString().split('T')[0];
+    }
+  };
+
   // Helper tính thứ 2 của tuần
   const getMondayStr = (d: Date = new Date()): string => {
     const day = d.getDay();
@@ -1120,16 +1137,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [notifications, currentUser.id]);
 
   // Cơ chế nhắc nhở hoàn thành công việc Daily:
-  // Toàn thời gian làm việc trong ngày (ca hành chính 7h30 - 16h00).
-  // Đến 15h (1 tiếng trước khi hết ca), nếu chưa gửi báo cáo hoàn thành công việc sẽ tự động nhắc nhở.
+  // Căn cứ vào ca làm việc thực tế của từng nhân viên (Ca 1, Ca 2, Ca 3, Hành chính, Buggy...)
+  // Hệ thống sẽ gửi nhắc nhở trước khi người đó hết ca trực 60 phút (thay vì cố định 15h00).
   useEffect(() => {
     const checkDailyTaskReminders = () => {
       const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
-      const overdueDailyTasksForZalo: Task[] = [];
+      const todayStr = getTodayDateString(now);
 
+      // 1. Nhắc nhở dự án dài hạn (Chưa xong và gần đến hạn trong vòng 1-3 ngày)
       tasks.forEach((t) => {
-        // Xử lý nhắc nhở dự án dài hạn (Chưa xong và gần đến hạn trong vòng 1-3 ngày)
         if (!t.isDaily && t.status !== 'APPROVED' && !t.isManagementOnly && !t.isDirectToStaff) {
           const dueTimestamp = new Date(t.reportDeadline || t.dueDate).getTime();
           const diffDays = Math.ceil((dueTimestamp - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -1140,9 +1156,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               notifyProjectDeadlineReminderToZalo(t, users, diffDays);
             }
           }
-          return;
         }
+      });
 
+      // 2. Nhắc nhở công việc Daily trước khi hết ca 60 phút
+      // Gom nhóm theo ca trực để gửi thông báo Zalo chuẩn xác theo từng ca
+      const shiftReminderGroups: Record<
+        string,
+        {
+          shiftInfo: ShiftInfo;
+          reminderTimeText: string;
+          endTimeText: string;
+          tasksWithAssignees: { task: Task; assignees: User[] }[];
+        }
+      > = {};
+
+      tasks.forEach((t) => {
         if (!t.isDaily) return;
         // Bỏ qua nếu đã được duyệt hoặc đã nộp đang chờ duyệt
         if (t.status === 'APPROVED' || t.status === 'SUBMITTED') return;
@@ -1150,25 +1179,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         // Kiểm tra task của ngày hôm nay
         const taskDate = new Date(t.reportDeadline || t.dueDate || t.createdAt);
-        if (taskDate.toDateString() !== now.toDateString()) return;
+        const taskDateStr = getTodayDateString(taskDate);
+        if (taskDateStr !== todayStr) return;
 
-        // Giờ nhắc nhở: 1 tiếng trước khi hết ca (Ví dụ deadline 16:00 thì nhắc từ 15:00)
-        const deadline = new Date(t.reportDeadline || t.dueDate);
-        const reminderTime = new Date(deadline.getTime() - 60 * 60 * 1000);
+        // Duyệt từng nhân sự được giao việc
+        t.assignedTo.forEach((assigneeId) => {
+          const userObj = users.find((u) => u.id === assigneeId);
 
-        if (now >= reminderTime) {
-          if (!t.isManagementOnly && !t.isDirectToStaff) {
-            overdueDailyTasksForZalo.push(t);
-          }
-          t.assignedTo.forEach((assigneeId) => {
+          // Tra cứu ca làm việc thực tế của nhân viên này hôm nay
+          const userShift = shifts.find((s) => s.userId === assigneeId && s.date === todayStr);
+          const shiftId = userShift?.shiftId || 'HANH_CHINH';
+
+          // Nếu nhân viên đang nghỉ ca thì không nhắc việc
+          if (shiftId === 'OFF' || shiftId === 'OFF_HALF') return;
+
+          // Tính toán mốc giờ ca trực & giờ nhắc nhở (trước hết ca 60 phút)
+          const shiftCalc = calculateShiftTimes(shiftId, now, shiftsConfigMap);
+          const reminderDate = new Date(shiftCalc.reminderDateIso);
+          const deadlineDate = new Date(shiftCalc.dueDateIso);
+
+          // Điều kiện nhắc: Đã đến giờ nhắc (>= reminderDate) và trong phạm vi ca làm việc (không quá 6 tiếng sau khi ca hết)
+          const isDueForReminder =
+            now >= reminderDate && now.getTime() - deadlineDate.getTime() <= 6 * 3600 * 1000;
+
+          if (isDueForReminder) {
+            // A. Gửi thông báo trong App cho nhân viên (cá nhân hóa theo ca)
             const notifKey = `remind-daily-${t.id}-${assigneeId}-${todayStr}`;
             setNotifications((prev) => {
               if (prev.some((n) => n.id === notifKey)) return prev;
               const notif: NotificationItem = {
                 id: notifKey,
                 userId: assigneeId,
-                title: '⏰ [Nhắc Nhở] Sắp hết ca làm việc - Vui lòng nộp báo cáo!',
-                message: `Đã 15:00 (còn 1 tiếng nữa kết thúc ca trực 16:00). Bạn có công việc "${t.title}" chưa gửi báo cáo hoàn thành. Vui lòng cập nhật ngay!`,
+                title: `⏰ [Nhắc Nhở] Sắp hết ca làm việc (${shiftCalc.formattedDeadlineText}) - Vui lòng nộp báo cáo!`,
+                message: `Đã đến ${shiftCalc.formattedReminderText} (còn 60 phút nữa kết thúc ca trực ${shiftCalc.formattedDeadlineText} - ${shiftCalc.shiftInfo.name}). Bạn có công việc "${t.title}" chưa gửi báo cáo hoàn thành. Vui lòng cập nhật ngay!`,
                 taskId: t.id,
                 isRead: false,
                 createdAt: now.toISOString(),
@@ -1177,24 +1220,56 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               localStorage.setItem(STORAGE_KEYS.NOTIFS, JSON.stringify(updated));
               return updated;
             });
-          });
-        }
+
+            // B. Gom nhóm vào ca để gửi tin Zalo đôn đốc
+            if (!t.isManagementOnly && !t.isDirectToStaff) {
+              if (!shiftReminderGroups[shiftId]) {
+                shiftReminderGroups[shiftId] = {
+                  shiftInfo: shiftCalc.shiftInfo,
+                  reminderTimeText: shiftCalc.formattedReminderText,
+                  endTimeText: shiftCalc.formattedDeadlineText,
+                  tasksWithAssignees: [],
+                };
+              }
+              const group = shiftReminderGroups[shiftId];
+              let existing = group.tasksWithAssignees.find((item) => item.task.id === t.id);
+              if (!existing) {
+                existing = { task: t, assignees: [] };
+                group.tasksWithAssignees.push(existing);
+              }
+              if (userObj && !existing.assignees.some((u) => u.id === userObj.id)) {
+                existing.assignees.push(userObj);
+              }
+            }
+          }
+        });
       });
 
-      // Tự động bắn thông báo nhắc việc tổng hợp 15:00 vào Nhóm Zalo (Mỗi ngày gửi 1 lần duy nhất)
-      if (overdueDailyTasksForZalo.length > 0) {
-        const dailyZaloKey = `zalo-daily-remind-${todayStr}`;
-        if (!localStorage.getItem(dailyZaloKey)) {
-          localStorage.setItem(dailyZaloKey, 'sent');
-          notifyDailyShiftReminderToZalo(overdueDailyTasksForZalo, users);
+      // 3. Tự động bắn thông báo nhắc việc theo từng ca vào Nhóm Zalo (Mỗi ca chỉ gửi 1 lần duy nhất trong ngày)
+      Object.entries(shiftReminderGroups).forEach(([shiftId, group]) => {
+        if (group.tasksWithAssignees.length === 0) return;
+
+        const shiftZaloKey = `zalo-shift-remind-${shiftId}-${todayStr}`;
+        if (!localStorage.getItem(shiftZaloKey)) {
+          localStorage.setItem(shiftZaloKey, 'sent');
+          notifyDailyShiftReminderToZalo(
+            group.tasksWithAssignees,
+            users,
+            {
+              name: group.shiftInfo.name,
+              timeRange: group.shiftInfo.timeRange,
+              reminderTime: group.reminderTimeText,
+              endTime: group.endTimeText,
+            }
+          );
         }
-      }
+      });
     };
 
     checkDailyTaskReminders();
     const interval = setInterval(checkDailyTaskReminders, 30000);
     return () => clearInterval(interval);
-  }, [tasks, users]);
+  }, [tasks, users, shifts, shiftsConfigMap]);
 
   const updateShifts = (newShifts: WorkShiftAssignment[]) => {
     setShifts(newShifts);
@@ -1279,11 +1354,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const getShiftForUser = (userId: string, date: string): WorkShiftAssignment | undefined => {
     return shifts.find((s) => s.userId === userId && s.date === date);
   };
-
-  const shiftsConfigMap: Record<string, ShiftInfo> = shiftsConfig.reduce((acc, s) => {
-    acc[s.id] = s;
-    return acc;
-  }, {} as Record<string, ShiftInfo>);
 
   const saveShiftConfig = (shift: ShiftInfo) => {
     setShiftsConfig((prev) => {

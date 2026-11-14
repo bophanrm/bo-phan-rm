@@ -596,8 +596,8 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                       className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
                     />
                     <div>
-                      <span className="font-bold text-slate-800">Nhắc nhở lúc 15:00 hằng ngày (Trước hết ca 1h)</span>
-                      <p className="text-[11px] text-slate-500">Tự động quét danh sách ai chưa nộp báo cáo ca trực và tag tên đôn đốc trong nhóm.</p>
+                      <span className="font-bold text-slate-800">Nhắc nhở trước khi hết ca 60 phút (Theo lịch ca từng nhân viên)</span>
+                      <p className="text-[11px] text-slate-500">Tự động căn cứ lịch ca (Ca 1: 13h00, Hành chính: 15h00, Buggy: 14h30, Ca 2: 21h00, Ca 3: 05h00...) để tag tên đôn đốc đúng ca.</p>
                     </div>
                   </label>
 

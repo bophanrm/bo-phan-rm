@@ -11,6 +11,7 @@ export async function GET(req: Request) {
     // 2. Kích hoạt kiểm tra và gửi tin theo lịch
     await zaloBot.checkAndTriggerWellReport();
     await zaloBot.checkAndTriggerWellSchedule();
+    await zaloBot.checkAndTriggerShiftReminders();
 
     const now = new Date();
     const vnTime = new Intl.DateTimeFormat('vi-VN', {

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       }
 
       if (type === 'DAILY_REMINDER' && zaloBot.config.notifyDailyShiftReminder === false) {
-        console.log('[ZaloBot] ĐÃ CHẶN GỬI TIN: Đã tắt nhắc nhở ca trực lúc 15h (notifyDailyShiftReminder = false)');
+        console.log('[ZaloBot] ĐÃ CHẶN GỬI TIN: Đã tắt nhắc nhở ca trực trước hết ca 60 phút (notifyDailyShiftReminder = false)');
         return NextResponse.json({ success: true, skipped: true, reason: 'Nhắc nhở ca trực đang tắt' });
       }
 

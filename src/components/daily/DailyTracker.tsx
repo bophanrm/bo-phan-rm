@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Task, User } from '@/types';
+import { calculateShiftTimes } from '@/utils/shiftHelper';
 import { exportDailyTasksToExcel } from '@/utils/excelExport';
 import { getPersonalName } from '@/utils/nameHelper';
 import {
@@ -236,7 +237,7 @@ export function DailyTracker({
   onOpenReportModal,
   onOpenReviewModal,
 }: DailyTrackerProps) {
-  const { tasks, currentUser, users, teams, rolloverTaskToTomorrow } = useApp();
+  const { tasks, currentUser, users, teams, shifts, shiftsConfigMap, rolloverTaskToTomorrow } = useApp();
 
   // State
   const [filterType, setFilterType] = useState<TaskFilterType>('ALL');
@@ -295,12 +296,27 @@ export function DailyTracker({
   const completedInPeriod = countApproved;
   const progressPercent = totalInPeriod > 0 ? Math.round((completedInPeriod / totalInPeriod) * 100) : 0;
 
-  // Cơ chế nhắc nhở ca trực (Toàn thời gian làm việc trong ngày: 7h30 - 16h00; nhắc lúc 15:00 nếu chưa gửi báo cáo)
+  // Cơ chế nhắc nhở ca trực: Căn cứ vào ca trực thực tế của từng nhân viên (nhắc trước khi hết ca 60 phút)
   const now = new Date();
+  const todayStr = (() => {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
+    } catch {
+      return now.toISOString().split('T')[0];
+    }
+  })();
+
   const todayDailyTasks = visibleTasks.filter((t) => {
     if (!t.isDaily) return false;
     const taskDate = new Date(t.reportDeadline || t.dueDate || t.createdAt);
-    return taskDate.toDateString() === now.toDateString();
+    const taskDateStr = (() => {
+      try {
+        return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(taskDate);
+      } catch {
+        return taskDate.toISOString().split('T')[0];
+      }
+    })();
+    return taskDateStr === todayStr;
   });
 
   const unsubmittedTodayDailyTasks = todayDailyTasks.filter((t) => {
@@ -309,17 +325,32 @@ export function DailyTracker({
     return true;
   });
 
-  // Kích hoạt nhắc nhở nếu thời gian hiện tại >= 1 tiếng trước deadline (ví dụ deadline 16:00 thì từ 15:00 trở đi)
-  const isShiftReminderActive = unsubmittedTodayDailyTasks.some((t) => {
-    const deadline = new Date(t.reportDeadline || t.dueDate);
-    const reminderTime = new Date(deadline.getTime() - 60 * 60 * 1000);
-    return now >= reminderTime;
-  });
-
-  // Danh sách công việc của nhân viên hiện tại cần nộp báo cáo
+  // Danh sách công việc của người dùng hiện tại cần nộp báo cáo
   const myUnsubmittedDailyTasks = unsubmittedTodayDailyTasks.filter((t) =>
     t.assignedTo.includes(currentUser.id)
   );
+
+  // Tra cứu ca làm việc hôm nay của người dùng hiện tại
+  const myShiftToday = shifts.find((s) => s.userId === currentUser.id && s.date === todayStr);
+  const myShiftCalc = calculateShiftTimes(myShiftToday?.shiftId || 'HANH_CHINH', now, shiftsConfigMap);
+  const isMyShiftOff = myShiftToday?.shiftId === 'OFF' || myShiftToday?.shiftId === 'OFF_HALF';
+
+  // Nhắc nhở của tôi được kích hoạt nếu: có việc chưa nộp, không nghỉ ca, và thời gian hiện tại >= giờ nhắc (trước hết ca 60 phút)
+  const isMyShiftReminderActive =
+    !isMyShiftOff &&
+    myUnsubmittedDailyTasks.length > 0 &&
+    now >= new Date(myShiftCalc.reminderDateIso);
+
+  // Đối với Cấp Quản lý / Giám sát: Kiểm tra xem có công việc nào của nhân sự trong ca đã tới giờ nhắc nhở (trước hết ca 60 phút)
+  const overdueTasksForManager = unsubmittedTodayDailyTasks.filter((t) => {
+    return t.assignedTo.some((assigneeId) => {
+      const userShift = shifts.find((s) => s.userId === assigneeId && s.date === todayStr);
+      const shiftId = userShift?.shiftId || 'HANH_CHINH';
+      if (shiftId === 'OFF' || shiftId === 'OFF_HALF') return false;
+      const shiftCalc = calculateShiftTimes(shiftId, now, shiftsConfigMap);
+      return now >= new Date(shiftCalc.reminderDateIso);
+    });
+  });
 
   const todayFormatted = new Intl.DateTimeFormat('vi-VN', {
     weekday: 'long',
@@ -595,8 +626,8 @@ export function DailyTracker({
         </div>
       </div>
 
-      {/* CƠ CHẾ NHẮC NHỞ CA TRỰC (7h30 - 16h00; Nhắc nhở lúc 15:00 nếu chưa gửi báo cáo hoàn thành) */}
-      {isShiftReminderActive && myUnsubmittedDailyTasks.length > 0 && (
+      {/* CƠ CHẾ NHẮC NHỞ CA TRỰC (Theo ca trực thực tế từng người; nhắc trước khi hết ca 60 phút) */}
+      {isMyShiftReminderActive && (
         <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border-2 border-amber-500/50 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-950 shadow-sm">
           <div className="flex items-start space-x-3.5">
             <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md">
@@ -605,15 +636,17 @@ export function DailyTracker({
             <div className="space-y-0.5">
               <div className="flex items-center space-x-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
-                  ⏰ Nhắc Nhở Ca Trực (15:00)
+                  ⏰ Nhắc Nhở Ca Trực ({myShiftCalc.formattedReminderText})
                 </span>
-                <span className="text-xs font-semibold text-amber-800">Còn 1 tiếng nữa kết thúc ca 16:00</span>
+                <span className="text-xs font-semibold text-amber-800">
+                  Còn 1 tiếng nữa kết thúc ca {myShiftCalc.formattedDeadlineText} ({myShiftCalc.shiftInfo.name})
+                </span>
               </div>
               <p className="text-sm font-bold text-slate-900">
                 Bạn có {myUnsubmittedDailyTasks.length} công việc hằng ngày chưa gửi báo cáo hoàn thành!
               </p>
               <p className="text-xs text-slate-600 line-clamp-1">
-                Công việc: &ldquo;{myUnsubmittedDailyTasks[0].title}&rdquo; &bull; Vui lòng nộp báo cáo kết quả trước 16:00.
+                Công việc: &ldquo;{myUnsubmittedDailyTasks[0].title}&rdquo; &bull; Vui lòng nộp báo cáo kết quả trước {myShiftCalc.formattedDeadlineText}.
               </p>
             </div>
           </div>
@@ -627,8 +660,8 @@ export function DailyTracker({
         </div>
       )}
 
-      {/* Cảnh báo dành cho Cấp Quản Lý / Điều Phối / Giám Sát (Cấp 1, 2, 3) theo dõi tiến độ lúc 15:00 */}
-      {isShiftReminderActive && myUnsubmittedDailyTasks.length === 0 && unsubmittedTodayDailyTasks.length > 0 && canReview && (
+      {/* Cảnh báo dành cho Cấp Quản Lý / Điều Phối / Giám Sát (Cấp 1, 2, 3) theo dõi tiến độ các ca trực */}
+      {!isMyShiftReminderActive && overdueTasksForManager.length > 0 && canReview && (
         <div className="bg-blue-50/90 border border-blue-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-blue-950 shadow-xs">
           <div className="flex items-start space-x-3">
             <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -637,15 +670,15 @@ export function DailyTracker({
             <div>
               <div className="flex items-center space-x-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-200 text-blue-900">
-                  Giám Sát Ca Trực (15:00)
+                  Giám Sát Ca Trực (Trước hết ca 60 phút)
                 </span>
-                <span className="text-xs text-blue-800">Hết ca lúc 16:00</span>
+                <span className="text-xs text-blue-800">Đôn đốc nộp báo cáo theo ca</span>
               </div>
               <p className="text-xs font-bold text-slate-900 mt-0.5">
-                Đang có {unsubmittedTodayDailyTasks.length} công việc hằng ngày hôm nay chưa nộp báo cáo kết quả.
+                Đang có {overdueTasksForManager.length} công việc hằng ngày hôm nay đến hạn nhắc nhở mà chưa nộp báo cáo kết quả.
               </p>
               <p className="text-[11px] text-slate-500">
-                Nhân sự phụ trách: {Array.from(new Set(unsubmittedTodayDailyTasks.flatMap((t) => t.assignedToNames || []))).map(n => getPersonalName(n)).join(', ')}
+                Nhân sự phụ trách: {Array.from(new Set(overdueTasksForManager.flatMap((t) => t.assignedToNames || []))).map(n => getPersonalName(n)).join(', ')}
               </p>
             </div>
           </div>
