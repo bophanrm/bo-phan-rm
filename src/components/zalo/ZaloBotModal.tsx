@@ -164,23 +164,45 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
     }
   };
 
-  // Cập nhật cấu hình báo cáo giếng
-  const handleSaveWellConfig = async (newWellConfig: any) => {
-    setWellConfig(newWellConfig);
+  // Hàm lưu cấu hình đồng bộ toàn diện, đảm bảo không bao giờ bị thất lạc trường dữ liệu nào
+  const saveFullConfig = async (
+    partialConfig?: Partial<typeof config>,
+    partialWellReport?: any,
+    partialWellSchedule?: any,
+    newGroupId?: string
+  ) => {
+    const updatedConfig = { ...config, ...(partialConfig || {}) };
+    const updatedWellReport = partialWellReport !== undefined ? partialWellReport : wellConfig;
+    const updatedWellSchedule = partialWellSchedule !== undefined ? partialWellSchedule : scheduleConfig;
+    const targetGroupId = newGroupId !== undefined ? newGroupId : selectedGroupId;
+    const groupName = groups.find((g) => g.id === targetGroupId)?.name || null;
+
+    if (partialConfig) setConfig(updatedConfig);
+    if (partialWellReport !== undefined) setWellConfig(updatedWellReport);
+    if (partialWellSchedule !== undefined) setScheduleConfig(updatedWellSchedule);
+    if (newGroupId !== undefined) setSelectedGroupId(targetGroupId);
+
     try {
       await fetch('/api/zalo/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...config,
-          groupId: selectedGroupId,
-          wellReport: newWellConfig,
-          wellSchedule: scheduleConfig,
+          ...updatedConfig,
+          groupId: targetGroupId || null,
+          groupName,
+          wellReport: updatedWellReport,
+          wellSchedule: updatedWellSchedule,
         }),
       });
+      console.log('[ZaloBotModal] Saved full config successfully');
     } catch (e) {
-      console.error('Lỗi lưu cấu hình báo cáo giếng:', e);
+      console.error('[ZaloBotModal] Lỗi lưu cấu hình:', e);
     }
+  };
+
+  // Cập nhật cấu hình báo cáo giếng
+  const handleSaveWellConfig = async (newWellConfig: any) => {
+    await saveFullConfig(undefined, newWellConfig, undefined);
   };
 
   // Gửi thử báo cáo giếng
@@ -229,24 +251,10 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
 
   // Lưu cấu hình lịch mở giếng & bảng thông số
   const handleSaveScheduleConfig = async (newScheduleConfig: any) => {
-    setScheduleConfig(newScheduleConfig);
-    try {
-      await fetch('/api/zalo/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...config,
-          groupId: selectedGroupId,
-          wellReport: wellConfig,
-          wellSchedule: newScheduleConfig,
-        }),
-      });
-      setScheduleSaveSuccess(true);
-      setTimeout(() => setScheduleSaveSuccess(false), 3000);
-      fetchSchedulePreview(newScheduleConfig.wells);
-    } catch (e) {
-      console.error('Lỗi lưu cấu hình lịch mở giếng:', e);
-    }
+    await saveFullConfig(undefined, undefined, newScheduleConfig);
+    setScheduleSaveSuccess(true);
+    setTimeout(() => setScheduleSaveSuccess(false), 3000);
+    fetchSchedulePreview(newScheduleConfig.wells);
   };
 
   // Cập nhật thông số một giếng (định mức, lưu lượng, độ trễ)
@@ -257,7 +265,8 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
       }
       return w;
     });
-    setScheduleConfig((prev) => ({ ...prev, wells: updatedWells }));
+    const updated = { ...scheduleConfig, wells: updatedWells };
+    setScheduleConfig(updated);
   };
 
   // Gửi thử lịch mở giếng
@@ -325,29 +334,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
 
   // Lưu cấu hình nhóm & tuỳ chọn thông báo
   const handleSaveConfig = async (newGroupId?: string) => {
-    const targetGroupId = newGroupId !== undefined ? newGroupId : selectedGroupId;
-    const groupName = groups.find((g) => g.id === targetGroupId)?.name || null;
-
-    try {
-      const res = await fetch('/api/zalo/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: targetGroupId || null,
-          groupName,
-          ...config,
-          wellReport: wellConfig,
-          wellSchedule: scheduleConfig,
-        }),
-      });
-      const data = await res.json();
-      if (data?.config?.groupId) {
-        setSelectedGroupId(data.config.groupId);
-      }
-      fetchStatus();
-    } catch (err) {
-      console.error('Lỗi lưu cấu hình:', err);
-    }
+    await saveFullConfig(undefined, undefined, undefined, newGroupId);
   };
 
   // Gửi tin nhắn test vào nhóm Zalo
@@ -545,7 +532,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
               {/* Các thiết lập tự động gửi tin */}
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
                 
-                {/* CÔNG TẮC TỔNG (MASTER SWITCH) */}
+                {/* CÔNG TẮC BẬT/TẮT THÔNG BÁO CÔNG VIỆC */}
                 <div className={`p-3 rounded-xl border flex items-center justify-between transition-colors ${
                   config.enabled
                     ? 'bg-emerald-50 border-emerald-200'
@@ -557,40 +544,32 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                       <span className={`text-xs font-black uppercase tracking-wider ${
                         config.enabled ? 'text-emerald-950' : 'text-rose-950'
                       }`}>
-                        {config.enabled ? 'Đang BẬT Gửi Tin Tự Động' : 'ĐÃ TẮT GỬI TIN TỰ ĐỘNG'}
+                        {config.enabled ? 'Thông Báo Công Việc: Đang Bật' : 'Thông Báo Công Việc: Đã Tắt'}
                       </span>
                     </div>
                     <p className={`text-[11px] leading-tight ${config.enabled ? 'text-emerald-800' : 'text-rose-800 font-medium'}`}>
                       {config.enabled
-                        ? 'Hệ thống tự động gửi tin vào Zalo theo các kịch bản bên dưới.'
-                        : 'Bot tạm dừng 100% mọi tin tự động (Zalo Chị Nguyên vẫn được lưu phiên, không bị mất).'}
+                        ? 'Gửi tin nhắc việc, thông báo giao việc vào nhóm Zalo (Báo cáo giếng có công tắc riêng độc lập bên dưới).'
+                        : 'Đang tắt tin nhắn giao việc & nhắc việc. Báo cáo giếng và Lịch mở giếng bên dưới vẫn hoạt động độc lập.'}
                     </p>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      const updated = { ...config, enabled: !config.enabled };
-                      setConfig(updated);
-                      fetch('/api/zalo/config', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ...updated, groupId: selectedGroupId }),
-                      });
-                    }}
+                    onClick={() => saveFullConfig({ enabled: !config.enabled })}
                     className={`px-3 py-1.5 rounded-lg text-xs font-black shrink-0 transition-all shadow-xs cursor-pointer ${
                       config.enabled
                         ? 'bg-rose-600 hover:bg-rose-700 text-white'
                         : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                     }`}
                   >
-                    {config.enabled ? 'TẮT GỬI TIN' : 'BẬT LẠI NGAY'}
+                    {config.enabled ? 'TẮT BÁO VIỆC' : 'BẬT LẠI NGAY'}
                   </button>
                 </div>
 
                 <div className="flex items-center space-x-1.5 text-slate-800 font-bold text-xs uppercase tracking-wider pt-1 border-t border-slate-200/80">
                   <Bell className="w-4 h-4 text-amber-600" />
-                  <span>Kịch Bản Chi Tiết (Bật/Tắt theo nhu cầu)</span>
+                  <span>Kịch Bản Công Việc & Ca Trực (Bật/Tắt theo nhu cầu)</span>
                 </div>
 
                 <div className={`space-y-2 text-xs transition-opacity ${!config.enabled ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -599,15 +578,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                       type="checkbox"
                       disabled={!config.enabled}
                       checked={config.notifyOnNewTask}
-                      onChange={(e) => {
-                        const updated = { ...config, notifyOnNewTask: e.target.checked };
-                        setConfig(updated);
-                        fetch('/api/zalo/config', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ ...updated, groupId: selectedGroupId }),
-                        });
-                      }}
+                      onChange={(e) => saveFullConfig({ notifyOnNewTask: e.target.checked })}
                       className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
                     />
                     <div>
@@ -621,15 +592,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                       type="checkbox"
                       disabled={!config.enabled}
                       checked={config.notifyDailyShiftReminder}
-                      onChange={(e) => {
-                        const updated = { ...config, notifyDailyShiftReminder: e.target.checked };
-                        setConfig(updated);
-                        fetch('/api/zalo/config', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ ...updated, groupId: selectedGroupId }),
-                        });
-                      }}
+                      onChange={(e) => saveFullConfig({ notifyDailyShiftReminder: e.target.checked })}
                       className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
                     />
                     <div>
@@ -643,15 +606,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                       type="checkbox"
                       disabled={!config.enabled}
                       checked={config.notifyProjectDeadline}
-                      onChange={(e) => {
-                        const updated = { ...config, notifyProjectDeadline: e.target.checked };
-                        setConfig(updated);
-                        fetch('/api/zalo/config', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ ...updated, groupId: selectedGroupId }),
-                        });
-                      }}
+                      onChange={(e) => saveFullConfig({ notifyProjectDeadline: e.target.checked })}
                       className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
                     />
                     <div>

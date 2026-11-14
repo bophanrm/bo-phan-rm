@@ -3,10 +3,17 @@ import { zaloBot } from '@/server/zaloBot';
 
 export async function GET() {
   try {
-    // Nếu chưa ở trạng thái CONNECTED (ví dụ server vừa khởi động lại), tự động tải phiên đã lưu từ Supabase / File
+    // Đảm bảo bot đã tải phiên và cấu hình mới nhất từ Supabase
     if (zaloBot.status !== 'CONNECTED' && zaloBot.status !== 'GENERATING_QR' && zaloBot.status !== 'QR_READY' && zaloBot.status !== 'SCANNED') {
       await zaloBot.loadSavedSession();
+    } else {
+      // Nếu đã CONNECTED, cập nhật cấu hình mới nhất từ Supabase zalo_config
+      await zaloBot.loadLatestConfigOnly();
     }
+
+    // Tự động kiểm tra lịch gửi bù nếu hôm nay đã đến giờ mà chưa gửi (phòng trường hợp serverless vừa thức dậy)
+    zaloBot.checkAndTriggerWellReport().catch((e) => console.warn('Error in background wellReport check:', e));
+    zaloBot.checkAndTriggerWellSchedule().catch((e) => console.warn('Error in background wellSchedule check:', e));
 
     let groups: any[] = [];
     let friends: any[] = [];

@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/zalo/cron",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/zalo/cron",
+      "schedule": "30 11 * * *"
+    },
+    {
+      "path": "/api/zalo/cron",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}

@@ -118,16 +118,37 @@ class ZaloBotService {
   // Tải cấu hình và phiên đã lưu từ trước (Hỗ trợ cả File cục bộ và Supabase Cloud)
   public async loadSavedSession() {
     try {
-      let data: ZaloSessionData | null = null;
+      // 1. Luôn tải CẤU HÌNH MỚI NHẤT từ Supabase (key = 'zalo_config') trước tiên!
+      try {
+        const { data: configRow } = await supabase
+          .from('app_sync_store')
+          .select('value')
+          .eq('key', 'zalo_config')
+          .maybeSingle();
 
-      // 1. Kiểm tra file cục bộ trước
-      if (fs.existsSync(SESSION_FILE_PATH)) {
-        const raw = fs.readFileSync(SESSION_FILE_PATH, 'utf-8');
-        data = JSON.parse(raw);
+        if (configRow?.value) {
+          this.config = { ...this.config, ...configRow.value };
+          console.log('[ZaloBot] Loaded latest config from Supabase zalo_config:', {
+            wellReportEnabled: this.config.wellReport?.enabled,
+            wellScheduleEnabled: this.config.wellSchedule?.enabled,
+          });
+        }
+      } catch (e: any) {
+        console.warn('[ZaloBot] Cannot load zalo_config from Supabase:', e.message);
       }
 
-      // 2. Nếu file không có hoặc trên cloud serverless, kiểm tra Supabase
-      if (!data) {
+      // 2. Tải phiên đăng nhập (Cookie, IMEI, UserInfo) từ file hoặc Supabase zalo_session
+      let data: ZaloSessionData | null = null;
+      if (fs.existsSync(SESSION_FILE_PATH)) {
+        try {
+          const raw = fs.readFileSync(SESSION_FILE_PATH, 'utf-8');
+          data = JSON.parse(raw);
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (!data || !data.cookie || !data.imei) {
         const { data: cloudRow } = await supabase
           .from('app_sync_store')
           .select('value')
@@ -136,7 +157,6 @@ class ZaloBotService {
 
         if (cloudRow?.value) {
           data = cloudRow.value;
-          // Ghi lại ra file nếu môi trường cho phép
           try {
             fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
           } catch (e) {
@@ -147,12 +167,28 @@ class ZaloBotService {
 
       if (data && data.cookie && data.imei) {
         if (data.userInfo) this.userInfo = data.userInfo;
-        if (data.config) this.config = { ...this.config, ...data.config };
         // Khôi phục phiên ngầm
         await this.reconnect(data);
       }
     } catch (err: any) {
       console.warn('[ZaloBot] Cannot read saved session:', err.message);
+    }
+  }
+
+  // Tải nhanh cấu hình mới nhất từ Supabase mà không cần reconnect lại Zalo
+  public async loadLatestConfigOnly() {
+    try {
+      const { data: configRow } = await supabase
+        .from('app_sync_store')
+        .select('value')
+        .eq('key', 'zalo_config')
+        .maybeSingle();
+
+      if (configRow?.value) {
+        this.config = { ...this.config, ...configRow.value };
+      }
+    } catch (e: any) {
+      console.warn('[ZaloBot] Error in loadLatestConfigOnly:', e.message);
     }
   }
 
@@ -221,18 +257,41 @@ class ZaloBotService {
     this.config = { ...this.config, ...newConfig };
     try {
       if (fs.existsSync(SESSION_FILE_PATH)) {
-        const raw = fs.readFileSync(SESSION_FILE_PATH, 'utf-8');
-        const data = JSON.parse(raw);
-        data.config = this.config;
-        fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+        try {
+          const raw = fs.readFileSync(SESSION_FILE_PATH, 'utf-8');
+          const data = JSON.parse(raw);
+          data.config = this.config;
+          fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+        } catch (e) {}
       }
+
+      // 1. Lưu vào bảng app_sync_store với key = zalo_config
       await supabase.from('app_sync_store').upsert({
         key: 'zalo_config',
         value: this.config,
         updated_at: new Date().toISOString(),
       });
-    } catch (e) {
-      // ignore
+
+      // 2. Đồng bộ lại vào zalo_session trên Supabase
+      const { data: sessionRow } = await supabase
+        .from('app_sync_store')
+        .select('value')
+        .eq('key', 'zalo_session')
+        .maybeSingle();
+
+      if (sessionRow?.value) {
+        const sessionData = sessionRow.value;
+        sessionData.config = this.config;
+        await supabase.from('app_sync_store').upsert({
+          key: 'zalo_session',
+          value: sessionData,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      console.log('[ZaloBot] Config successfully synced to Supabase zalo_config & zalo_session');
+    } catch (e: any) {
+      console.error('[ZaloBot] Error updating config in Supabase:', e.message);
     }
   }
 
@@ -501,9 +560,11 @@ class ZaloBotService {
       }).format(now);
       const todayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
 
-      const targetTime = this.config.wellReport.time || '00:05';
-      if (vnTime === targetTime && this.config.wellReport.lastSentDate !== todayVnStr) {
-        console.log(`[ZaloBot] Đến giờ tự động gửi báo cáo giếng (${vnTime}) ngày ${todayVnStr}!`);
+      const targetTime = this.config.wellReport.time || '07:00';
+      const shouldTrigger = vnTime >= targetTime && this.config.wellReport.lastSentDate !== todayVnStr;
+
+      if (shouldTrigger) {
+        console.log(`[ZaloBot] Đến giờ tự động gửi báo cáo giếng (${vnTime} >= ${targetTime}) ngày ${todayVnStr}!`);
         this.config.wellReport.lastSentDate = todayVnStr;
         await this.updateConfig({ wellReport: this.config.wellReport });
 
@@ -542,8 +603,10 @@ class ZaloBotService {
       const todayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
 
       const targetTime = this.config.wellSchedule.time || '18:30';
-      if (vnTime === targetTime && this.config.wellSchedule.lastSentDate !== todayVnStr) {
-        console.log(`[ZaloBot] Đến giờ tự động gửi LỊCH MỞ GIẾNG (${vnTime}) ngày ${todayVnStr}!`);
+      const shouldTrigger = vnTime >= targetTime && this.config.wellSchedule.lastSentDate !== todayVnStr;
+
+      if (shouldTrigger) {
+        console.log(`[ZaloBot] Đến giờ tự động gửi LỊCH MỞ GIẾNG (${vnTime} >= ${targetTime}) ngày ${todayVnStr}!`);
         this.config.wellSchedule.lastSentDate = todayVnStr;
         await this.updateConfig({ wellSchedule: this.config.wellSchedule });
 
