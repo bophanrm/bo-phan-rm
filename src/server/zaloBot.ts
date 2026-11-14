@@ -571,8 +571,10 @@ class ZaloBotService {
         this.config.wellReport.lastSentDate = todayVnStr;
         await this.updateConfig({ wellReport: this.config.wellReport });
 
-        // Crawl số liệu 24h
-        const report = await QuantracService.get24hWellData(todayVnStr);
+        // Crawl số liệu 24h của NGÀY HÔM TRƯỚC (từ 0h hôm trước đến 0h hôm nay)
+        const yesterday = new Date(now.getTime() - 24 * 3600 * 1000);
+        const yesterdayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(yesterday);
+        const report = await QuantracService.get24hWellData(yesterdayVnStr);
         const msg = QuantracService.formatZaloMessage(report, this.config.wellSchedule?.wells);
 
         // Gửi Zalo cá nhân nếu bật

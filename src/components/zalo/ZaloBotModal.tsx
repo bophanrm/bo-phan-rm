@@ -628,7 +628,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                           Báo Cáo Khai Thác Nước Giếng 24h
                         </h4>
                         <p className="text-[11px] text-slate-500">
-                          Tự động đăng nhập web quan trắc & tổng hợp m³ mỗi giếng trong 24h
+                          Tự động đăng nhập web quan trắc & gửi sản lượng ngày hôm trước (0h hôm trước đến 0h hôm nay)
                         </p>
                       </div>
                     </div>
@@ -655,7 +655,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                             <Clock className="w-3.5 h-3.5 text-cyan-700" />
                             <span>Giờ gửi báo cáo tự động:</span>
                           </label>
-                          <p className="text-[10px] text-slate-500">Khung giờ hệ thống chốt số liệu 24h để gửi tin</p>
+                          <p className="text-[10px] text-slate-500">Gửi tổng sản lượng 24h của ngày hôm trước (0h hôm trước đến 0h hôm nay)</p>
                         </div>
                         <div className="flex items-center space-x-2">
                           <input

@@ -117,18 +117,33 @@ export class QuantracService {
 
   /**
    * Truy vấn số liệu ngày và tính toán sản lượng 24h
-   * @param dateStr Định dạng YYYY-MM-DD
+   * Chu kỳ 24h hoàn chỉnh: Từ 00:00 ngày targetDate đến 00:00 ngày tiếp theo (targetDate + 1)
+   * @param dateStr Định dạng YYYY-MM-DD (mặc định là ngày hôm qua để lấy trọn vẹn 24h)
    */
   public static async get24hWellData(dateStr?: string): Promise<DailyWellReportSummary> {
-    // Mặc định lấy ngày hôm nay theo giờ Việt Nam
-    const targetDate = dateStr || new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
+    // Mặc định lấy ngày hôm qua theo giờ Việt Nam để chốt trọn vẹn 24h (từ 0h hôm qua đến 0h hôm nay)
+    let targetDate = dateStr;
+    if (!targetDate) {
+      const now = new Date();
+      const yesterday = new Date(now.getTime() - 24 * 3600 * 1000);
+      targetDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(yesterday);
+    }
+
+    // Tính ngày tiếp theo (targetDate + 1) để lấy mốc chốt 00:00 của đêm tiếp theo
+    const [y, m, d] = targetDate.split('-').map(Number);
+    const tDate = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+    const nextDate = new Date(tDate.getTime() + 24 * 3600 * 1000);
+    const nextYear = nextDate.getUTCFullYear();
+    const nextMonth = String(nextDate.getUTCMonth() + 1).padStart(2, '0');
+    const nextDay = String(nextDate.getUTCDate()).padStart(2, '0');
+    const nextDateStr = `${nextYear}-${nextMonth}-${nextDay}`;
 
     const cookie = await this.login();
 
     const qPayload = new URLSearchParams();
     qPayload.append('chonthoigian', '120');
     qPayload.append('date_start', targetDate);
-    qPayload.append('date_end', targetDate);
+    qPayload.append('date_end', nextDateStr);
     qPayload.append('view_data', '1');
     for (const g of ['golf-g1-', 'golf-g2-', 'golf-g3-', 'golf-g4-', 'golf-g5-', 'golf-g6-']) {
       for (const p of ['LUULUONG', 'TONGLUULUONG', 'MUCNUOC']) {
@@ -190,8 +205,23 @@ export class QuantracService {
       throw new Error(`Ngày ${targetDate} chưa có bản ghi dữ liệu quan trắc nào.`);
     }
 
+    // Bản ghi bắt đầu: Bản ghi đầu tiên của ngày targetDate (thường là 00:00 của ngày targetDate)
     const first = records[0];
-    const last = records[records.length - 1];
+
+    // Bản ghi kết thúc: Đúng mốc 00:00 của ngày tiếp theo (chu kỳ trọn vẹn 24h)
+    const nextDayMidnightPrefix = `${nextDay}/${nextMonth}/${nextYear} 00:00`;
+    let last = records.find((r) => r.timeStr.startsWith(nextDayMidnightPrefix));
+
+    if (!last) {
+      // Nếu không có mốc đúng 00:00, tìm bản ghi đầu tiên của ngày tiếp theo
+      const nextDayPrefix = `${nextDay}/${nextMonth}/${nextYear}`;
+      last = records.find((r) => r.timeStr.startsWith(nextDayPrefix));
+    }
+
+    if (!last) {
+      // Nếu ngày tiếp theo chưa có bản ghi nào, lấy bản ghi cuối cùng của targetDate
+      last = records[records.length - 1];
+    }
 
     let grandTotal = 0;
     const wellsResult: WellDataResult[] = [];
@@ -271,9 +301,21 @@ export class QuantracService {
       })
       .join('\n');
 
+    const startParts = report.startTimeStr.split(' ');
+    const endParts = report.endTimeStr.split(' ');
+    const startClock = startParts[1] || '00:00';
+    const startDate = startParts[0] || displayDate;
+    const endClock = endParts[1] || '00:00';
+    const endDate = endParts[0] || displayDate;
+
+    const timeRangeText =
+      startDate === endDate
+        ? `Từ ${startClock} đến ${endClock}`
+        : `Từ ${startClock} ngày ${startDate.slice(0, 5)} đến ${endClock} ngày ${endDate.slice(0, 5)}`;
+
     return `💧 [BỘ PHẬN RM] BÁO CÁO KHAI THÁC NƯỚC GIẾNG (24H)
 ━━━━━━━━━━━━━━━━━━━━
-📅 Ngày: ${displayDate} (Từ ${report.startTimeStr.split(' ')[1] || '00:00'} đến ${report.endTimeStr.split(' ')[1] || '24:00'})
+📅 Ngày: ${displayDate} (${timeRangeText})
 
 ${wellLines}
 ━━━━━━━━━━━━━━━━━━━━
