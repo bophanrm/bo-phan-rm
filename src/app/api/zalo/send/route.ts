@@ -3,6 +3,9 @@ import { zaloBot } from '@/server/zaloBot';
 
 export async function POST(req: Request) {
   try {
+    // 1. Luôn đảm bảo nạp phiên và cấu hình mới nhất từ Supabase Cloud khi có yêu cầu gửi tin
+    await zaloBot.ensureConnected();
+
     const { groupId, message, type } = await req.json();
     const targetGroupId = groupId || zaloBot.config.groupId;
 

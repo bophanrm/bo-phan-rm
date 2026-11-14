@@ -178,6 +178,16 @@ class ZaloBotService {
     }
   }
 
+  // Đảm bảo bot luôn ở trạng thái sẵn sàng kết nối, tự động thức dậy nếu container vừa khởi động lại hoặc ngủ đông
+  public async ensureConnected(): Promise<boolean> {
+    if (this.status === 'CONNECTED' && this.api) {
+      return true;
+    }
+    console.log('[ZaloBot] Đang tự động nạp phiên và đánh thức kết nối bot từ Supabase...');
+    await this.loadSavedSession();
+    return this.status === 'CONNECTED' && Boolean(this.api);
+  }
+
   // Tải nhanh cấu hình mới nhất từ Supabase mà không cần reconnect lại Zalo
   public async loadLatestConfigOnly() {
     try {
@@ -491,8 +501,9 @@ class ZaloBotService {
 
   // Gửi tin nhắn vào nhóm
   public async sendGroupMessage(groupId: string, messageText: string): Promise<{ success: boolean; error?: string }> {
+    await this.ensureConnected();
     if (this.status !== 'CONNECTED' || !this.api) {
-      return { success: false, error: 'Zalo Bot chưa được kết nối' };
+      return { success: false, error: 'Zalo Bot chưa được kết nối hoặc phiên đăng nhập đã hết hạn' };
     }
 
     try {
@@ -513,8 +524,9 @@ class ZaloBotService {
 
   // Gửi tin nhắn cá nhân (1:1 chat)
   public async sendDirectMessage(userId: string, messageText: string): Promise<{ success: boolean; error?: string }> {
+    await this.ensureConnected();
     if (this.status !== 'CONNECTED' || !this.api) {
-      return { success: false, error: 'Zalo Bot chưa được kết nối' };
+      return { success: false, error: 'Zalo Bot chưa được kết nối hoặc phiên đăng nhập đã hết hạn' };
     }
 
     try {

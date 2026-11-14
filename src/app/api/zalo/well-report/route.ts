@@ -5,6 +5,7 @@ import { QuantracService } from '@/server/quantracService';
 // GET: Lấy số liệu 24h mới nhất để xem trước
 export async function GET(req: Request) {
   try {
+    await zaloBot.ensureConnected();
     const { searchParams } = new URL(req.url);
     const date = searchParams.get('date') || undefined;
     const data = await QuantracService.get24hWellData(date);
@@ -18,6 +19,7 @@ export async function GET(req: Request) {
 // POST: Gửi báo cáo giếng ngay lập tức (Test hoặc gửi chủ động)
 export async function POST(req: Request) {
   try {
+    await zaloBot.ensureConnected();
     const body = await req.json().catch(() => ({}));
     const { targetType, targetUserId, targetGroupId, date } = body;
 

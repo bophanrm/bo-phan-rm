@@ -5,6 +5,7 @@ import { QuantracService } from '@/server/quantracService';
 // GET: Tính toán lịch mở giếng để xem trước (Preview)
 export async function GET(req: Request) {
   try {
+    await zaloBot.ensureConnected();
     const { searchParams } = new URL(req.url);
     const date = searchParams.get('date') || undefined;
     const customWellsRaw = searchParams.get('wells');
@@ -30,6 +31,7 @@ export async function GET(req: Request) {
 // POST: Gửi thử hoặc gửi chủ động Lịch mở giếng vào Zalo
 export async function POST(req: Request) {
   try {
+    await zaloBot.ensureConnected();
     const body = await req.json().catch(() => ({}));
     const { targetType, targetUserId, targetGroupId, wells, date } = body;
 
