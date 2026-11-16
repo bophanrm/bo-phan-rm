@@ -560,6 +560,13 @@ class ZaloBotService {
     }
   }
 
+  // Helper chuyển đổi chuỗi giờ "HH:mm" thành số phút trong ngày
+  private parseTimeToMinutes(timeStr: string): number {
+    if (!timeStr || !timeStr.includes(':')) return 0;
+    const parts = timeStr.split(':').map((v) => parseInt(v, 10));
+    return (parts[0] || 0) * 60 + (parts[1] || 0);
+  }
+
   // Bộ lập lịch ngầm kiểm tra và gửi báo cáo giếng đúng giờ
   public async checkAndTriggerWellReport() {
     try {
@@ -576,28 +583,44 @@ class ZaloBotService {
       const todayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
 
       const targetTime = this.config.wellReport.time || '07:00';
-      const shouldTrigger = vnTime >= targetTime && this.config.wellReport.lastSentDate !== todayVnStr;
+      const currentMinutes = this.parseTimeToMinutes(vnTime);
+      const targetMinutes = this.parseTimeToMinutes(targetTime);
+      const diffMinutes = currentMinutes - targetMinutes;
 
-      if (shouldTrigger) {
-        console.log(`[ZaloBot] Đến giờ tự động gửi báo cáo giếng (${vnTime} >= ${targetTime}) ngày ${todayVnStr}!`);
+      // Nếu đã gửi hôm nay rồi thì không gửi lại
+      if (this.config.wellReport.lastSentDate === todayVnStr) return;
+
+      // Chưa đến giờ hẹn
+      if (diffMinutes < 0) return;
+
+      // Nếu đã trễ quá 30 phút so với giờ hẹn (ví dụ server ngủ đông đến trưa/tối mới thức dậy),
+      // thì tự động đánh dấu đã qua giờ cho ngày hôm nay để TUYỆT ĐỐI KHÔNG gửi bù sai giờ!
+      if (diffMinutes > 30) {
+        console.log(`[ZaloBot] Đã quá giờ hẹn gửi báo cáo giếng (${vnTime} trễ hơn ${targetTime} > 30 phút), hủy gửi bù cho ngày ${todayVnStr}.`);
         this.config.wellReport.lastSentDate = todayVnStr;
         await this.updateConfig({ wellReport: this.config.wellReport });
+        return;
+      }
 
-        // Crawl số liệu 24h của NGÀY HÔM TRƯỚC (từ 0h hôm trước đến 0h hôm nay)
-        const yesterday = new Date(now.getTime() - 24 * 3600 * 1000);
-        const yesterdayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(yesterday);
-        const report = await QuantracService.get24hWellData(yesterdayVnStr);
-        const msg = QuantracService.formatZaloMessage(report, this.config.wellSchedule?.wells);
+      // Đang trong khung giờ hợp lệ (từ targetTime đến tối đa +30 phút):
+      console.log(`[ZaloBot] Đến giờ tự động gửi báo cáo giếng (${vnTime} ~ ${targetTime}) ngày ${todayVnStr}!`);
+      this.config.wellReport.lastSentDate = todayVnStr;
+      await this.updateConfig({ wellReport: this.config.wellReport });
 
-        // Gửi Zalo cá nhân nếu bật
-        if (this.config.wellReport.sendToUser && this.config.wellReport.targetUserId) {
-          await this.sendDirectMessage(this.config.wellReport.targetUserId, msg);
-        }
+      // Crawl số liệu 24h của NGÀY HÔM TRƯỚC (từ 0h hôm trước đến 0h hôm nay)
+      const yesterday = new Date(now.getTime() - 24 * 3600 * 1000);
+      const yesterdayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(yesterday);
+      const report = await QuantracService.get24hWellData(yesterdayVnStr);
+      const msg = QuantracService.formatZaloMessage(report, this.config.wellSchedule?.wells);
 
-        // Gửi Nhóm Zalo nếu bật
-        if (this.config.wellReport.sendToGroup && this.config.wellReport.targetGroupId) {
-          await this.sendGroupMessage(this.config.wellReport.targetGroupId, msg);
-        }
+      // Gửi Zalo cá nhân nếu bật
+      if (this.config.wellReport.sendToUser && this.config.wellReport.targetUserId) {
+        await this.sendDirectMessage(this.config.wellReport.targetUserId, msg);
+      }
+
+      // Gửi Nhóm Zalo nếu bật
+      if (this.config.wellReport.sendToGroup && this.config.wellReport.targetGroupId) {
+        await this.sendGroupMessage(this.config.wellReport.targetGroupId, msg);
       }
     } catch (err: any) {
       console.error('[ZaloBot] Error in checkAndTriggerWellReport:', err.message);
@@ -620,29 +643,45 @@ class ZaloBotService {
       const todayVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
 
       const targetTime = this.config.wellSchedule.time || '18:30';
-      const shouldTrigger = vnTime >= targetTime && this.config.wellSchedule.lastSentDate !== todayVnStr;
+      const currentMinutes = this.parseTimeToMinutes(vnTime);
+      const targetMinutes = this.parseTimeToMinutes(targetTime);
+      const diffMinutes = currentMinutes - targetMinutes;
 
-      if (shouldTrigger) {
-        console.log(`[ZaloBot] Đến giờ tự động gửi LỊCH MỞ GIẾNG (${vnTime} >= ${targetTime}) ngày ${todayVnStr}!`);
+      // Nếu đã gửi hôm nay rồi thì không gửi lại
+      if (this.config.wellSchedule.lastSentDate === todayVnStr) return;
+
+      // Chưa đến giờ hẹn
+      if (diffMinutes < 0) return;
+
+      // Nếu đã trễ quá 30 phút so với giờ hẹn (ví dụ server ngủ đông tới tối khuya mới thức dậy),
+      // thì tự động đánh dấu đã qua giờ cho ngày hôm nay để TUYỆT ĐỐI KHÔNG gửi bù sai giờ!
+      if (diffMinutes > 30) {
+        console.log(`[ZaloBot] Đã quá giờ hẹn gửi lịch mở giếng (${vnTime} trễ hơn ${targetTime} > 30 phút), hủy gửi bù cho ngày ${todayVnStr}.`);
         this.config.wellSchedule.lastSentDate = todayVnStr;
         await this.updateConfig({ wellSchedule: this.config.wellSchedule });
+        return;
+      }
 
-        // Tính toán lịch mở giếng dựa trên số liệu hiện tại & cấu hình của Admin
-        const schedule = await QuantracService.calculateWellSchedule(
-          this.config.wellSchedule.wells,
-          todayVnStr
-        );
-        const msg = QuantracService.formatWellScheduleMessage(schedule);
+      // Đang trong khung giờ hợp lệ (từ targetTime đến tối đa +30 phút):
+      console.log(`[ZaloBot] Đến giờ tự động gửi LỊCH MỞ GIẾNG (${vnTime} ~ ${targetTime}) ngày ${todayVnStr}!`);
+      this.config.wellSchedule.lastSentDate = todayVnStr;
+      await this.updateConfig({ wellSchedule: this.config.wellSchedule });
 
-        // Gửi Zalo cá nhân nếu bật
-        if (this.config.wellSchedule.sendToUser && this.config.wellSchedule.targetUserId) {
-          await this.sendDirectMessage(this.config.wellSchedule.targetUserId, msg);
-        }
+      // Tính toán lịch mở giếng dựa trên số liệu hiện tại & cấu hình của Admin
+      const schedule = await QuantracService.calculateWellSchedule(
+        this.config.wellSchedule.wells,
+        todayVnStr
+      );
+      const msg = QuantracService.formatWellScheduleMessage(schedule);
 
-        // Gửi Nhóm Zalo nếu bật
-        if (this.config.wellSchedule.sendToGroup && this.config.wellSchedule.targetGroupId) {
-          await this.sendGroupMessage(this.config.wellSchedule.targetGroupId, msg);
-        }
+      // Gửi Zalo cá nhân nếu bật
+      if (this.config.wellSchedule.sendToUser && this.config.wellSchedule.targetUserId) {
+        await this.sendDirectMessage(this.config.wellSchedule.targetUserId, msg);
+      }
+
+      // Gửi Nhóm Zalo nếu bật
+      if (this.config.wellSchedule.sendToGroup && this.config.wellSchedule.targetGroupId) {
+        await this.sendGroupMessage(this.config.wellSchedule.targetGroupId, msg);
       }
     } catch (err: any) {
       console.error('[ZaloBot] Error in checkAndTriggerWellSchedule:', err.message);
