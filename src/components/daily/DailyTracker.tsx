@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Task, User } from '@/types';
 import { calculateShiftTimes } from '@/utils/shiftHelper';
-import { exportDailyTasksToExcel } from '@/utils/excelExport';
+import { exportDailyTasksToExcel, exportWeeklyTasksToExcel } from '@/utils/excelExport';
+import { QuickProgressModal } from '@/components/tasks/QuickProgressModal';
 import { getPersonalName } from '@/utils/nameHelper';
 import {
   canExportDailyExcel,
@@ -42,6 +43,9 @@ import {
   FileText,
   RotateCcw,
   Eye,
+  Building2,
+  TrendingUp,
+  BarChart3,
 } from 'lucide-react';
 
 interface DailyTrackerProps {
@@ -244,6 +248,17 @@ export function DailyTracker({
   const [timePeriod, setTimePeriod] = useState<TimeFilterPeriod>('TODAY');
   const [customDate, setCustomDate] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState<boolean>(false);
+  const [selectedWeekMonday, setSelectedWeekMonday] = useState<Date>(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    const mon = new Date(now);
+    mon.setDate(now.getDate() + diff);
+    mon.setHours(0, 0, 0, 0);
+    return mon;
+  });
+  const [quickProgressTask, setQuickProgressTask] = useState<Task | null>(null);
   const [extendModalTask, setExtendModalTask] = useState<Task | null>(null);
 
   const isSecretary = currentUser.role === 'SECRETARY' || currentUser.level === 'LEVEL_2_SECRETARY';
@@ -308,6 +323,30 @@ export function DailyTracker({
 
   const todayDailyTasks = visibleTasks.filter((t) => {
     if (!t.isDaily) return false;
+
+    // Nếu là việc nhiều ngày (durationDays > 1)
+    if (t.durationDays && t.durationDays > 1) {
+      const startD = new Date(t.startDate || t.createdAt);
+      const startStr = (() => {
+        try {
+          return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(startD);
+        } catch {
+          return startD.toISOString().split('T')[0];
+        }
+      })();
+      const endD = new Date(t.reportDeadline || t.dueDate);
+      const endStr = (() => {
+        try {
+          return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(endD);
+        } catch {
+          return endD.toISOString().split('T')[0];
+        }
+      })();
+
+      // Active nếu hôm nay nằm trong khoảng từ ngày bắt đầu đến ngày kết thúc, hoặc quá hạn nhưng chưa hoàn thành
+      return (todayStr >= startStr && todayStr <= endStr) || (todayStr > endStr && t.status !== 'APPROVED');
+    }
+
     const taskDate = new Date(t.reportDeadline || t.dueDate || t.createdAt);
     const taskDateStr = (() => {
       try {
@@ -321,7 +360,10 @@ export function DailyTracker({
 
   const unsubmittedTodayDailyTasks = todayDailyTasks.filter((t) => {
     if (t.status === 'APPROVED' || t.status === 'SUBMITTED') return false;
-    if (t.reports && t.reports.some((r) => r.status === 'ACCEPTED' || r.status === 'PENDING_REVIEW')) return false;
+    // Nếu hôm nay đã gửi báo cáo kết quả hoàn thành
+    if (t.reports && t.reports.some((r) => (r.submittedAt?.startsWith(todayStr) || false) && (r.status === 'ACCEPTED' || r.status === 'PENDING_REVIEW'))) return false;
+    // Đối với việc nhiều ngày: nếu hôm nay đã có cập nhật tiến độ (progressUpdates) thì coi như hôm nay đã nộp
+    if (t.progressUpdates && t.progressUpdates.some((pu) => pu.updatedAt?.startsWith(todayStr))) return false;
     return true;
   });
 
@@ -374,7 +416,7 @@ export function DailyTracker({
     }
   };
 
-  // Handle Export Excel
+  // Handle Export Daily Excel
   const handleExportExcel = async () => {
     const tasksToExport = filteredDailyTasks.length > 0 ? filteredDailyTasks : visibleTasks;
     if (tasksToExport.length === 0) {
@@ -393,9 +435,50 @@ export function DailyTracker({
         exportedByName: getPersonalName(currentUser.name, false),
         managerName: managerNameStr,
       });
+      setShowExportOptions(false);
     } catch (error) {
       console.error('Error generating Excel report:', error);
       alert('Có lỗi khi tạo file Excel. Vui lòng thử lại.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Handle Export Weekly Excel (Chỉ dành cho Cấp 2 thao tác)
+  const handleExportWeeklyExcel = async () => {
+    try {
+      setIsExporting(true);
+      const mon = new Date(selectedWeekMonday);
+      mon.setHours(0, 0, 0, 0);
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
+      sun.setHours(23, 59, 59, 999);
+
+      // Lọc toàn bộ công việc (cả ngày và dự án) có mốc thời gian diễn ra trong tuần
+      const weeklyTasks = tasks.filter((t) => {
+        const d = new Date(t.startDate || t.dueDate || t.createdAt);
+        return d >= mon && d <= sun;
+      });
+
+      const managerUsers = users.filter((u) => u.role !== 'ADMIN' && (u.level === 'LEVEL_1_MANAGER' || u.role === 'MANAGER'));
+      const managerNameStr = managerUsers.length > 0 ? managerUsers.map((m) => getPersonalName(m.name, false)).join(' / ') : 'Ban Quản Lý';
+
+      const monStr = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(mon);
+      const sunStr = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(sun);
+
+      await exportWeeklyTasksToExcel({
+        tasks: weeklyTasks,
+        users,
+        startDate: mon,
+        endDate: sun,
+        weekLabel: `Tuần từ ${monStr} đến ${sunStr}`,
+        exportedByName: getPersonalName(currentUser.name, false),
+        managerName: managerNameStr,
+      });
+      setShowExportOptions(false);
+    } catch (error) {
+      console.error('Error generating Weekly Excel report:', error);
+      alert('Có lỗi khi tạo file Excel tuần. Vui lòng thử lại.');
     } finally {
       setIsExporting(false);
     }
@@ -427,15 +510,120 @@ export function DailyTracker({
           <div className="flex items-center space-x-2 shrink-0 self-start md:self-auto flex-wrap gap-y-2">
             {/* Export Excel Button (Chỉ Nhân Viên Điều Phối mới có quyền xuất file tổng hợp) */}
             {canExportExcel && (
-              <button
-                onClick={handleExportExcel}
-                disabled={isExporting}
-                title="Xuất bảng tổng hợp Excel kèm ảnh nghiệm thu"
-                className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>{isExporting ? 'Đang xuất Excel & ảnh...' : 'Xuất File Excel (Kèm Ảnh)'}</span>
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowExportOptions(!showExportOptions)}
+                  disabled={isExporting}
+                  className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>{isExporting ? 'Đang tạo Excel...' : 'Xuất File Excel'}</span>
+                  <span className="text-[10px] bg-emerald-800/60 px-1.5 py-0.5 rounded-md">▼</span>
+                </button>
+
+                {/* Dropdown Menu Tùy Chọn Xuất Báo Cáo */}
+                {showExportOptions && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 z-50 text-slate-800 space-y-2.5 animate-fade-in">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                        <span>Tùy Chọn Xuất Báo Cáo</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowExportOptions(false)}
+                        className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Lựa chọn 1: Xuất Báo Cáo Ngày */}
+                    <button
+                      type="button"
+                      onClick={handleExportExcel}
+                      disabled={isExporting}
+                      className="w-full p-2.5 text-left rounded-xl hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 transition-all flex items-start space-x-2.5 cursor-pointer group"
+                    >
+                      <div className="p-2 rounded-lg bg-emerald-100 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-950">
+                          1. Xuất Báo Cáo Ngày (Kèm Ảnh)
+                        </p>
+                        <p className="text-[11px] text-slate-500 leading-snug">
+                          Xuất kết quả công việc hằng ngày theo ngày đang xem ({customDate || 'Hôm nay'}) kèm đầy đủ ảnh hiện trường.
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Lựa chọn 2: Xuất Báo Cáo Tuần */}
+                    <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-blue-950 flex items-center gap-1">
+                          <BarChart3 className="w-3.5 h-3.5 text-blue-700" />
+                          <span>2. Xuất Báo Cáo Tuần (Tổng Hợp)</span>
+                        </span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-200 text-blue-900">
+                          Cấp 2
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-blue-900 leading-relaxed font-medium">
+                        Tổng hợp toàn bộ việc đã làm & chưa làm, phân loại việc nội bộ và việc nhà thầu ngoài.
+                      </p>
+
+                      {/* Bộ chọn tuần */}
+                      <div className="flex items-center justify-between bg-white rounded-lg p-1 border border-blue-200 text-xs font-bold text-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const d = new Date(selectedWeekMonday);
+                            d.setDate(d.getDate() - 7);
+                            setSelectedWeekMonday(d);
+                          }}
+                          className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-800 cursor-pointer"
+                          title="Tuần trước"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="text-[11px] font-mono text-blue-900">
+                          {new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(selectedWeekMonday)}
+                          {' ➔ '}
+                          {(() => {
+                            const sun = new Date(selectedWeekMonday);
+                            sun.setDate(sun.getDate() + 6);
+                            return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(sun);
+                          })()}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const d = new Date(selectedWeekMonday);
+                            d.setDate(d.getDate() + 7);
+                            setSelectedWeekMonday(d);
+                          }}
+                          className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-800 cursor-pointer"
+                          title="Tuần sau"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleExportWeeklyExcel}
+                        disabled={isExporting}
+                        className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs flex items-center justify-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Tải Báo Cáo Tuần (.xlsx)</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -726,7 +914,16 @@ export function DailyTracker({
                   {/* Hàng 1: Phân Loại + Nhân Sự + Trạng Thái */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      {task.isDaily ? (
+                      {task.isContractor ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 shrink-0 flex items-center gap-1">
+                          <Building2 className="w-3 h-3 text-amber-700" />
+                          <span>Nhà thầu: {task.contractorName}</span>
+                        </span>
+                      ) : task.durationDays && task.durationDays > 1 ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 border border-blue-300 shrink-0">
+                          🗓️ Việc {task.durationDays} ngày
+                        </span>
+                      ) : task.isDaily ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
                           ☀️ Việc ngày
                         </span>
@@ -736,29 +933,38 @@ export function DailyTracker({
                         </span>
                       )}
                       <span className="text-[11px] font-semibold text-slate-700 truncate">
-                        👤 {task.teamName || (task.assignedToNames?.map((n) => getPersonalName(n)).join(', ') || 'Chưa phân công')}
+                        {task.isContractor
+                          ? `Giám sát: ${task.assignedToNames?.map((n) => getPersonalName(n)).join(', ') || 'Chưa chỉ định'}`
+                          : `👤 ${task.teamName || (task.assignedToNames?.map((n) => getPersonalName(n)).join(', ') || 'Chưa phân công')}`}
                       </span>
                     </div>
 
-                    <span
-                      className={`shrink-0 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                        task.status === 'APPROVED'
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                    <div className="flex items-center gap-1 shrink-0">
+                      {(task.progressPercent !== undefined || (task.durationDays && task.durationDays > 1)) && task.status !== 'APPROVED' && (
+                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          {task.progressPercent || 0}%
+                        </span>
+                      )}
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          task.status === 'APPROVED'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                            : task.status === 'SUBMITTED'
+                            ? 'bg-purple-50 text-purple-800 border border-purple-300'
+                            : isRemindTime
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300 font-extrabold animate-pulse'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {task.status === 'APPROVED'
+                          ? '✓ Đã xong'
                           : task.status === 'SUBMITTED'
-                          ? 'bg-purple-50 text-purple-800 border border-purple-300'
+                          ? 'Chờ duyệt'
                           : isRemindTime
-                          ? 'bg-amber-100 text-amber-900 border border-amber-300 font-extrabold animate-pulse'
-                          : 'bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      {task.status === 'APPROVED'
-                        ? '✓ Đã xong'
-                        : task.status === 'SUBMITTED'
-                        ? 'Chờ duyệt'
-                        : isRemindTime
-                        ? '⏰ Cần nộp'
-                        : 'Đang làm'}
-                    </span>
+                          ? '⏰ Cần nộp'
+                          : 'Đang làm'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Hàng 2: Tên công việc & Yêu cầu */}
@@ -830,6 +1036,18 @@ export function DailyTracker({
 
                     {/* Các nút thao tác */}
                     <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                      {/* Nút Cập nhật nhanh tiến độ (Cấp 1, Cấp 2, Giám sát, Người tạo hoặc Người phụ trách) */}
+                      {task.status !== 'APPROVED' && (isManager || isSecretary || task.createdBy === currentUser.id || task.assignedTo.includes(currentUser.id)) && (
+                        <button
+                          type="button"
+                          onClick={() => setQuickProgressTask(task)}
+                          title="Cập nhật nhanh tiến độ công việc"
+                          className="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg border border-indigo-200 transition-colors cursor-pointer"
+                        >
+                          <TrendingUp className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
                       {/* 1. Nút Duyệt gia hạn */}
                       {task.extensionRequest?.status === 'PENDING' && canApproveExtensionRequest(currentUser, task, users) && (
                         <button
@@ -926,12 +1144,21 @@ export function DailyTracker({
                     <tr key={task.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="px-3.5 py-3 font-semibold text-slate-400">{idx + 1}</td>
                       <td className="px-3.5 py-3 text-center whitespace-nowrap">
-                        {task.isDaily ? (
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 inline-flex items-center space-x-1">
+                        {task.isContractor ? (
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center space-x-1">
+                            <Building2 className="w-3 h-3 text-amber-700" />
+                            <span>Nhà thầu: {task.contractorName}</span>
+                          </span>
+                        ) : task.durationDays && task.durationDays > 1 ? (
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-300 inline-flex items-center space-x-1">
+                            <span>🗓️ Việc {task.durationDays} ngày</span>
+                          </span>
+                        ) : task.isDaily ? (
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center space-x-1">
                             <span>☀️ Việc hằng ngày</span>
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300 inline-flex items-center space-x-1">
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 inline-flex items-center space-x-1">
                             <span>📋 Dự án dài hạn</span>
                           </span>
                         )}
@@ -949,12 +1176,40 @@ export function DailyTracker({
                             {task.description}
                           </p>
                         )}
+                        {(task.progressPercent !== undefined || (task.durationDays && task.durationDays > 1)) && task.status !== 'APPROVED' && (
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <div className="w-24 bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                              <div
+                                className="bg-indigo-600 h-full rounded-full transition-all"
+                                style={{ width: `${Math.min(100, Math.max(0, task.progressPercent || 0))}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-black text-indigo-700">
+                              {task.progressPercent || 0}%
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-slate-800">
-                          {task.teamName || (task.assignedToNames?.map((n) => getPersonalName(n)).join(', ') || 'Chưa phân công')}
-                        </p>
-                        <p className="text-[10px] text-slate-400">Giao bởi: {getPersonalName(task.createdByName || '')}</p>
+                        {task.isContractor ? (
+                          <div>
+                            <div className="flex items-center gap-1 font-bold text-amber-800 text-xs">
+                              <Building2 className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                              <span>{task.contractorName}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                              Giám sát: {task.teamName || (task.assignedToNames?.map((n) => getPersonalName(n)).join(', ') || 'Chưa chỉ định')}
+                            </p>
+                            <p className="text-[9px] text-slate-400">Giao bởi: {getPersonalName(task.createdByName || '')}</p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="font-semibold text-slate-800">
+                              {task.teamName || (task.assignedToNames?.map((n) => getPersonalName(n)).join(', ') || 'Chưa phân công')}
+                            </p>
+                            <p className="text-[10px] text-slate-400">Giao bởi: {getPersonalName(task.createdByName || '')}</p>
+                          </div>
+                        )}
                       </td>
                       <td className="px-3.5 py-3 text-center whitespace-nowrap">
                         {task.reportDeadline && !isNaN(new Date(task.reportDeadline).getTime()) ? (() => {
@@ -1076,6 +1331,18 @@ export function DailyTracker({
                       </td>
                       <td className="px-3.5 py-3 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end space-x-1.5">
+                          {/* Nút Cập nhật nhanh tiến độ (Cấp 1, Cấp 2, Giám sát, Người tạo hoặc Người phụ trách) */}
+                          {task.status !== 'APPROVED' && (isManager || isSecretary || task.createdBy === currentUser.id || task.assignedTo.includes(currentUser.id)) && (
+                            <button
+                              type="button"
+                              onClick={() => setQuickProgressTask(task)}
+                              title="Cập nhật nhanh tiến độ công việc"
+                              className="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg border border-indigo-200 transition-colors cursor-pointer"
+                            >
+                              <TrendingUp className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
                           {/* 1. Nút Duyệt gia hạn (Nếu có yêu cầu và user có thẩm quyền) */}
                           {task.extensionRequest?.status === 'PENDING' && canApproveExtensionRequest(currentUser, task, users) && (
                             <button
@@ -1160,6 +1427,12 @@ export function DailyTracker({
         task={extendModalTask}
         isOpen={!!extendModalTask}
         onClose={() => setExtendModalTask(null)}
+      />
+      {/* Modal Cập Nhật Nhanh Tiến Độ Công Việc */}
+      <QuickProgressModal
+        task={quickProgressTask}
+        isOpen={!!quickProgressTask}
+        onClose={() => setQuickProgressTask(null)}
       />
     </div>
   );

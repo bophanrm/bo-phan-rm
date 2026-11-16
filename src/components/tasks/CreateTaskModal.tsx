@@ -17,6 +17,7 @@ import {
   Star,
   AlertTriangle,
   AlertCircle,
+  Building2,
 } from 'lucide-react';
 import { Priority, StaffLevel, User } from '@/types';
 import { canAssignProject as checkCanAssignProject, canAssignToTarget, STAFF_LEVEL_LABELS, getLevelRank, isLevel1Manager } from '@/utils/permissions';
@@ -98,6 +99,10 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
     .filter((g) => g.members.length > 0);
 
   const [isDaily, setIsDaily] = useState<boolean>(!canAssignProject || (initialIsDaily ?? true));
+  const [isContractor, setIsContractor] = useState<boolean>(false);
+  const [contractorName, setContractorName] = useState<string>('');
+  const [contractorSupervisorId, setContractorSupervisorId] = useState<string>(currentUser.id);
+  const [durationDays, setDurationDays] = useState<number>(1);
   const [isManagementOnly, setIsManagementOnly] = useState<boolean>(false);
   const [isDirectToStaff, setIsDirectToStaff] = useState<boolean>(false);
   const [dailyDate, setDailyDate] = useState<string>(
@@ -228,32 +233,45 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       return;
     }
 
-    if (selectedMemberIds.length === 0) {
-      alert('⚠️ Bạn chưa chọn nhân viên thực hiện! Vui lòng tick chọn ít nhất 1 nhân viên trước khi giao việc.');
-      return;
-    }
-
-    // Nếu giao theo tổ nhưng chưa chọn giám sát hiện trường (và không phải việc riêng bỏ qua giám sát):
-    if (assignMode === 'TEAM' && !leadId && !isDirectToStaff) {
-      const currentTeam = teams.find((t) => t.id === selectedTeamId);
-      const members = currentTeam
-        ? (currentTeam.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[])
-        : [];
-      const supervisors = members.filter((m) => m.level === 'LEVEL_3_LEAD');
-
-      if (supervisors.length > 1) {
-        alert(
-          `⚠️ Tổ "${currentTeam?.name || 'được chọn'}" hiện có ${supervisors.length} Giám Sát Ca.\n\nVui lòng chọn 1 Giám Sát làm Giám Sát Hiện Trường trước khi tiếp tục giao việc!`
-        );
-      } else {
-        alert(
-          `⚠️ Tổ "${currentTeam?.name || 'được chọn'}" hiện chưa có Giám Sát và chưa bổ nhiệm Tổ Trưởng.\n\nVui lòng chỉ định một người làm Giám Sát Hiện Trường trước khi giao việc!`
-        );
+    if (isContractor) {
+      if (!contractorName.trim()) {
+        alert('⚠️ Vui lòng nhập Tên Nhà Thầu / Nhà Cung Cấp ngoài thực hiện!');
+        return;
       }
-      return;
+      if (!contractorSupervisorId) {
+        alert('⚠️ Vui lòng chỉ định một Nhân sự nội bộ phụ trách theo dõi tiến độ nhà thầu!');
+        return;
+      }
+    } else {
+      if (selectedMemberIds.length === 0) {
+        alert('⚠️ Bạn chưa chọn nhân viên thực hiện! Vui lòng tick chọn ít nhất 1 nhân viên trước khi giao việc.');
+        return;
+      }
+
+      // Nếu giao theo tổ nhưng chưa chọn giám sát hiện trường (và không phải việc riêng bỏ qua giám sát):
+      if (assignMode === 'TEAM' && !leadId && !isDirectToStaff) {
+        const currentTeam = teams.find((t) => t.id === selectedTeamId);
+        const members = currentTeam
+          ? (currentTeam.memberIds.map((id) => users.find((u) => u.id === id)).filter(Boolean) as User[])
+          : [];
+        const supervisors = members.filter((m) => m.level === 'LEVEL_3_LEAD');
+
+        if (supervisors.length > 1) {
+          alert(
+            `⚠️ Tổ "${currentTeam?.name || 'được chọn'}" hiện có ${supervisors.length} Giám Sát Ca.\n\nVui lòng chọn 1 Giám Sát làm Giám Sát Hiện Trường trước khi tiếp tục giao việc!`
+          );
+        } else {
+          alert(
+            `⚠️ Tổ "${currentTeam?.name || 'được chọn'}" hiện chưa có Giám Sát và chưa bổ nhiệm Tổ Trưởng.\n\nVui lòng chỉ định một người làm Giám Sát Hiện Trường trước khi giao việc!`
+          );
+        }
+        return;
+      }
     }
 
-    const assignedNames = selectedMemberIds.map((id) => {
+    const effectiveMemberIds = isContractor ? [contractorSupervisorId] : selectedMemberIds;
+
+    const assignedNames = effectiveMemberIds.map((id) => {
       const u = users.find((user) => user.id === id);
       return u ? getPersonalName(u.name, false) : id;
     });
@@ -291,7 +309,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
     if (!isDirectToStaff && !isManagementOnly) {
       // Điểm 1 (Cách A): Nếu Cấp 2 (Điều Phối) giao việc cho Cấp 4, tự động bổ sung Tổ Trưởng (Cấp 3) của tổ đó vào danh sách đồng nhận & duyệt sơ bộ
       if (currentUser.level === 'LEVEL_2_SECRETARY' || currentUser.role === 'SECRETARY') {
-        selectedMemberIds.forEach((mId) => {
+        effectiveMemberIds.forEach((mId) => {
           const memberTeam = teams.find((tm) => tm.memberIds.includes(mId));
           if (memberTeam) {
             const lead = users.find((u) => u.id === memberTeam.leaderId || (u.level === 'LEVEL_3_LEAD' && memberTeam.memberIds.includes(u.id)));
@@ -304,16 +322,16 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
 
       // Nếu người giao việc là Cấp 3 (Tổ trưởng / Giám sát), tự động đưa chính mình lên đầu danh sách nhận báo cáo (nếu mình không phải người làm)
       if (currentUser.level === 'LEVEL_3_LEAD') {
-        if (!finalReviewerIds.includes(currentUser.id) && !selectedMemberIds.includes(currentUser.id)) {
+        if (!finalReviewerIds.includes(currentUser.id) && !effectiveMemberIds.includes(currentUser.id)) {
           finalReviewerIds.unshift(currentUser.id);
         }
       }
 
-      const effectiveLeadId = leadId || selectedMemberIds[0];
+      const effectiveLeadId = isContractor ? contractorSupervisorId : (leadId || effectiveMemberIds[0]);
       const leadUser = users.find((u) => u.id === effectiveLeadId);
 
       // Nếu chỉ định Cấp 3 khác làm Giám sát hiện trường (effectiveLeadId), bổ sung người đó vào danh sách nhận báo cáo & duyệt sơ bộ
-      if (effectiveLeadId && !finalReviewerIds.includes(effectiveLeadId) && !selectedMemberIds.includes(effectiveLeadId)) {
+      if (effectiveLeadId && !finalReviewerIds.includes(effectiveLeadId) && !effectiveMemberIds.includes(effectiveLeadId)) {
         finalReviewerIds.push(effectiveLeadId);
       }
     }
@@ -323,34 +341,55 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       return u ? getPersonalName(u.name, false) : id;
     });
 
-    const chosenTeam = assignMode === 'TEAM' ? teams.find((t) => t.id === selectedTeamId) : undefined;
+    const chosenTeam = assignMode === 'TEAM' && !isContractor ? teams.find((t) => t.id === selectedTeamId) : undefined;
 
     let computedStart = new Date(startDate).toISOString();
     let computedDue = new Date(dueDate).toISOString();
     let computedReport = new Date(reportDeadline).toISOString();
 
+    const actualDurationDays = Math.max(1, durationDays || 1);
+
     if (isDaily) {
-      // Đối chiếu trực tiếp với ca làm việc của người được giao (selectedMemberIds[0]) vào ngày được chọn
+      // Đối chiếu trực tiếp với ca làm việc của người được giao (effectiveMemberIds[0]) vào ngày được chọn
       const baseDate = dailyDate ? new Date(dailyDate) : new Date();
-      const primaryAssigneeId = selectedMemberIds[0];
+      const primaryAssigneeId = effectiveMemberIds[0];
       const targetDateStr = baseDate.toISOString().split('T')[0];
       const userShift = primaryAssigneeId ? getShiftForUser(primaryAssigneeId, targetDateStr) : undefined;
       const shiftCalc = calculateShiftTimes(userShift?.shiftId || 'HANH_CHINH', baseDate);
 
       computedStart = shiftCalc.startDateIso;
-      computedDue = shiftCalc.dueDateIso;
-      computedReport = shiftCalc.reportDeadlineIso; // Hạn nộp báo cáo hoàn thành theo đúng giờ hết ca trực
+
+      if (actualDurationDays > 1) {
+        // Nếu làm trong nhiều ngày: hạn chót được tính vào cuối ca của ngày kết thúc
+        const finishDate = new Date(baseDate);
+        finishDate.setDate(finishDate.getDate() + (actualDurationDays - 1));
+        const finishTargetStr = finishDate.toISOString().split('T')[0];
+        const finishShift = primaryAssigneeId ? getShiftForUser(primaryAssigneeId, finishTargetStr) : undefined;
+        const finishShiftCalc = calculateShiftTimes(finishShift?.shiftId || 'HANH_CHINH', finishDate);
+
+        computedDue = finishShiftCalc.dueDateIso;
+        computedReport = finishShiftCalc.reportDeadlineIso;
+      } else {
+        computedDue = shiftCalc.dueDateIso;
+        computedReport = shiftCalc.reportDeadlineIso; // Hạn nộp báo cáo hoàn thành theo đúng giờ hết ca trực
+      }
     }
 
-    const effectiveLead = !isDirectToStaff ? (leadId || selectedMemberIds[0]) : undefined;
+    const effectiveLead = isContractor
+      ? contractorSupervisorId
+      : !isDirectToStaff
+      ? leadId || effectiveMemberIds[0]
+      : undefined;
     const leadUserObj = effectiveLead ? users.find((u) => u.id === effectiveLead) : undefined;
 
     createTask({
       title: title.trim(),
       description: description.trim(),
-      assignedTo: selectedMemberIds,
+      assignedTo: effectiveMemberIds,
       assignedToNames: assignedNames,
-      teamName: chosenTeam?.name || (selectedMemberIds.length > 1 ? `Nhóm phối hợp (${selectedMemberIds.length} người)` : undefined),
+      teamName: isContractor
+        ? `🏗️ [Nhà Thầu] ${contractorName.trim()}`
+        : chosenTeam?.name || (effectiveMemberIds.length > 1 ? `Nhóm phối hợp (${effectiveMemberIds.length} người)` : undefined),
       leadId: effectiveLead,
       leadName: effectiveLead ? getPersonalName(leadUserObj?.name || assignedNames[0], false) : undefined,
       reviewers: finalReviewerIds,
@@ -361,6 +400,11 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       isDaily,
       isManagementOnly: canAssignProject ? isManagementOnly : false,
       isDirectToStaff: isLevel1 ? isDirectToStaff : false,
+      isContractor: isContractor || undefined,
+      contractorName: isContractor ? contractorName.trim() : undefined,
+      durationDays: actualDurationDays,
+      progressPercent: 0,
+      progressUpdates: [],
       timeSlot: isDaily ? 'FULL_DAY' : undefined,
       startDate: computedStart,
       dueDate: computedDue,
@@ -511,9 +555,108 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
             />
           </div>
 
-          {/* Section 1: Assign to Team or Multiple People */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
+          {/* Switcher Đơn vị thực hiện: Nội Bộ vs Nhà Thầu Ngoài */}
+          <div className="bg-slate-100 p-1 rounded-xl flex items-center">
+            <button
+              type="button"
+              onClick={() => setIsContractor(false)}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                !isContractor ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>🏢 Nhân Sự Nội Bộ</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsContractor(true);
+                setIsDirectToStaff(false);
+                setIsManagementOnly(false);
+              }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                isContractor ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>🏗️ Nhà Thầu / NCC Ngoài</span>
+            </button>
+          </div>
+
+          {/* Section 1: Phân công người thực hiện */}
+          {isContractor ? (
+            /* KHUNG GIAO VIỆC CHO NHÀ THẦU / NCC NGOÀI */
+            <div className="bg-amber-50/80 border-2 border-amber-300/90 rounded-2xl p-4 space-y-3.5 shadow-xs animate-fade-in">
+              <div className="flex items-center space-x-2 text-amber-950">
+                <Building2 className="w-4 h-4 text-amber-700 shrink-0" />
+                <span className="text-xs font-extrabold uppercase tracking-wider">
+                  Thông Tin Nhà Thầu & Người Theo Dõi Tiến Độ
+                </span>
+              </div>
+
+              {/* Tên nhà thầu */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                  Tên Nhà Thầu / Nhà Cung Cấp Ngoài <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={contractorName}
+                  onChange={(e) => setContractorName(e.target.value)}
+                  placeholder="VD: Công ty TNHH Bơm & Van Nam Sài Gòn, Nhà Thầu Sơn Hải..."
+                  className="w-full text-xs font-semibold bg-white border border-amber-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-amber-500 outline-none text-slate-900"
+                />
+              </div>
+
+              {/* Nhân sự nội bộ phụ trách theo dõi (Tất cả cấp bậc: Cấp 1, Cấp 2, Cấp 3, Cấp 4) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Nhân sự nội bộ phụ trách theo dõi & nghiệm thu <span className="text-rose-500">*</span></span>
+                  <span className="text-[10px] text-amber-800 font-normal">Cấp 1 & Cấp 2 có thể chỉ định chéo</span>
+                </label>
+                <select
+                  value={contractorSupervisorId}
+                  onChange={(e) => setContractorSupervisorId(e.target.value)}
+                  className="w-full text-xs font-bold bg-white border border-amber-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-amber-500 outline-none text-slate-900"
+                >
+                  <optgroup label="Ban Quản Lý & Điều Phối (Cấp 1 & Cấp 2)">
+                    {users
+                      .filter((u) => u.level === 'LEVEL_1_MANAGER' || u.level === 'LEVEL_2_SECRETARY' || u.role === 'MANAGER' || u.role === 'SECRETARY')
+                      .map((u) => (
+                        <option key={u.id} value={u.id}>
+                          👑 {getPersonalName(u.name, false)} ({u.level === 'LEVEL_1_MANAGER' ? 'Quản Lý' : 'Điều Phối'}) {u.id === currentUser.id ? '• [Chính tôi]' : ''}
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Giám Sát Hiện Trường (Cấp 3)">
+                    {users
+                      .filter((u) => u.level === 'LEVEL_3_LEAD')
+                      .map((u) => (
+                        <option key={u.id} value={u.id}>
+                          ⭐ {getPersonalName(u.name, false)} [Giám Sát] {u.id === currentUser.id ? '• [Chính tôi]' : ''}
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Kỹ Thuật Viên / Nhân Viên (Cấp 4)">
+                    {users
+                      .filter((u) => !u.level || u.level === 'LEVEL_4_STAFF')
+                      .map((u) => (
+                        <option key={u.id} value={u.id}>
+                          👤 {getPersonalName(u.name, false)} [Nhân Viên] {u.id === currentUser.id ? '• [Chính tôi]' : ''}
+                        </option>
+                      ))}
+                  </optgroup>
+                </select>
+                <p className="text-[11px] text-amber-900 mt-1.5 leading-relaxed">
+                  💡 <strong>Quy trình theo dõi:</strong> Nhân sự được chọn sẽ trực tiếp kiểm tra tại hiện trường và nộp báo cáo tiến độ/nghiệm thu thay cho nhà thầu. Ban Quản Lý (Cấp 1 & Cấp 2) cũng có thể <strong>cập nhật nhanh tiến độ bất cứ lúc nào</strong>.
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* Section 1: Assign to Team or Multiple People */
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-1.5">
                 <Users className="w-4 h-4 text-blue-600" />
                 <span>Phân công người thực hiện</span>
@@ -1002,48 +1145,91 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
             })()
           )}
           </div>
+        )}
 
           {/* Priority & Deadlines (Đối chiếu trực tiếp với ca trực của người được giao) */}
           {(() => {
-            const primaryAssigneeId = selectedMemberIds[0];
+            const primaryAssigneeId = isContractor ? contractorSupervisorId : selectedMemberIds[0];
             const primaryAssigneeUser = users.find((u) => u.id === primaryAssigneeId);
             const targetDateStr = dailyDate || new Date().toISOString().split('T')[0];
             const detectedShift = primaryAssigneeId ? getShiftForUser(primaryAssigneeId, targetDateStr) : undefined;
             const currentShiftCalc = calculateShiftTimes(detectedShift?.shiftId || 'HANH_CHINH', new Date(targetDateStr));
 
             if (isDaily) {
+              const baseDateObj = new Date(targetDateStr);
+              const finishDateObj = new Date(baseDateObj);
+              const actualDays = Math.max(1, durationDays || 1);
+              finishDateObj.setDate(finishDateObj.getDate() + (actualDays - 1));
+              const finishDateFormatted = new Intl.DateTimeFormat('vi-VN', {
+                weekday: 'short',
+                day: '2-digit',
+                month: '2-digit',
+              }).format(finishDateObj);
+
               return (
                 <div className="bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/70 border border-blue-200/90 rounded-2xl p-4 space-y-3.5 shadow-xs">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center space-x-1.5">
                       <Clock className="w-4 h-4 text-blue-600" />
-                      <span>Thời Gian Hoàn Thành (Đối Chiếu Ca Trực)</span>
+                      <span>Thời Gian & Hạn Hoàn Thành</span>
                     </span>
                     <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-600 text-white shadow-xs shrink-0">
-                      {currentShiftCalc.shiftInfo.shortName}
+                      {actualDays > 1 ? `Làm trong ${actualDays} ngày` : currentShiftCalc.shiftInfo.shortName}
                     </span>
                   </div>
 
-                  {/* Ô chọn ngày áp dụng */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white/95 rounded-xl p-3 border border-blue-100">
-                    <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-slate-800">
-                        Ca trực của {primaryAssigneeUser ? getPersonalName(primaryAssigneeUser.name) : 'nhân sự'}:{' '}
-                        <span className="text-blue-700">{currentShiftCalc.formattedShiftText}</span>
-                      </p>
-                      <p className="text-[11px] text-slate-500">
-                        Hệ thống tự động đồng bộ theo lịch phân ca làm việc thực tế của nhân sự.
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <label className="text-[11px] font-medium text-slate-500">Ngày:</label>
+                  {/* Ô chọn ngày bắt đầu & Số ngày hoàn thành */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white/95 rounded-xl p-3 border border-blue-100">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Ngày bắt đầu:
+                      </label>
                       <input
                         type="date"
                         value={dailyDate}
                         onChange={(e) => setDailyDate(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                        <span>Thời hạn hoàn thành:</span>
+                        <span className="text-[10px] text-blue-600 font-bold">{actualDays > 1 ? 'Nhiều ngày' : 'Trong ngày'}</span>
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={durationDays}
+                          onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || 1)}
+                          className="w-20 bg-slate-50 border border-slate-200 text-xs font-black text-center px-2 py-1.5 rounded-lg text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span className="text-xs font-bold text-slate-700">ngày</span>
+                        {actualDays > 1 && (
+                          <span className="text-[11px] text-slate-500">
+                            (Đến {finishDateFormatted})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Thông tin ca trực & cơ chế nhắc nhở */}
+                  <div className="bg-white/95 rounded-xl p-3 border border-blue-100 space-y-1">
+                    <p className="text-xs font-bold text-slate-800">
+                      Ca trực của {primaryAssigneeUser ? getPersonalName(primaryAssigneeUser.name) : 'nhân sự'}:{' '}
+                      <span className="text-blue-700">{currentShiftCalc.formattedShiftText}</span>
+                    </p>
+                    {actualDays > 1 ? (
+                      <p className="text-[11px] text-amber-800 font-medium">
+                        🔔 <strong>Cơ chế nhắc nhở hằng ngày:</strong> Hệ thống sẽ tự động nhắc nhở nhân viên cập nhật tiến độ công việc trước khi hết ca 60 phút mỗi ngày cho đến khi hoàn thành hoặc xin gia hạn.
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-500">
+                        Hệ thống tự động đồng bộ hạn nộp theo lịch phân ca làm việc thực tế của nhân sự.
+                      </p>
+                    )}
                   </div>
 
                   {currentShiftCalc.isOff && (
@@ -1058,9 +1244,15 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                   {/* Thông tin Hạn nộp & Cơ chế nhắc nhở theo ca */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div className="bg-white/90 rounded-xl p-3 border border-blue-100 space-y-0.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hạn nộp kết quả báo cáo</span>
-                      <p className="text-sm font-extrabold text-blue-700">{currentShiftCalc.formattedDeadlineText} (Hết ca trực)</p>
-                      <p className="text-[10px] text-slate-500">Toàn thời gian ca làm việc trong ngày</p>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        {actualDays > 1 ? 'Hạn chót hoàn tất công việc' : 'Hạn nộp kết quả báo cáo'}
+                      </span>
+                      <p className="text-sm font-extrabold text-blue-700">
+                        {actualDays > 1 ? `${finishDateFormatted} (Hết ca)` : `${currentShiftCalc.formattedDeadlineText} (Hết ca)`}
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        {actualDays > 1 ? `Kéo dài ${actualDays} ngày` : 'Toàn thời gian ca làm việc trong ngày'}
+                      </p>
                     </div>
 
                     <div className="bg-amber-50/90 rounded-xl p-3 border border-amber-200/90 space-y-0.5">
@@ -1070,7 +1262,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                       </span>
                       <p className="text-sm font-extrabold text-amber-900">{currentShiftCalc.formattedReminderText} (Trước hết ca 1h)</p>
                       <p className="text-[10px] text-amber-700">
-                        Tự động nhắc nếu chưa gửi báo cáo hoàn thành.
+                        {actualDays > 1 ? 'Nhắc cập nhật tiến độ mỗi ngày' : 'Nhắc nếu chưa gửi báo cáo hoàn thành'}
                       </p>
                     </div>
                   </div>

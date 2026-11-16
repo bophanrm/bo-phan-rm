@@ -729,11 +729,29 @@ class ZaloBotService {
         if (!t.isDaily) return;
         if (t.isManagementOnly || t.isDirectToStaff) return;
         if (t.status === 'APPROVED' || t.status === 'SUBMITTED') return;
-        if (t.reports && t.reports.some((r: any) => r.status === 'ACCEPTED' || r.status === 'PENDING_REVIEW')) return;
 
-        const taskDate = new Date(t.reportDeadline || t.dueDate || t.createdAt);
-        const taskDateVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(taskDate);
-        if (taskDateVnStr !== todayVnStr) return;
+        // Xử lý công việc nhiều ngày và công việc trong ngày
+        const isMultiDay = t.durationDays && t.durationDays > 1;
+        if (isMultiDay) {
+          const startD = new Date(t.startDate || t.createdAt);
+          const startVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(startD);
+          const endD = new Date(t.reportDeadline || t.dueDate);
+          const endVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(endD);
+
+          const isActiveToday = (todayVnStr >= startVnStr && todayVnStr <= endVnStr) || (todayVnStr > endVnStr && t.status !== 'APPROVED');
+          if (!isActiveToday) return;
+
+          // Nếu hôm nay nhân viên đã gửi báo cáo kết quả hoặc đã nộp cập nhật tiến độ thì không nhắc
+          const hasReportedToday =
+            (t.reports && t.reports.some((r: any) => (r.submittedAt?.startsWith(todayVnStr) || false) && (r.status === 'ACCEPTED' || r.status === 'PENDING_REVIEW'))) ||
+            (t.progressUpdates && t.progressUpdates.some((pu: any) => pu.updatedAt?.startsWith(todayVnStr)));
+          if (hasReportedToday) return;
+        } else {
+          if (t.reports && t.reports.some((r: any) => r.status === 'ACCEPTED' || r.status === 'PENDING_REVIEW')) return;
+          const taskDate = new Date(t.reportDeadline || t.dueDate || t.createdAt);
+          const taskDateVnStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(taskDate);
+          if (taskDateVnStr !== todayVnStr) return;
+        }
 
         const assignees: string[] = t.assignedTo || [];
         assignees.forEach((assigneeId) => {
@@ -784,7 +802,14 @@ class ZaloBotService {
             entry.assignees.length > 0
               ? entry.assignees.map((u) => `@${getPersonalName(u.name, true)}`).join(', ')
               : 'Chưa phân công';
-          taskListText += `${idx + 1}. ${entry.task.title} (${assigneesText})\n`;
+
+          let taskTag = '';
+          if (entry.task.isContractor) {
+            taskTag = ` [Nhà thầu: ${entry.task.contractorName || 'Ngoài'}]`;
+          } else if (entry.task.durationDays && entry.task.durationDays > 1) {
+            taskTag = ` [Tiến độ: ${entry.task.progressPercent || 0}%]`;
+          }
+          taskListText += `${idx + 1}. ${entry.task.title}${taskTag} (${assigneesText})\n`;
         });
 
         if (group.tasksWithAssignees.length > 10) {
@@ -795,11 +820,11 @@ class ZaloBotService {
 `⏰ [BỘ PHẬN RM] NHẮC NHỞ HẠN NỘP CA TRỰC (${group.shiftInfo.name}: ${group.shiftInfo.timeRange})
 ━━━━━━━━━━━━━━━━━━━━
 Đã đến ${group.reminderTimeText} (còn 60 phút nữa kết thúc ca làm việc ${group.endTimeText}).
-Hiện tại hệ thống ghi nhận các công việc sau CHƯA GỬI BÁO CÁO hoàn thành:
+Hiện tại hệ thống ghi nhận các công việc sau CHƯA GỬI BÁO CÁO hoàn thành hoặc chưa cập nhật tiến độ hôm nay:
 
 ${taskListText.trim()}
 ━━━━━━━━━━━━━━━━━━━━
-👉 Các anh vui lòng chụp ảnh nghiệm thu và gửi báo cáo hoàn thành trên hệ thống trước ${group.endTimeText}!`;
+👉 Các anh vui lòng chụp ảnh nghiệm thu hoàn thành hoặc gửi báo cáo tiến độ hôm nay trên hệ thống trước ${group.endTimeText}!`;
 
         console.log(`[ZaloBot] Gửi tin nhắc nhở ca trực ${shiftId} (${group.reminderTimeText}) cho nhóm ${this.config.groupId}`);
         await this.sendGroupMessage(this.config.groupId, message);

@@ -16,6 +16,10 @@ interface SubmitReportModalProps {
 export function SubmitReportModal({ task, isOpen, onClose }: SubmitReportModalProps) {
   const { currentUser, submitReport } = useApp();
 
+  const [reportType, setReportType] = useState<'PROGRESS' | 'COMPLETION'>(
+    task?.durationDays && task.durationDays > 1 && (task.progressPercent || 0) < 100 ? 'PROGRESS' : 'COMPLETION'
+  );
+  const [progressPercent, setProgressPercent] = useState<number>(task?.progressPercent || 50);
   const [summary, setSummary] = useState('');
   const [notes, setNotes] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -71,7 +75,11 @@ export function SubmitReportModal({ task, isOpen, onClose }: SubmitReportModalPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!summary.trim()) {
-      alert('Vui lòng nhập tóm tắt kết quả công việc đã hoàn thành.');
+      alert(
+        reportType === 'PROGRESS'
+          ? 'Vui lòng nhập tóm tắt khối lượng tiến độ đã thực hiện hôm nay.'
+          : 'Vui lòng nhập tóm tắt kết quả công việc đã hoàn thành.'
+      );
       return;
     }
 
@@ -82,6 +90,8 @@ export function SubmitReportModal({ task, isOpen, onClose }: SubmitReportModalPr
       summary: summary.trim(),
       notes: notes.trim() || undefined,
       attachments,
+      reportType,
+      progressPercent: reportType === 'PROGRESS' ? progressPercent : 100,
     });
 
     onClose();
@@ -93,9 +103,15 @@ export function SubmitReportModal({ task, isOpen, onClose }: SubmitReportModalPr
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-blue-50/60">
           <div>
-            <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">
-              Nộp Báo Cáo Hoàn Thành
-            </span>
+            <div className="flex items-center space-x-1.5">
+              <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">
+                {task.isContractor
+                  ? `🏗️ Báo Cáo Nhà Thầu (${task.contractorName})`
+                  : task.durationDays && task.durationDays > 1
+                  ? `🗓️ Công Việc Nhiều Ngày (${task.durationDays} ngày)`
+                  : 'Nộp Báo Cáo Công Việc'}
+              </span>
+            </div>
             <h3 className="font-bold text-slate-900 text-base line-clamp-1">{task.title}</h3>
           </div>
           <button
@@ -108,16 +124,78 @@ export function SubmitReportModal({ task, isOpen, onClose }: SubmitReportModalPr
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
+          {/* Lựa chọn loại báo cáo: Báo cáo tiến độ hôm nay vs Báo cáo hoàn thành nghiệm thu */}
+          <div className="bg-slate-100 p-1 rounded-xl flex items-center">
+            <button
+              type="button"
+              onClick={() => setReportType('PROGRESS')}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                reportType === 'PROGRESS'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>⏳ Báo Cáo Tiến Độ Hôm Nay</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setReportType('COMPLETION')}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                reportType === 'COMPLETION'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>✅ Báo Cáo Hoàn Thành (100%)</span>
+            </button>
+          </div>
+
+          {reportType === 'PROGRESS' ? (
+            <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+                  Mức độ tiến độ hiện tại:
+                </label>
+                <span className="text-sm font-black text-amber-900 bg-white px-2 py-0.5 rounded-lg border border-amber-200 shadow-2xs">
+                  {progressPercent}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="95"
+                step="5"
+                value={progressPercent}
+                onChange={(e) => setProgressPercent(parseInt(e.target.value, 10))}
+                className="w-full accent-amber-600 cursor-pointer"
+              />
+              <p className="text-[11px] text-amber-900 leading-relaxed font-medium">
+                💡 <strong>Tiếp tục thực hiện:</strong> Báo cáo này ghi nhận tiến độ trong ngày hôm nay, công việc vẫn sẽ tiếp tục ở trạng thái <em>Đang thực hiện</em> để bạn hoặc nhà thầu làm tiếp vào ngày mai.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-emerald-50/90 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-950 font-medium leading-relaxed">
+              🎉 <strong>Nghiệm thu toàn bộ:</strong> Khi chọn báo cáo hoàn thành, công việc sẽ được gửi cho cấp trên (Cấp 1 & Cấp 2) phê duyệt nghiệm thu chính thức.
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Kết quả công việc đã thực hiện <span className="text-rose-500">*</span>
+              {reportType === 'PROGRESS'
+                ? 'Nội dung khối lượng đã làm hôm nay '
+                : 'Kết quả công việc đã thực hiện '}
+              <span className="text-rose-500">*</span>
             </label>
             <textarea
               required
               rows={3}
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              placeholder="Mô tả cụ thể những gì đã làm, các thông số, kết quả đạt được..."
+              placeholder={
+                reportType === 'PROGRESS'
+                  ? 'Mô tả cụ thể hôm nay đã thi công/lắp đặt được những gì, % ước đạt...'
+                  : 'Mô tả cụ thể những gì đã làm xong, các thông số kỹ thuật, kết quả đạt được...'
+              }
               className="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none leading-relaxed"
             />
           </div>
@@ -239,10 +317,14 @@ export function SubmitReportModal({ task, isOpen, onClose }: SubmitReportModalPr
             <button
               type="submit"
               disabled={isCompressing}
-              className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 transition-all flex items-center space-x-2 disabled:opacity-50"
+              className={`px-5 py-2.5 text-sm font-semibold text-white rounded-xl shadow-md transition-all flex items-center space-x-2 disabled:opacity-50 ${
+                reportType === 'PROGRESS'
+                  ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
+                  : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/25'
+              }`}
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Gửi Báo Cáo</span>
+              <span>{reportType === 'PROGRESS' ? 'Lưu Tiến Độ Hôm Nay' : 'Nộp Nghiệm Thu Hoàn Thành'}</span>
             </button>
           </div>
         </form>

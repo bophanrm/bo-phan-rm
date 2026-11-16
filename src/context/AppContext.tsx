@@ -20,6 +20,7 @@ import {
   ScheduleApprovalStatus,
   TaskExtensionRequest,
   TaskExtensionHistoryItem,
+  TaskProgressUpdate,
   ChatMessage,
   ChatChannelType,
 } from '@/types';
@@ -626,6 +627,14 @@ interface AppContextType {
   shifts: WorkShiftAssignment[];
   createTask: (task: Omit<Task, 'id' | 'createdAt' | 'status' | 'reports'>) => void;
   submitReport: (taskId: string, report: Omit<TaskReport, 'id' | 'submittedAt' | 'status'>) => void;
+  updateTaskProgress: (
+    taskId: string,
+    progressData: {
+      percent: number;
+      note: string;
+      attachments?: any[];
+    }
+  ) => void;
   reviewReport: (taskId: string, reportId: string, status: 'ACCEPTED' | 'REVISION_NEEDED', feedback?: string) => void;
   extendTaskDeadline: (taskId: string, newDeadlineIso: string, reason?: string, newAssigneeId?: string) => void;
   requestTaskExtension: (taskId: string, requestedNewDeadline: string, reason: string, suggestedAssigneeId?: string) => void;
@@ -1718,21 +1727,97 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     notifyNewTaskToZalo(newTask, users, currentUser);
   };
 
-  // Submit report (Gửi về CÙNG LÚC cho Trưởng phòng VÀ Thư ký)
+  // Cập nhật nhanh tiến độ công việc (Dành cho Cấp 1, Cấp 2, Giám sát hoặc Người được giao)
+  const updateTaskProgress = (
+    taskId: string,
+    progressData: {
+      percent: number;
+      note: string;
+      attachments?: any[];
+    }
+  ) => {
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
+
+    const percent = Math.min(100, Math.max(0, progressData.percent));
+    const updateItem: TaskProgressUpdate = {
+      id: `prog-${Date.now()}`,
+      taskId,
+      updatedBy: currentUser.id,
+      updatedByName: getPersonalName(currentUser.name, false),
+      updatedByLevel: currentUser.level,
+      percent,
+      note: progressData.note,
+      attachments: progressData.attachments || [],
+      updatedAt: new Date().toISOString(),
+    };
+
+    const newTasks = tasks.map((t) => {
+      if (t.id === taskId) {
+        return {
+          ...t,
+          status: t.status === 'TODO' ? ('IN_PROGRESS' as const) : t.status,
+          progressPercent: percent,
+          progressUpdates: [...(t.progressUpdates || []), updateItem],
+        };
+      }
+      return t;
+    });
+
+    updateTasks(newTasks);
+
+    // Gửi thông báo đến người giao việc và reviewers (nếu không phải chính người đó cập nhật)
+    const notifyUserIds = Array.from(new Set([targetTask.createdBy, ...(targetTask.reviewers || [])])).filter(
+      (uid) => uid !== currentUser.id
+    );
+
+    if (notifyUserIds.length > 0) {
+      const progNotifs: NotificationItem[] = notifyUserIds.map((uid, idx) => ({
+        id: `notif-${Date.now()}-prog-${idx}`,
+        userId: uid,
+        title: 'Cập nhật tiến độ công việc',
+        message: `${getPersonalName(currentUser.name, false)} đã cập nhật tiến độ (${percent}%) cho việc "${targetTask.title}": ${progressData.note || 'Không có ghi chú'}.`,
+        taskId: targetTask.id,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      }));
+      updateNotifications([...progNotifs, ...notifications]);
+    }
+  };
+
+  // Submit report (Hỗ trợ cả báo cáo tiến độ hôm nay hoặc báo cáo hoàn thành nghiệm thu)
   const submitReport = (taskId: string, reportData: Omit<TaskReport, 'id' | 'submittedAt' | 'status'>) => {
+    const isProgressReport = reportData.reportType === 'PROGRESS';
+    const percent = reportData.progressPercent !== undefined ? Math.min(100, Math.max(0, reportData.progressPercent)) : 100;
+
     const newReport: TaskReport = {
       ...reportData,
       id: `rep-${Date.now()}`,
-      status: 'PENDING_REVIEW',
+      status: isProgressReport ? 'ACCEPTED' : 'PENDING_REVIEW',
       submittedAt: new Date().toISOString(),
     };
 
     const targetTask = tasks.find((t) => t.id === taskId);
     const newTasks = tasks.map((t) => {
       if (t.id === taskId) {
+        const currentUpdates = t.progressUpdates || [];
+        const newProgressUpdate: TaskProgressUpdate = {
+          id: `prog-${Date.now()}`,
+          taskId,
+          updatedBy: currentUser.id,
+          updatedByName: getPersonalName(currentUser.name, false),
+          updatedByLevel: currentUser.level,
+          percent: isProgressReport ? percent : 100,
+          note: reportData.summary + (reportData.notes ? ` - ${reportData.notes}` : ''),
+          attachments: reportData.attachments || [],
+          updatedAt: new Date().toISOString(),
+        };
+
         return {
           ...t,
-          status: 'SUBMITTED' as const,
+          status: isProgressReport ? (t.status === 'TODO' ? ('IN_PROGRESS' as const) : t.status) : ('SUBMITTED' as const),
+          progressPercent: isProgressReport ? percent : 100,
+          progressUpdates: [...currentUpdates, newProgressUpdate],
           reports: [...(t.reports || []), newReport],
         };
       }
@@ -1750,10 +1835,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return {
           id: `notif-${Date.now()}-rev-${idx}`,
           userId: reviewerId,
-          title: isSecretary
+          title: isProgressReport
+            ? 'Cập nhật tiến độ công việc hôm nay'
+            : isSecretary
             ? 'Báo cáo mới gửi đến (Nhân Viên Điều Phối đồng nhận)'
             : 'Báo cáo mới cần duyệt',
-          message: `${getPersonalName(currentUser.name, false)} đã nộp báo cáo kèm kết quả cho việc "${targetTask.title}".`,
+          message: isProgressReport
+            ? `${getPersonalName(currentUser.name, false)} đã cập nhật tiến độ (${percent}%) cho việc "${targetTask.title}".`
+            : `${getPersonalName(currentUser.name, false)} đã nộp báo cáo kèm kết quả cho việc "${targetTask.title}".`,
           taskId: targetTask.id,
           isRead: false,
           createdAt: new Date().toISOString(),
@@ -2246,6 +2335,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         shifts,
         createTask,
         submitReport,
+        updateTaskProgress,
         reviewReport,
         extendTaskDeadline,
         requestTaskExtension,

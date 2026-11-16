@@ -567,3 +567,343 @@ export async function exportShiftScheduleToExcel({
   document.body.removeChild(anchor);
   window.URL.revokeObjectURL(url);
 }
+
+/**
+ * XUẤT BÁO CÁO CÔNG VIỆC TỔNG HỢP THEO TUẦN (Chỉ dành cho Cấp 2 thao tác)
+ * Phân tách rõ ràng: Việc Đã Hoàn Thành & Việc Chưa Làm / Đang Thực Hiện
+ * Bao gồm cả việc Nội Bộ và việc giao cho Nhà Thầu / NCC Ngoài.
+ */
+export interface ExportWeeklyExcelOptions {
+  tasks: Task[];
+  users: User[];
+  startDate: Date; // Thứ Hai
+  endDate: Date; // Chủ Nhật
+  weekLabel?: string;
+  exportedByName?: string;
+  managerName?: string;
+}
+
+export async function exportWeeklyTasksToExcel({
+  tasks,
+  users,
+  startDate,
+  endDate,
+  weekLabel,
+  exportedByName = 'Nguyên (Nhân Viên Điều Phối)',
+  managerName = 'Vũ (Trưởng phòng)',
+}: ExportWeeklyExcelOptions): Promise<void> {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = exportedByName;
+  workbook.lastModifiedBy = exportedByName;
+  workbook.created = new Date();
+  workbook.modified = new Date();
+
+  const startFormatted = new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(startDate);
+
+  const endFormatted = new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(endDate);
+
+  const rangeLabel = weekLabel || `Từ ${startFormatted} đến ${endFormatted}`;
+
+  const worksheet = workbook.addWorksheet('Báo Cáo Tổng Hợp Tuần', {
+    views: [{ showGridLines: true }],
+  });
+
+  // Columns definition (10 cột chuẩn)
+  worksheet.columns = [
+    { key: 'stt', width: 6 }, // A
+    { key: 'category', width: 16 }, // B: Phân Loại (Nội bộ / Nhà thầu)
+    { key: 'type', width: 14 }, // C: Loại Việc (Hằng ngày / Dự án)
+    { key: 'title', width: 34 }, // D: Tên Công Việc
+    { key: 'assignee', width: 28 }, // E: Đơn Vị / Người Thực Hiện
+    { key: 'supervisor', width: 22 }, // F: Người Giám Sát / Giao Việc
+    { key: 'progress', width: 14 }, // G: Tiến Độ %
+    { key: 'dates', width: 20 }, // H: Hạn Chót (Deadline)
+    { key: 'status', width: 18 }, // I: Trạng Thái
+    { key: 'notes', width: 38 }, // J: Kết Quả / Ghi Chú Tiến Độ / Gia Hạn
+  ];
+
+  // Row 1: Company header
+  worksheet.mergeCells('A1:J1');
+  const r1 = worksheet.getCell('A1');
+  r1.value = 'CÔNG TY TNHH KỸ THUẬT & DỊCH VỤ VIỄN THÔNG';
+  r1.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF475569' } };
+  r1.alignment = { vertical: 'middle', horizontal: 'left' };
+
+  // Row 2: Main Title
+  worksheet.mergeCells('A2:J2');
+  const r2 = worksheet.getCell('A2');
+  r2.value = 'BÁO CÁO CÔNG VIỆC TỔNG HỢP THEO TUẦN';
+  r2.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1E3A8A' } };
+  r2.alignment = { vertical: 'middle', horizontal: 'center' };
+  worksheet.getRow(2).height = 30;
+
+  // Row 3: Details & Period
+  worksheet.mergeCells('A3:J3');
+  const r3 = worksheet.getCell('A3');
+  r3.value = `Kỳ báo cáo: ${rangeLabel}  •  Người tổng hợp: ${exportedByName}  •  Lãnh đạo phụ trách: ${managerName}`;
+  r3.font = { name: 'Arial', size: 11, italic: true, color: { argb: 'FF334155' } };
+  r3.alignment = { vertical: 'middle', horizontal: 'center' };
+  worksheet.getRow(3).height = 20;
+
+  // KPIs
+  const completedTasks = tasks.filter((t) => t.status === 'APPROVED');
+  const incompletedTasks = tasks.filter((t) => t.status !== 'APPROVED');
+  const contractorTasks = tasks.filter((t) => t.isContractor);
+  const internalTasks = tasks.filter((t) => !t.isContractor);
+  const percentDone = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
+
+  // Row 4: Summary KPIs
+  worksheet.mergeCells('A4:J4');
+  const r4 = worksheet.getCell('A4');
+  r4.value = `TỔNG SỐ: ${tasks.length} VIỆC   |   ĐÃ HOÀN THÀNH: ${completedTasks.length} (${percentDone}%)   |   CHƯA HOÀN THÀNH / ĐANG LÀM: ${incompletedTasks.length}   |   NỘI BỘ: ${internalTasks.length}   |   NHÀ THẦU NGOÀI: ${contractorTasks.length}`;
+  r4.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF0F766E' } };
+  r4.alignment = { vertical: 'middle', horizontal: 'center' };
+  r4.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFF0FDFA' },
+  };
+  worksheet.getRow(4).height = 24;
+
+  let rowIdx = 6;
+
+  // Helper apply table header
+  const applyHeaderStyles = (rowNumber: number, title: string, count: number, bgColor: string) => {
+    worksheet.mergeCells(`A${rowNumber}:J${rowNumber}`);
+    const sectionCell = worksheet.getCell(`A${rowNumber}`);
+    sectionCell.value = `${title} (${count} công việc)`;
+    sectionCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+    sectionCell.alignment = { vertical: 'middle', horizontal: 'left' };
+    sectionCell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: bgColor },
+    };
+    worksheet.getRow(rowNumber).height = 26;
+
+    // Sub-header columns
+    const subRow = worksheet.getRow(rowNumber + 1);
+    subRow.values = [
+      'STT',
+      'Đơn Vị',
+      'Loại Việc',
+      'Tên Công Việc',
+      'Người / Tổ Thực Hiện',
+      'Giám Sát / Giao Việc',
+      'Tiến Độ',
+      'Hạn Hoàn Thành',
+      'Trạng Thái',
+      'Kết Quả & Ghi Chú Tiến Độ',
+    ];
+    subRow.height = 24;
+    subRow.eachCell((cell) => {
+      cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF1E293B' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE2E8F0' },
+      };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF94A3B8' } },
+        bottom: { style: 'thin', color: { argb: 'FF94A3B8' } },
+        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      };
+    });
+  };
+
+  // PHẦN I: DANH SÁCH VIỆC ĐÃ HOÀN THÀNH
+  applyHeaderStyles(rowIdx, 'I. DANH SÁCH CÔNG VIỆC ĐÃ HOÀN THÀNH', completedTasks.length, 'FF15803D'); // Dark Green
+  rowIdx += 2;
+
+  if (completedTasks.length === 0) {
+    worksheet.mergeCells(`A${rowIdx}:J${rowIdx}`);
+    const emptyCell = worksheet.getCell(`A${rowIdx}`);
+    emptyCell.value = 'Chưa có công việc nào hoàn thành trong tuần này.';
+    emptyCell.font = { name: 'Arial', size: 9, italic: true, color: { argb: 'FF64748B' } };
+    emptyCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(rowIdx).height = 25;
+    rowIdx++;
+  } else {
+    completedTasks.forEach((t, i) => {
+      const latestReport = t.reports && t.reports.length > 0 ? t.reports[t.reports.length - 1] : null;
+      const deadlineStr = t.dueDate
+        ? new Date(t.dueDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+        : '--';
+
+      const row = worksheet.getRow(rowIdx);
+      row.values = [
+        i + 1,
+        t.isContractor ? `🏗️ ${t.contractorName || 'Nhà thầu'}` : '🏢 Nội bộ',
+        t.isDaily ? 'Hằng ngày' : 'Dự án',
+        t.title,
+        t.isContractor
+          ? `${t.contractorName} (Giám sát: ${t.assignedToNames.map((n) => getPersonalName(n)).join(', ')})`
+          : t.teamName || t.assignedToNames.map((n) => getPersonalName(n)).join(', '),
+        getPersonalName(t.createdByName, true),
+        '100%',
+        deadlineStr,
+        '✓ ĐÃ DUYỆT',
+        latestReport?.summary || latestReport?.managerFeedback || 'Đạt yêu cầu nghiệm thu hoàn thành',
+      ];
+      row.height = 36;
+      row.eachCell((cell, col) => {
+        cell.font = { name: 'Arial', size: 9 };
+        cell.alignment = { vertical: 'middle', wrapText: true };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        };
+        if ([1, 2, 3, 7, 8, 9].includes(col)) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        }
+        if (col === 9) {
+          cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF15803D' } };
+        }
+      });
+      rowIdx++;
+    });
+  }
+
+  rowIdx++; // Blank row
+
+  // PHẦN II: DANH SÁCH VIỆC CHƯA HOÀN THÀNH / ĐANG THỰC HIỆN
+  applyHeaderStyles(rowIdx, 'II. DANH SÁCH CÔNG VIỆC CHƯA HOÀN THÀNH / ĐANG THỰC HIỆN', incompletedTasks.length, 'FFB45309'); // Amber / Orange
+  rowIdx += 2;
+
+  if (incompletedTasks.length === 0) {
+    worksheet.mergeCells(`A${rowIdx}:J${rowIdx}`);
+    const emptyCell = worksheet.getCell(`A${rowIdx}`);
+    emptyCell.value = 'Tuyệt vời! Không có công việc nào bị tồn đọng hoặc chưa hoàn thành.';
+    emptyCell.font = { name: 'Arial', size: 9, italic: true, color: { argb: 'FF15803D' } };
+    emptyCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(rowIdx).height = 25;
+    rowIdx++;
+  } else {
+    incompletedTasks.forEach((t, i) => {
+      const deadlineStr = t.dueDate
+        ? new Date(t.dueDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+        : '--';
+
+      const statusText =
+        t.status === 'SUBMITTED'
+          ? '⏳ CHỜ DUYỆT'
+          : t.status === 'IN_PROGRESS'
+          ? '⚡ ĐANG LÀM'
+          : t.status === 'REJECTED'
+          ? '⚠️ CẦN SỬA'
+          : 'MỚI GIAO';
+
+      const latestUpdate = t.progressUpdates && t.progressUpdates.length > 0
+        ? t.progressUpdates[t.progressUpdates.length - 1]
+        : null;
+
+      let notes = latestUpdate?.note || t.description || 'Đang triển khai';
+      if (t.extensionRequest?.status === 'PENDING') {
+        notes = `[Đang xin gia hạn]: ${t.extensionRequest.reason} - Hạn đề xuất: ${new Date(t.extensionRequest.requestedNewDeadline).toLocaleDateString('vi-VN')}`;
+      } else if (t.extensionHistory && t.extensionHistory.length > 0) {
+        notes = `[Đã gia hạn]: ${notes}`;
+      }
+
+      const row = worksheet.getRow(rowIdx);
+      row.values = [
+        i + 1,
+        t.isContractor ? `🏗️ ${t.contractorName || 'Nhà thầu'}` : '🏢 Nội bộ',
+        t.durationDays && t.durationDays > 1 ? `Hằng ngày (${t.durationDays}N)` : t.isDaily ? 'Hằng ngày' : 'Dự án',
+        t.title,
+        t.isContractor
+          ? `${t.contractorName} (Giám sát: ${t.assignedToNames.map((n) => getPersonalName(n)).join(', ')})`
+          : t.teamName || t.assignedToNames.map((n) => getPersonalName(n)).join(', '),
+        getPersonalName(t.createdByName, true),
+        `${t.progressPercent || 0}%`,
+        deadlineStr,
+        statusText,
+        notes,
+      ];
+      row.height = 36;
+      row.eachCell((cell, col) => {
+        cell.font = { name: 'Arial', size: 9 };
+        cell.alignment = { vertical: 'middle', wrapText: true };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        };
+        if ([1, 2, 3, 7, 8, 9].includes(col)) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        }
+        if (col === 9) {
+          cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FFB45309' } };
+        }
+      });
+      rowIdx++;
+    });
+  }
+
+  // Row Signatures
+  rowIdx += 2;
+  worksheet.mergeCells(`B${rowIdx}:D${rowIdx}`);
+  const signLeftHeader = worksheet.getCell(`B${rowIdx}`);
+  signLeftHeader.value = 'NGƯỜI LẬP BÁO CÁO (NHÂN VIÊN ĐIỀU PHỐI)';
+  signLeftHeader.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1E293B' } };
+  signLeftHeader.alignment = { horizontal: 'center' };
+
+  worksheet.mergeCells(`G${rowIdx}:I${rowIdx}`);
+  const signRightHeader = worksheet.getCell(`G${rowIdx}`);
+  signRightHeader.value = 'LÃNH ĐẠO / BAN GIÁM ĐỐC PHÊ DUYỆT';
+  signRightHeader.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1E293B' } };
+  signRightHeader.alignment = { horizontal: 'center' };
+
+  rowIdx++;
+  worksheet.mergeCells(`B${rowIdx}:D${rowIdx}`);
+  const signLeftSub = worksheet.getCell(`B${rowIdx}`);
+  signLeftSub.value = '(Ký, ghi rõ họ tên)';
+  signLeftSub.font = { name: 'Arial', size: 9, italic: true, color: { argb: 'FF64748B' } };
+  signLeftSub.alignment = { horizontal: 'center' };
+
+  worksheet.mergeCells(`G${rowIdx}:I${rowIdx}`);
+  const signRightSub = worksheet.getCell(`G${rowIdx}`);
+  signRightSub.value = '(Ký duyệt)';
+  signRightSub.font = { name: 'Arial', size: 9, italic: true, color: { argb: 'FF64748B' } };
+  signRightSub.alignment = { horizontal: 'center' };
+
+  rowIdx += 4;
+  worksheet.mergeCells(`B${rowIdx}:D${rowIdx}`);
+  const signLeftName = worksheet.getCell(`B${rowIdx}`);
+  signLeftName.value = getPersonalName(exportedByName, true);
+  signLeftName.font = { name: 'Arial', size: 10, bold: true };
+  signLeftName.alignment = { horizontal: 'center' };
+
+  worksheet.mergeCells(`G${rowIdx}:I${rowIdx}`);
+  const signRightName = worksheet.getCell(`G${rowIdx}`);
+  signRightName.value = managerName.split('/').map((n) => getPersonalName(n.trim(), true)).join(' / ');
+  signRightName.font = { name: 'Arial', size: 10, bold: true };
+  signRightName.alignment = { horizontal: 'center' };
+
+  // Generate buffer and trigger download
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `Bao_Cao_Tong_Hop_Tuan_${startFormatted.replace(/\//g, '-')}_den_${endFormatted.replace(/\//g, '-')}.xlsx`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  window.URL.revokeObjectURL(url);
+}

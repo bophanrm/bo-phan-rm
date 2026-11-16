@@ -211,6 +211,8 @@ export interface TaskReport {
   notes?: string;
   attachments: Attachment[];
   status: 'PENDING_REVIEW' | 'ACCEPTED' | 'REVISION_NEEDED';
+  reportType?: 'PROGRESS' | 'COMPLETION'; // Báo cáo tiến độ (vẫn in progress) hay báo cáo nghiệm thu hoàn thành
+  progressPercent?: number; // % tiến độ tại thời điểm báo cáo
   managerFeedback?: string;
   reviewedBy?: string;
   reviewedByName?: string;
@@ -221,6 +223,18 @@ export interface TaskReport {
   leadStatus?: 'LEAD_ACCEPTED' | 'REVISION_NEEDED';
   submittedAt: string;
   reviewedAt?: string;
+}
+
+export interface TaskProgressUpdate {
+  id: string;
+  taskId: string;
+  updatedBy: string;
+  updatedByName: string;
+  updatedByLevel?: StaffLevel;
+  percent: number; // 0 - 100
+  note: string;
+  attachments?: Attachment[];
+  updatedAt: string; // ISO string
 }
 
 export interface TaskExtensionRequest {
@@ -277,6 +291,11 @@ export interface Task {
   dueDate: string; // ISO string
   reportDeadline: string; // ISO string
   createdAt: string;
+  isContractor?: boolean; // Việc giao cho nhà thầu / NCC ngoài thực hiện
+  contractorName?: string; // Tên nhà thầu / Nhà cung cấp ngoài
+  durationDays?: number; // Số ngày quy định hoàn thành công việc (mặc định 1)
+  progressPercent?: number; // Tiến độ hiện tại (0 - 100%)
+  progressUpdates?: TaskProgressUpdate[]; // Lịch sử nhật ký tiến độ từng ngày
   reports?: TaskReport[];
   extensionRequest?: TaskExtensionRequest;
   extensionHistory?: TaskExtensionHistoryItem[];

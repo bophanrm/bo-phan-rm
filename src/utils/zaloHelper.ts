@@ -129,7 +129,14 @@ export async function notifyDailyShiftReminderToZalo(
         entry.assignees.length > 0
           ? entry.assignees.map((u) => `@${getPersonalName(u.name, true)}`).join(', ')
           : 'Chưa phân công';
-      taskListText += `${idx + 1}. ${entry.task.title} (${assigneesText})\n`;
+
+      let taskTag = '';
+      if (entry.task.isContractor) {
+        taskTag = ` [Nhà thầu: ${entry.task.contractorName || 'Ngoài'}]`;
+      } else if (entry.task.durationDays && entry.task.durationDays > 1) {
+        taskTag = ` [Tiến độ: ${entry.task.progressPercent || 0}%]`;
+      }
+      taskListText += `${idx + 1}. ${entry.task.title}${taskTag} (${assigneesText})\n`;
     });
 
     if (normalizedTasks.length > 10) {
@@ -144,11 +151,11 @@ export async function notifyDailyShiftReminderToZalo(
 `⏰ [BỘ PHẬN RM] NHẮC NHỞ HẠN NỘP CA TRỰC${shiftHeader}
 ━━━━━━━━━━━━━━━━━━━━
 Đã đến ${reminderTimeStr} (còn 60 phút nữa kết thúc ca làm việc ${endTimeStr}).
-Hiện tại hệ thống ghi nhận các công việc sau CHƯA GỬI BÁO CÁO hoàn thành:
+Hiện tại hệ thống ghi nhận các công việc sau CHƯA GỬI BÁO CÁO hoàn thành hoặc chưa cập nhật tiến độ hôm nay:
 
 ${taskListText.trim()}
 ━━━━━━━━━━━━━━━━━━━━
-👉 Các anh vui lòng chụp ảnh nghiệm thu và gửi báo cáo hoàn thành trên hệ thống trước ${endTimeStr}!`;
+👉 Các anh vui lòng chụp ảnh nghiệm thu hoàn thành hoặc gửi báo cáo tiến độ hôm nay trên hệ thống trước ${endTimeStr}!`;
 
     await sendZaloMessage(message, undefined, 'DAILY_REMINDER');
   } catch (error) {
