@@ -26,12 +26,12 @@ import {
 } from 'lucide-react';
 
 const DEFAULT_SCHEDULE_WELLS = [
-  { wellId: 1, wellName: 'Giếng G1', enabled: true, dinhMuc: 450, luuLuongPerHour: 72, delayMinutes: 0 },
-  { wellId: 2, wellName: 'Giếng G2', enabled: true, dinhMuc: 480, luuLuongPerHour: 85, delayMinutes: 0 },
-  { wellId: 3, wellName: 'Giếng G3', enabled: true, dinhMuc: 480, luuLuongPerHour: 66, delayMinutes: 0 },
-  { wellId: 4, wellName: 'Giếng G4', enabled: true, dinhMuc: 480, luuLuongPerHour: 13, delayMinutes: 0 },
-  { wellId: 5, wellName: 'Giếng G5', enabled: true, dinhMuc: 650, luuLuongPerHour: 79, delayMinutes: 0 },
-  { wellId: 6, wellName: 'Giếng G6', enabled: false, dinhMuc: 480, luuLuongPerHour: 50, delayMinutes: 0 },
+  { wellId: 1, wellName: 'Giếng G1', enabled: true, dinhMuc: 450, luuLuongPerHour: 72, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 2, wellName: 'Giếng G2', enabled: true, dinhMuc: 480, luuLuongPerHour: 85, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 3, wellName: 'Giếng G3', enabled: true, dinhMuc: 480, luuLuongPerHour: 66, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 4, wellName: 'Giếng G4', enabled: true, dinhMuc: 480, luuLuongPerHour: 13, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 5, wellName: 'Giếng G5', enabled: true, dinhMuc: 650, luuLuongPerHour: 79, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 6, wellName: 'Giếng G6', enabled: false, dinhMuc: 480, luuLuongPerHour: 50, delayMinutes: 0, turnOffTime: '06:00' },
 ];
 
 interface ZaloGroupInfo {
@@ -135,7 +135,10 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
         }
         if (data.config.wellSchedule) {
           const loadedWells = (data.config.wellSchedule.wells && data.config.wellSchedule.wells.length > 0)
-            ? data.config.wellSchedule.wells
+            ? data.config.wellSchedule.wells.map((w: any) => ({
+                ...w,
+                turnOffTime: w.turnOffTime || '06:00',
+              }))
             : DEFAULT_SCHEDULE_WELLS;
           setScheduleConfig({
             enabled: data.config.wellSchedule.enabled ?? false,
@@ -978,7 +981,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                           <div className="flex items-center space-x-1.5">
                             <Sliders className="w-4 h-4 text-amber-700" />
                             <span className="font-extrabold text-slate-900 text-xs">
-                              Cài Đặt Định Mức (m³), Lưu Lượng & Độ Trễ Từng Giếng
+                              Cài Đặt Định Mức (m³), Lưu Lượng, Độ Trễ & Giờ Tắt Giếng
                             </span>
                           </div>
                           <button
@@ -995,10 +998,10 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                         <div className="bg-amber-50/90 border border-amber-300/80 rounded-lg p-2 text-[11px] text-amber-950 flex items-start space-x-2">
                           <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                           <div className="space-y-0.5">
-                            <p className="font-bold">Cơ chế bảo mật Độ Trễ (+phút):</p>
+                            <p className="font-bold">Cơ chế bảo mật Độ Trễ & Giờ Tắt Giếng:</p>
                             <p className="text-[10px] text-amber-900 leading-relaxed">
-                              Độ trễ giúp Admin điều chỉnh dời thời gian mở giếng (ví dụ hệ thống tính 22:16, đặt trễ 20 phút $\rightarrow$ thông báo mở lúc <strong>22:36</strong>).
-                              Thông báo gửi qua Zalo <strong>hoàn toàn KHÔNG ghi chú cộng thêm số phút này</strong>, đảm bảo bảo mật và bảo toàn quy trình nội bộ của Admin.
+                              • <strong>Độ trễ (+phút)</strong>: Điều chỉnh dời giờ mở giếng (ví dụ tính 22:16, trễ 20p $\rightarrow$ thông báo mở lúc <strong>22:36</strong>). Tin nhắn Zalo <strong>hoàn toàn KHÔNG ghi chú cộng thêm số phút này</strong>.<br />
+                              • <strong>Giờ tắt (sáng mai)</strong>: Bạn có thể chủ động cài đặt giờ tắt riêng cho từng giếng (mặc định 06:00). Thông báo Zalo sẽ gửi kèm giờ tắt này.
                             </p>
                           </div>
                         </div>
@@ -1013,6 +1016,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                                 <th className="p-2">Định Mức (m³)</th>
                                 <th className="p-2">Lưu Lượng/1h (m³/h)</th>
                                 <th className="p-2">Độ Trễ (+phút)</th>
+                                <th className="p-2 text-center">Giờ Tắt (Sáng Mai)</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-[11px]">
@@ -1068,6 +1072,14 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                                       <span className="text-[10px] font-bold text-amber-800">phút</span>
                                     </div>
                                   </td>
+                                  <td className="p-2 text-center">
+                                    <input
+                                      type="time"
+                                      value={well.turnOffTime || '06:00'}
+                                      onChange={(e) => handleWellParamChange(well.wellId, 'turnOffTime', e.target.value)}
+                                      className="w-24 bg-white border border-slate-300 rounded px-2 py-1 font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 outline-none text-center shadow-2xs"
+                                    />
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
@@ -1107,6 +1119,7 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                                     <th className="p-1.5 text-right">Còn Lại</th>
                                     <th className="p-1.5 text-center">Giờ Lý Thuyết</th>
                                     <th className="p-1.5 text-center font-black text-amber-900">Giờ Báo Zalo</th>
+                                    <th className="p-1.5 text-center font-black text-slate-800">Giờ Tắt (Sáng Mai)</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-[11px]">
@@ -1123,6 +1136,9 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                                         </td>
                                         <td className="p-1.5 text-center font-mono font-black text-amber-900 bg-amber-50/80 rounded">
                                           {w.displayTime}
+                                        </td>
+                                        <td className="p-1.5 text-center font-mono font-bold text-slate-800">
+                                          {w.turnOffTime || '06:00'}
                                         </td>
                                       </tr>
                                     ))}
@@ -1143,13 +1159,14 @@ export function ZaloBotModal({ isOpen, onClose }: ZaloBotModalProps) {
                                 schedulePreview.wells
                                   .filter((w: any) => w.enabled)
                                   .map((w: any) => {
+                                    const offTimeStr = w.turnOffTime || '06:00';
                                     if (w.status === 'QUOTA_REACHED') {
                                       return `🔹 ${w.wellName}: Đã đạt định mức (Không cần mở)\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³`;
                                     }
                                     if (w.status === 'RUN_NOW') {
-                                      return `🔹 ${w.wellName}: Cần mở ngay\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³ (~${w.soGioCanBom} giờ)`;
+                                      return `🔹 ${w.wellName}: Cần mở ngay ➔ Giờ tắt: ${offTimeStr} (sáng hôm sau)\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³ (~${w.soGioCanBom} giờ)`;
                                     }
-                                    return `🔹 ${w.wellName}: Thời gian mở giếng lúc ${w.displayTime}\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³`;
+                                    return `🔹 ${w.wellName}: Mở lúc ${w.displayTime} ➔ Giờ tắt: ${offTimeStr} (sáng hôm sau)\n   • Đã khai thác: ${w.daKhaiThac} m³ / Định mức: ${w.dinhMuc} m³\n   • Còn lại: ${w.conLai} m³`;
                                   })
                                   .join('\n\n') +
                                 `\n━━━━━━━━━━━━━━━━━━━━\n` +

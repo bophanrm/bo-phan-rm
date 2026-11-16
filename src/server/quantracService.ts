@@ -19,6 +19,7 @@ export interface WellScheduleConfigItem {
   dinhMuc: number; // m³ định mức trong ngày
   luuLuongPerHour: number; // m³/h lưu lượng bơm trung bình
   delayMinutes: number; // phút độ trễ cộng thêm (ẩn trên thông báo)
+  turnOffTime?: string; // Giờ tắt giếng vào sáng hôm sau (vd: "06:00")
 }
 
 export interface WellScheduleCalculationResult {
@@ -32,6 +33,7 @@ export interface WellScheduleCalculationResult {
   conLai: number;
   luuLuongPerHour: number;
   delayMinutes: number;
+  turnOffTime?: string; // Giờ tắt giếng vào sáng hôm sau (vd: "06:00")
   soGioCanBom: number; // đơn vị giờ
   thoiGianMoLyThuyet: string; // "HH:mm:ss"
   thoiGianMoThucTe: string; // "HH:mm:ss" (đã cộng delay)
@@ -47,12 +49,12 @@ export interface DailyWellScheduleSummary {
 }
 
 export const DEFAULT_WELL_SCHEDULE_CONFIGS: WellScheduleConfigItem[] = [
-  { wellId: 1, wellName: 'Giếng G1', enabled: true, dinhMuc: 450, luuLuongPerHour: 72, delayMinutes: 0 },
-  { wellId: 2, wellName: 'Giếng G2', enabled: true, dinhMuc: 480, luuLuongPerHour: 85, delayMinutes: 0 },
-  { wellId: 3, wellName: 'Giếng G3', enabled: true, dinhMuc: 480, luuLuongPerHour: 66, delayMinutes: 0 },
-  { wellId: 4, wellName: 'Giếng G4', enabled: true, dinhMuc: 480, luuLuongPerHour: 13, delayMinutes: 0 },
-  { wellId: 5, wellName: 'Giếng G5', enabled: true, dinhMuc: 650, luuLuongPerHour: 79, delayMinutes: 0 },
-  { wellId: 6, wellName: 'Giếng G6', enabled: false, dinhMuc: 480, luuLuongPerHour: 50, delayMinutes: 0 },
+  { wellId: 1, wellName: 'Giếng G1', enabled: true, dinhMuc: 450, luuLuongPerHour: 72, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 2, wellName: 'Giếng G2', enabled: true, dinhMuc: 480, luuLuongPerHour: 85, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 3, wellName: 'Giếng G3', enabled: true, dinhMuc: 480, luuLuongPerHour: 66, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 4, wellName: 'Giếng G4', enabled: true, dinhMuc: 480, luuLuongPerHour: 13, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 5, wellName: 'Giếng G5', enabled: true, dinhMuc: 650, luuLuongPerHour: 79, delayMinutes: 0, turnOffTime: '06:00' },
+  { wellId: 6, wellName: 'Giếng G6', enabled: false, dinhMuc: 480, luuLuongPerHour: 50, delayMinutes: 0, turnOffTime: '06:00' },
 ];
 
 export interface DailyWellReportSummary {
@@ -442,6 +444,7 @@ ${wellLines}
       const dinhMuc = conf.dinhMuc;
       const flowRate = conf.luuLuongPerHour > 0 ? conf.luuLuongPerHour : 70;
       const delayMin = conf.delayMinutes || 0;
+      const turnOffTime = conf.turnOffTime || '06:00';
       const conLai = Math.max(0, Math.round((dinhMuc - daKhaiThac) * 100) / 100);
 
       if (!conf.enabled) {
@@ -456,6 +459,7 @@ ${wellLines}
           conLai,
           luuLuongPerHour: flowRate,
           delayMinutes: delayMin,
+          turnOffTime,
           soGioCanBom: 0,
           thoiGianMoLyThuyet: '--',
           thoiGianMoThucTe: '--',
@@ -477,6 +481,7 @@ ${wellLines}
           conLai: 0,
           luuLuongPerHour: flowRate,
           delayMinutes: delayMin,
+          turnOffTime,
           soGioCanBom: 0,
           thoiGianMoLyThuyet: '--',
           thoiGianMoThucTe: '--',
@@ -514,6 +519,7 @@ ${wellLines}
         conLai,
         luuLuongPerHour: flowRate,
         delayMinutes: delayMin,
+        turnOffTime,
         soGioCanBom,
         thoiGianMoLyThuyet: strLyThuyet,
         thoiGianMoThucTe: strThucTe,
@@ -551,13 +557,14 @@ ${wellLines}
 
     const lines = activeWells
       .map((w) => {
+        const offTimeStr = w.turnOffTime || '06:00';
         if (w.status === 'QUOTA_REACHED') {
           return `🔹 ${w.wellName}: Đã đạt định mức (Không cần mở)\n   • Đã khai thác: ${w.daKhaiThac.toLocaleString('vi-VN')} m³ / Định mức: ${w.dinhMuc.toLocaleString('vi-VN')} m³`;
         }
         if (w.status === 'RUN_NOW') {
-          return `🔹 ${w.wellName}: Cần mở ngay\n   • Đã khai thác: ${w.daKhaiThac.toLocaleString('vi-VN')} m³ / Định mức: ${w.dinhMuc.toLocaleString('vi-VN')} m³\n   • Còn lại: ${w.conLai.toLocaleString('vi-VN')} m³ (~${w.soGioCanBom} giờ)`;
+          return `🔹 ${w.wellName}: Cần mở ngay ➔ Giờ tắt: ${offTimeStr} (sáng hôm sau)\n   • Đã khai thác: ${w.daKhaiThac.toLocaleString('vi-VN')} m³ / Định mức: ${w.dinhMuc.toLocaleString('vi-VN')} m³\n   • Còn lại: ${w.conLai.toLocaleString('vi-VN')} m³ (~${w.soGioCanBom} giờ)`;
         }
-        return `🔹 ${w.wellName}: Thời gian mở giếng lúc ${w.displayTime}\n   • Đã khai thác: ${w.daKhaiThac.toLocaleString('vi-VN')} m³ / Định mức: ${w.dinhMuc.toLocaleString('vi-VN')} m³\n   • Còn lại: ${w.conLai.toLocaleString('vi-VN')} m³`;
+        return `🔹 ${w.wellName}: Mở lúc ${w.displayTime} ➔ Giờ tắt: ${offTimeStr} (sáng hôm sau)\n   • Đã khai thác: ${w.daKhaiThac.toLocaleString('vi-VN')} m³ / Định mức: ${w.dinhMuc.toLocaleString('vi-VN')} m³\n   • Còn lại: ${w.conLai.toLocaleString('vi-VN')} m³`;
       })
       .join('\n\n');
 
