@@ -42,14 +42,34 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
     rejectTaskExtension,
   } = useApp();
 
-  // Xác định ngày mai làm ngày mặc định
-  const getTomorrowStr = () => {
-    const d = new Date();
+  // Xác định hạn hiện tại của task và mốc cơ sở để tính gia hạn
+  const currentDeadline = task ? new Date(task.reportDeadline || task.dueDate) : new Date();
+  const isValidCurrentDeadline = !isNaN(currentDeadline.getTime());
+
+  // Mốc cơ sở để gia hạn (Base Date):
+  // - Nếu hạn hiện tại >= hôm nay (chưa quá hạn, vd hạn 20/11 mà hôm nay 17/11): Mốc cơ sở là ngày hạn hiện tại (20/11)
+  // - Nếu đã quá hạn so với hôm nay (vd hạn 15/11, hôm nay 17/11): Mốc cơ sở là ngày hôm nay (17/11)
+  const getBaseExtendDate = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (isValidCurrentDeadline) {
+      const taskDay = new Date(currentDeadline);
+      taskDay.setHours(0, 0, 0, 0);
+      if (taskDay.getTime() >= today.getTime()) {
+        return taskDay;
+      }
+    }
+    return today;
+  };
+
+  const getDefaultTargetDateStr = () => {
+    const base = getBaseExtendDate();
+    const d = new Date(base);
     d.setDate(d.getDate() + 1);
     return d.toISOString().split('T')[0];
   };
 
-  const [selectedDate, setSelectedDate] = useState<string>(getTomorrowStr());
+  const [selectedDate, setSelectedDate] = useState<string>(getDefaultTargetDateStr());
   const [selectedTime, setSelectedTime] = useState<string>('16:00');
   const [useShiftTime, setUseShiftTime] = useState<boolean>(true);
   const [reason, setReason] = useState<string>('');
@@ -80,14 +100,14 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
           const mm = reqDateObj.getMinutes().toString().padStart(2, '0');
           setSelectedTime(`${hh}:${mm}`);
         } else {
-          setSelectedDate(getTomorrowStr());
+          setSelectedDate(getDefaultTargetDateStr());
           setSelectedTime('16:00');
         }
         setReason(pendingRequest.reason || '');
         setSelectedAssigneeId(pendingRequest.suggestedAssigneeId || task.assignedTo[0] || '');
         setUseShiftTime(false);
       } else {
-        setSelectedDate(getTomorrowStr());
+        setSelectedDate(getDefaultTargetDateStr());
         setSelectedTime('16:00');
         setReason('');
         setSelectedAssigneeId(task.assignedTo[0] || '');
@@ -108,6 +128,12 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
   const assigneeShift = effectiveAssigneeId ? getShiftForUser(effectiveAssigneeId, selectedDate) : undefined;
   const shiftCalc = calculateShiftTimes(assigneeShift?.shiftId || 'HANH_CHINH', targetDateObj);
 
+  // Tính số ngày chênh lệch giữa ngày mới và mốc hạn cơ sở
+  const baseDateForDiff = getBaseExtendDate();
+  const diffDaysFromBase = selectedDate
+    ? Math.round((new Date(selectedDate).setHours(0, 0, 0, 0) - baseDateForDiff.getTime()) / (1000 * 60 * 60 * 24))
+    : 1;
+
   // Tính ISO deadline mới
   const computeNewDeadlineIso = () => {
     if (useShiftTime) {
@@ -119,9 +145,10 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
     return d.toISOString();
   };
 
-  const handleQuickPreset = (daysFromNow: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() + daysFromNow);
+  const handleAddDays = (daysToAdd: number) => {
+    const base = getBaseExtendDate();
+    const d = new Date(base);
+    d.setDate(d.getDate() + daysToAdd);
     setSelectedDate(d.toISOString().split('T')[0]);
   };
 
@@ -384,29 +411,46 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
               </div>
 
               {/* CHỌN NGÀY HOÀN THÀNH MỚI */}
-              <div className="space-y-2">
-                <label className="block font-bold text-slate-700 uppercase tracking-wider text-[11px]">
-                  {pendingRequest && hasApprovePermission
-                    ? 'Thời Gian Hoàn Thành Được Phê Duyệt'
-                    : 'Chọn Ngày Hoàn Thành Mới'}
-                </label>
-                <div className="flex items-center space-x-1.5">
+              <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                    {pendingRequest && hasApprovePermission
+                      ? 'Thời Gian Hoàn Thành Được Phê Duyệt'
+                      : 'Gia Hạn Thêm / Chọn Ngày Hoàn Thành Mới'}
+                  </label>
+                  {diffDaysFromBase > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      + {diffDaysFromBase} ngày so với hạn
+                    </span>
+                  )}
+                </div>
+
+                {/* Các nút chọn nhanh số ngày gia hạn thêm (+1 ngày, +2 ngày, +3 ngày, +5 ngày, +7 ngày) */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-semibold text-slate-500 mr-1">Cộng thêm:</span>
                   {[
-                    { label: 'Ngày mai', days: 1 },
+                    { label: '+1 ngày', days: 1 },
                     { label: '+2 ngày', days: 2 },
                     { label: '+3 ngày', days: 3 },
+                    { label: '+5 ngày', days: 5 },
+                    { label: '+7 ngày', days: 7 },
                   ].map((preset) => (
                     <button
                       key={preset.label}
                       type="button"
-                      onClick={() => handleQuickPreset(preset.days)}
-                      className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-slate-700 font-semibold transition-all cursor-pointer"
+                      onClick={() => handleAddDays(preset.days)}
+                      className={`px-2.5 py-1 rounded-lg border font-bold text-xs transition-all active:scale-95 cursor-pointer ${
+                        diffDaysFromBase === preset.days
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-white hover:bg-blue-50 text-slate-700 border-slate-300'
+                      }`}
                     >
                       {preset.label}
                     </button>
                   ))}
                 </div>
 
+                {/* Ô chọn ngày từ lịch */}
                 <div className="flex items-center space-x-2 pt-1">
                   <div className="relative flex-1">
                     <input
@@ -414,9 +458,26 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
                       value={selectedDate}
                       min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                       required
                     />
+                  </div>
+                </div>
+
+                {/* Đối chiếu trực quan: Hạn cũ -> Hạn mới đề xuất */}
+                <div className="text-[11px] text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-400 block text-[9px] uppercase font-bold">Mốc tính hạn</span>
+                    <span className="font-semibold text-slate-700">
+                      {baseDateForDiff.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                    </span>
+                  </div>
+                  <span className="text-blue-500 font-bold">➜</span>
+                  <div className="text-right">
+                    <span className="text-blue-600 block text-[9px] uppercase font-bold">Hạn mới đề xuất</span>
+                    <span className="font-extrabold text-blue-700">
+                      {selectedDate ? new Date(selectedDate).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : '---'}
+                    </span>
                   </div>
                 </div>
               </div>

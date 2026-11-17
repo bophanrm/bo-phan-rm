@@ -88,25 +88,46 @@ function isTaskInTimeFilter(task: Task, period: TimeFilterPeriod, customDate?: s
       ).getTime()
     : dueDay;
 
-  // 1. Đối với Việc Trong Ngày (Daily Task: isDaily = true)
-  if (task.isDaily) {
-    const taskDay = dueDay || deadlineDay || startDay;
+  const minActiveDay = Math.min(startDay, dueDay, deadlineDay);
+  const maxActiveDay = Math.max(startDay, dueDay, deadlineDay);
 
+  // Kiểm tra xem công việc là dạng nhiều ngày (Dự án hoặc Việc nhiều ngày durationDays > 1 hoặc kéo dài qua nhiều ngày)
+  const isMultiDayOrProject =
+    !task.isDaily ||
+    (task.durationDays !== undefined && task.durationDays > 1) ||
+    minActiveDay < maxActiveDay;
+
+  // 1. Đối với Công việc nhiều ngày hoặc Dự án dài hạn
+  // Công việc sẽ hiển thị trong suốt tất cả các ngày từ ngày bắt đầu đến ngày kết thúc
+  if (isMultiDayOrProject) {
     if (period === 'CUSTOM') {
       if (!customDate) return true;
       const targetDay = new Date(customDate).setHours(0, 0, 0, 0);
-      return taskDay === targetDay;
+      const todayZero = new Date().setHours(0, 0, 0, 0);
+      // Hiển thị nếu ngày được chọn nằm trong chu kỳ làm việc, HOẶC việc quá hạn chưa hoàn thành tính đến hôm nay
+      return (
+        (targetDay >= minActiveDay && targetDay <= maxActiveDay) ||
+        (task.status !== 'APPROVED' && targetDay > maxActiveDay && targetDay <= todayZero)
+      );
     }
 
     if (period === 'TODAY') {
       const today = new Date().setHours(0, 0, 0, 0);
-      return taskDay === today;
+      // Xuất hiện ở "Hôm nay" nếu hôm nay nằm trong thời gian làm việc hoặc công việc đang làm chưa hoàn thành
+      return (
+        (today >= minActiveDay && today <= maxActiveDay) ||
+        (task.status !== 'APPROVED' && today >= minActiveDay)
+      );
     }
 
     if (period === 'YESTERDAY') {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      return taskDay === yesterday.setHours(0, 0, 0, 0);
+      const yDay = yesterday.setHours(0, 0, 0, 0);
+      return (
+        (yDay >= minActiveDay && yDay <= maxActiveDay) ||
+        (task.status !== 'APPROVED' && yDay > maxActiveDay)
+      );
     }
 
     if (period === 'THIS_WEEK') {
@@ -118,7 +139,7 @@ function isTaskInTimeFilter(task: Task, period: TimeFilterPeriod, customDate?: s
       const sunday = new Date(monday);
       sunday.setDate(monday.getDate() + 6);
       sunday.setHours(23, 59, 59, 999);
-      return taskDay >= monday.getTime() && taskDay <= sunday.getTime();
+      return maxActiveDay >= monday.getTime() && minActiveDay <= sunday.getTime();
     }
 
     if (period === 'LAST_WEEK') {
@@ -130,47 +151,42 @@ function isTaskInTimeFilter(task: Task, period: TimeFilterPeriod, customDate?: s
       const lastSunday = new Date(lastMonday);
       lastSunday.setDate(lastMonday.getDate() + 6);
       lastSunday.setHours(23, 59, 59, 999);
-      return taskDay >= lastMonday.getTime() && taskDay <= lastSunday.getTime();
+      return maxActiveDay >= lastMonday.getTime() && minActiveDay <= lastSunday.getTime();
     }
 
     if (period === 'THIS_MONTH') {
-      const tD = new Date(taskDay);
-      return tD.getMonth() === now.getMonth() && tD.getFullYear() === now.getFullYear();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+      return maxActiveDay >= thisMonthStart && minActiveDay <= thisMonthEnd;
     }
 
     if (period === 'LAST_MONTH') {
-      const tD = new Date(taskDay);
-      const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-      const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-      return tD.getMonth() === lastMonth && tD.getFullYear() === lastMonthYear;
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999).getTime();
+      return maxActiveDay >= lastMonthStart && minActiveDay <= lastMonthEnd;
     }
 
     return true;
   }
 
-  // 2. Đối với Dự Án / Kế Hoạch Dài Hạn (!task.isDaily)
-  // Dự án là công việc diễn ra trong cả chu kỳ từ ngày bắt đầu (startDay) đến ngày hoàn thành (dueDay/deadlineDay)
-  const minActiveDay = Math.min(startDay, dueDay);
-  const maxActiveDay = Math.max(startDay, dueDay, deadlineDay);
+  // 2. Đối với Việc Trong Ngày (chỉ làm trong đúng 1 ngày)
+  const taskDay = dueDay || deadlineDay || startDay;
 
   if (period === 'CUSTOM') {
     if (!customDate) return true;
     const targetDay = new Date(customDate).setHours(0, 0, 0, 0);
-    // Dự án xuất hiện nếu ngày được chọn nằm trong khoảng thời gian diễn ra dự án
-    return targetDay >= minActiveDay && targetDay <= maxActiveDay;
+    return taskDay === targetDay;
   }
 
   if (period === 'TODAY') {
     const today = new Date().setHours(0, 0, 0, 0);
-    // Dự án xuất hiện ở "Hôm nay" nếu hôm nay nằm trong thời gian dự án hoặc dự án đang làm chưa hoàn thành
-    return (today >= minActiveDay && today <= maxActiveDay) || (task.status !== 'APPROVED' && today >= minActiveDay);
+    return taskDay === today || (task.status !== 'APPROVED' && today > taskDay);
   }
 
   if (period === 'YESTERDAY') {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yDay = yesterday.setHours(0, 0, 0, 0);
-    return yDay >= minActiveDay && yDay <= maxActiveDay;
+    return taskDay === yesterday.setHours(0, 0, 0, 0);
   }
 
   if (period === 'THIS_WEEK') {
@@ -182,7 +198,7 @@ function isTaskInTimeFilter(task: Task, period: TimeFilterPeriod, customDate?: s
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
-    return maxActiveDay >= monday.getTime() && minActiveDay <= sunday.getTime();
+    return taskDay >= monday.getTime() && taskDay <= sunday.getTime();
   }
 
   if (period === 'LAST_WEEK') {
@@ -194,19 +210,19 @@ function isTaskInTimeFilter(task: Task, period: TimeFilterPeriod, customDate?: s
     const lastSunday = new Date(lastMonday);
     lastSunday.setDate(lastMonday.getDate() + 6);
     lastSunday.setHours(23, 59, 59, 999);
-    return maxActiveDay >= lastMonday.getTime() && minActiveDay <= lastSunday.getTime();
+    return taskDay >= lastMonday.getTime() && taskDay <= lastSunday.getTime();
   }
 
   if (period === 'THIS_MONTH') {
-    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
-    return maxActiveDay >= thisMonthStart && minActiveDay <= thisMonthEnd;
+    const tD = new Date(taskDay);
+    return tD.getMonth() === now.getMonth() && tD.getFullYear() === now.getFullYear();
   }
 
   if (period === 'LAST_MONTH') {
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999).getTime();
-    return maxActiveDay >= lastMonthStart && minActiveDay <= lastMonthEnd;
+    const tD = new Date(taskDay);
+    const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    return tD.getMonth() === lastMonth && tD.getFullYear() === lastMonthYear;
   }
 
   return true;

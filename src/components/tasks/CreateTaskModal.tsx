@@ -1162,47 +1162,66 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
               const finishDateObj = new Date(baseDateObj);
               const actualDays = Math.max(1, parseInt(String(durationDays), 10) || 1);
               finishDateObj.setDate(finishDateObj.getDate() + (actualDays - 1));
+
+              const startDateFormatted = new Intl.DateTimeFormat('vi-VN', {
+                weekday: 'short',
+                day: '2-digit',
+                month: '2-digit',
+              }).format(baseDateObj);
+
               const finishDateFormatted = new Intl.DateTimeFormat('vi-VN', {
                 weekday: 'short',
                 day: '2-digit',
                 month: '2-digit',
+                year: 'numeric',
               }).format(finishDateObj);
 
               return (
-                <div className="bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/70 border border-blue-200/90 rounded-2xl p-4 space-y-3.5 shadow-xs">
-                  <div className="flex items-center justify-between gap-2">
+                <div className="bg-slate-50/90 border border-blue-200/80 rounded-2xl p-4 space-y-3.5 shadow-xs">
+                  {/* Tiêu đề & Badge tóm tắt */}
+                  <div className="flex items-center justify-between gap-2 border-b border-blue-100/80 pb-2.5">
                     <span className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center space-x-1.5">
                       <Clock className="w-4 h-4 text-blue-600" />
                       <span>Thời Gian & Hạn Hoàn Thành</span>
                     </span>
-                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-600 text-white shadow-xs shrink-0">
-                      {actualDays > 1 ? `Làm trong ${actualDays} ngày` : currentShiftCalc.shiftInfo.shortName}
+                    <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-600 text-white shadow-xs shrink-0">
+                      {actualDays > 1 ? `Kế hoạch ${actualDays} ngày` : 'Trong ngày (1 ca)'}
                     </span>
                   </div>
 
-                  {/* Ô chọn ngày bắt đầu & Số ngày hoàn thành */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white/95 rounded-xl p-3 border border-blue-100">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Ngày bắt đầu:
-                      </label>
+                  {/* Khối cấu hình: Ngày bắt đầu & Thời hạn hoàn thành */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {/* Cột 1: Ngày bắt đầu */}
+                    <div className="bg-white rounded-xl p-3 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                          Ngày bắt đầu:
+                        </label>
+                        <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                          {startDateFormatted}
+                        </span>
+                      </div>
                       <input
                         type="date"
                         value={dailyDate}
                         onChange={(e) => setDailyDate(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 text-xs font-semibold px-2.5 py-2 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-300 text-xs font-bold px-3 py-2 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
-                        <span>Thời hạn hoàn thành:</span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${actualDays > 1 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
-                          {actualDays > 1 ? `Làm trong ${actualDays} ngày` : 'Trong ngày'}
-                        </span>
-                      </label>
 
-                      {/* Bộ Stepper Tăng/Giảm (+ / -) và Ô nhập số thông minh */}
-                      <div className="flex items-center gap-2">
+                    {/* Cột 2: Thời hạn hoàn thành & Stepper */}
+                    <div className="bg-white rounded-xl p-3 border border-slate-200/80 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                          Số ngày thực hiện:
+                        </label>
+                        <span className="text-[10px] font-semibold text-slate-500">
+                          Tối đa 30 ngày
+                        </span>
+                      </div>
+
+                      {/* Bộ Stepper Tăng/Giảm (+ / -) */}
+                      <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center bg-slate-100 border border-slate-300 rounded-xl p-0.5 shadow-2xs">
                           <button
                             type="button"
@@ -1250,16 +1269,16 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
 
                         <span className="text-xs font-bold text-slate-700 shrink-0">ngày</span>
 
-                        {actualDays > 1 && (
-                          <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-lg truncate">
-                            Hạn: {finishDateFormatted}
+                        <div className="text-right flex-1 truncate">
+                          <span className="text-[10px] text-slate-400 block font-medium">Hạn chót</span>
+                          <span className="text-[11px] font-extrabold text-blue-700 truncate block">
+                            {finishDateFormatted}
                           </span>
-                        )}
+                        </div>
                       </div>
 
-                      {/* Các nút chọn nhanh (Quick Select Chips) trên điện thoại: 1 chạm là đổi ngay */}
-                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                        <span className="text-[10px] text-slate-400 font-semibold mr-0.5">Chọn nhanh:</span>
+                      {/* Các nút chọn nhanh (Quick Select Chips) */}
+                      <div className="flex items-center gap-1.5 pt-1 flex-wrap">
                         {[1, 2, 3, 4, 5, 7, 10].map((days) => (
                           <button
                             key={days}
@@ -1268,25 +1287,45 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                             className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border transition-all active:scale-95 cursor-pointer ${
                               actualDays === days
                                 ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                                : 'bg-slate-50 hover:bg-blue-50 text-slate-700 border-slate-200'
                             }`}
                           >
-                            {days === 1 ? '1 ngày' : `${days} ngày`}
+                            {days === 1 ? '1N' : `${days}N`}
                           </button>
                         ))}
                       </div>
                     </div>
                   </div>
 
+                  {/* Lộ trình tóm tắt trực quan: Bắt đầu -> Kết thúc */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50/70 rounded-xl p-3 border border-blue-100 flex items-center justify-between text-xs">
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                      <div>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Khởi hành</span>
+                        <span className="font-bold text-slate-800">{startDateFormatted}</span>
+                      </div>
+                    </div>
+                    <span className="text-blue-400 font-bold px-2">➜</span>
+                    <div className="text-right">
+                      <span className="text-[10px] text-blue-600 uppercase font-bold block">
+                        {actualDays > 1 ? `Hạn nộp (${actualDays} ngày)` : 'Hạn nộp'}
+                      </span>
+                      <span className="font-extrabold text-blue-800">
+                        {actualDays > 1 ? `${finishDateFormatted} (Hết ca)` : `${currentShiftCalc.formattedDeadlineText} (Hết ca)`}
+                      </span>
+                    </div>
+                  </div>
+
                   {/* Thông tin ca trực & cơ chế nhắc nhở */}
-                  <div className="bg-white/95 rounded-xl p-3 border border-blue-100 space-y-1">
+                  <div className="bg-white rounded-xl p-3 border border-slate-200/80 space-y-1">
                     <p className="text-xs font-bold text-slate-800">
                       Ca trực của {primaryAssigneeUser ? getPersonalName(primaryAssigneeUser.name) : 'nhân sự'}:{' '}
                       <span className="text-blue-700">{currentShiftCalc.formattedShiftText}</span>
                     </p>
                     {actualDays > 1 ? (
                       <p className="text-[11px] text-amber-800 font-medium">
-                        🔔 <strong>Cơ chế nhắc nhở hằng ngày:</strong> Hệ thống sẽ tự động nhắc nhở nhân viên cập nhật tiến độ công việc trước khi hết ca 60 phút mỗi ngày cho đến khi hoàn thành hoặc xin gia hạn.
+                        🔔 <strong>Nhắc nhở hằng ngày:</strong> Hệ thống tự động nhắc cập nhật tiến độ trước khi hết ca 60 phút mỗi ngày cho đến khi hoàn thành.
                       </p>
                     ) : (
                       <p className="text-[11px] text-slate-500">

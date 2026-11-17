@@ -1980,10 +1980,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           actionType,
         };
 
+        // Nếu là công việc nhiều ngày, cập nhật lại số ngày tương ứng với hạn mới
+        let updatedDurationDays = t.durationDays;
+        if (t.durationDays && t.durationDays > 1) {
+          const sDate = new Date(t.startDate || t.createdAt);
+          const eDate = new Date(newDeadlineIso);
+          if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
+            const diffTime = eDate.getTime() - sDate.getTime();
+            const calcDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (calcDays >= 1) {
+              updatedDurationDays = calcDays;
+            }
+          }
+        }
+
         return {
           ...t,
           dueDate: newDeadlineIso,
           reportDeadline: newDeadlineIso,
+          durationDays: updatedDurationDays,
           assignedTo: updatedAssignedTo,
           assignedToNames: updatedAssignedToNames,
           // Đóng pending extensionRequest nếu có
