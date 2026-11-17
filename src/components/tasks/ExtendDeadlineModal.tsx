@@ -432,8 +432,11 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
                     { label: '+1 ngày', days: 1 },
                     { label: '+2 ngày', days: 2 },
                     { label: '+3 ngày', days: 3 },
+                    { label: '+4 ngày', days: 4 },
                     { label: '+5 ngày', days: 5 },
+                    { label: '+6 ngày', days: 6 },
                     { label: '+7 ngày', days: 7 },
+                    { label: '+10 ngày', days: 10 },
                   ].map((preset) => (
                     <button
                       key={preset.label}

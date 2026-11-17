@@ -1281,7 +1281,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                   {/* Hàng chọn nhanh số ngày (Full Width trải đều) */}
                   <div className="bg-white rounded-xl p-2.5 border border-slate-200/80 shadow-2xs flex items-center gap-1.5 flex-wrap">
                     <span className="text-[11px] font-bold text-slate-500 mr-1 shrink-0">Chọn nhanh:</span>
-                    {[1, 2, 3, 4, 5, 7, 10, 15].map((days) => (
+                    {[1, 2, 3, 4, 5, 6, 7, 10, 15, 30].map((days) => (
                       <button
                         key={days}
                         type="button"
