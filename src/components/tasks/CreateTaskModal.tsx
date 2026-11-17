@@ -1189,131 +1189,132 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                     </span>
                   </div>
 
-                  {/* Khối cấu hình: Ngày bắt đầu & Thời hạn hoàn thành */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Khối cấu hình: 2 ô cân xứng tuyệt đối */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Cột 1: Ngày bắt đầu */}
                     <div className="bg-white rounded-xl p-3 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                          Ngày bắt đầu:
-                        </label>
-                        <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                          {startDateFormatted}
-                        </span>
-                      </div>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
+                        Ngày bắt đầu:
+                      </label>
                       <input
                         type="date"
                         value={dailyDate}
                         onChange={(e) => setDailyDate(e.target.value)}
                         className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-300 text-xs font-bold px-3 py-2 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                       />
+                      <div className="mt-2 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">Khởi hành:</span>
+                        <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                          {startDateFormatted}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Cột 2: Thời hạn hoàn thành & Stepper */}
-                    <div className="bg-white rounded-xl p-3 border border-slate-200/80 shadow-2xs space-y-2">
-                      <div className="flex items-center justify-between">
+                    {/* Cột 2: Số ngày thực hiện */}
+                    <div className="bg-white rounded-xl p-3 border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                      <div className="flex items-center justify-between mb-1">
                         <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                           Số ngày thực hiện:
                         </label>
-                        <span className="text-[10px] font-semibold text-slate-500">
+                        <span className="text-[10px] font-bold text-slate-400">
                           Tối đa 30 ngày
                         </span>
                       </div>
 
-                      {/* Bộ Stepper Tăng/Giảm (+ / -) */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center bg-slate-100 border border-slate-300 rounded-xl p-0.5 shadow-2xs">
-                          <button
-                            type="button"
-                            onClick={() => setDurationDays(Math.max(1, actualDays - 1))}
-                            disabled={actualDays <= 1}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-700 hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs transition-all"
-                            title="Giảm 1 ngày"
-                          >
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
+                      {/* Bộ Stepper Tăng/Giảm (+ / -) trải rộng đều */}
+                      <div className="flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 rounded-lg py-1 px-2">
+                        <button
+                          type="button"
+                          onClick={() => setDurationDays(Math.max(1, actualDays - 1))}
+                          disabled={actualDays <= 1}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-700 hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs border border-slate-200 transition-all"
+                          title="Giảm 1 ngày"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
 
-                          <input
-                            type="number"
-                            min="1"
-                            max="30"
-                            value={durationDays}
-                            onFocus={(e) => e.target.select()}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val === '') {
-                                setDurationDays('');
-                              } else {
-                                const n = parseInt(val, 10);
-                                if (!isNaN(n)) setDurationDays(Math.min(30, Math.max(1, n)));
-                              }
-                            }}
-                            onBlur={() => {
-                              if (!durationDays || parseInt(String(durationDays), 10) < 1) {
-                                setDurationDays(1);
-                              }
-                            }}
-                            className="w-12 bg-transparent text-sm font-black text-center text-blue-900 focus:outline-none py-1"
-                          />
+                        <input
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={durationDays}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '') {
+                              setDurationDays('');
+                            } else {
+                              const n = parseInt(val, 10);
+                              if (!isNaN(n)) setDurationDays(Math.min(30, Math.max(1, n)));
+                            }
+                          }}
+                          onBlur={() => {
+                            if (!durationDays || parseInt(String(durationDays), 10) < 1) {
+                              setDurationDays(1);
+                            }
+                          }}
+                          className="w-16 bg-white border border-slate-300 rounded-lg text-base font-black text-center text-blue-900 focus:outline-none py-0.5 shadow-2xs"
+                        />
 
-                          <button
-                            type="button"
-                            onClick={() => setDurationDays(Math.min(30, actualDays + 1))}
-                            disabled={actualDays >= 30}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-700 hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs transition-all"
-                            title="Tăng 1 ngày"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setDurationDays(Math.min(30, actualDays + 1))}
+                          disabled={actualDays >= 30}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-700 hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs border border-slate-200 transition-all"
+                          title="Tăng 1 ngày"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
 
-                        <span className="text-xs font-bold text-slate-700 shrink-0">ngày</span>
-
-                        <div className="text-right flex-1 truncate">
-                          <span className="text-[10px] text-slate-400 block font-medium">Hạn chót</span>
-                          <span className="text-[11px] font-extrabold text-blue-700 truncate block">
-                            {finishDateFormatted}
-                          </span>
-                        </div>
+                        <span className="text-xs font-bold text-slate-700 ml-1">ngày</span>
                       </div>
 
-                      {/* Các nút chọn nhanh (Quick Select Chips) */}
-                      <div className="flex items-center gap-1.5 pt-1 flex-wrap">
-                        {[1, 2, 3, 4, 5, 7, 10].map((days) => (
-                          <button
-                            key={days}
-                            type="button"
-                            onClick={() => setDurationDays(days)}
-                            className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border transition-all active:scale-95 cursor-pointer ${
-                              actualDays === days
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                                : 'bg-slate-50 hover:bg-blue-50 text-slate-700 border-slate-200'
-                            }`}
-                          >
-                            {days === 1 ? '1N' : `${days}N`}
-                          </button>
-                        ))}
+                      <div className="mt-2 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">Kế hoạch:</span>
+                        <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                          {actualDays > 1 ? `${actualDays} ngày liên tục` : 'Trong ngày (1 ca)'}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Lộ trình tóm tắt trực quan: Bắt đầu -> Kết thúc */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50/70 rounded-xl p-3 border border-blue-100 flex items-center justify-between text-xs">
-                    <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Khởi hành</span>
-                        <span className="font-bold text-slate-800">{startDateFormatted}</span>
-                      </div>
+                  {/* Hàng chọn nhanh số ngày (Full Width trải đều) */}
+                  <div className="bg-white rounded-xl p-2.5 border border-slate-200/80 shadow-2xs flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-bold text-slate-500 mr-1 shrink-0">Chọn nhanh:</span>
+                    {[1, 2, 3, 4, 5, 7, 10, 15].map((days) => (
+                      <button
+                        key={days}
+                        type="button"
+                        onClick={() => setDurationDays(days)}
+                        className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-all active:scale-95 cursor-pointer ${
+                          actualDays === days
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-slate-50 hover:bg-blue-50 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {days === 1 ? '1 ngày' : `${days} ngày`}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Thẻ Hạn Chót Hoàn Thành - Nổi bật, rộng rãi, hiển thị trọn vẹn 100% */}
+                  <div className="bg-gradient-to-r from-blue-50 via-indigo-50/80 to-blue-50 rounded-xl p-3.5 border-2 border-blue-200 shadow-xs space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-800 flex items-center space-x-1">
+                        <span>🏁 HẠN CHÓT HOÀN TẤT CÔNG VIỆC</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-2xs">
+                        Hết ca trực
+                      </span>
                     </div>
-                    <span className="text-blue-400 font-bold px-2">➜</span>
-                    <div className="text-right">
-                      <span className="text-[10px] text-blue-600 uppercase font-bold block">
-                        {actualDays > 1 ? `Hạn nộp (${actualDays} ngày)` : 'Hạn nộp'}
-                      </span>
-                      <span className="font-extrabold text-blue-800">
-                        {actualDays > 1 ? `${finishDateFormatted} (Hết ca)` : `${currentShiftCalc.formattedDeadlineText} (Hết ca)`}
-                      </span>
+
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="text-base sm:text-lg font-black text-blue-900 leading-tight">
+                        {actualDays > 1 ? finishDateFormatted : `${currentShiftCalc.formattedDeadlineText} (${startDateFormatted})`}
+                      </div>
+                      <div className="text-[11px] font-semibold text-slate-600 bg-white/90 px-2.5 py-1 rounded-lg border border-blue-100">
+                        {actualDays > 1 ? `Kéo dài ${actualDays} ngày (Từ ${startDateFormatted})` : 'Toàn thời gian ca làm việc'}
+                      </div>
                     </div>
                   </div>
 
