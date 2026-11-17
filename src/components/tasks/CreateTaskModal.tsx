@@ -18,6 +18,8 @@ import {
   AlertTriangle,
   AlertCircle,
   Building2,
+  Plus,
+  Minus,
 } from 'lucide-react';
 import { Priority, StaffLevel, User } from '@/types';
 import { canAssignProject as checkCanAssignProject, canAssignToTarget, STAFF_LEVEL_LABELS, getLevelRank, isLevel1Manager } from '@/utils/permissions';
@@ -102,7 +104,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
   const [isContractor, setIsContractor] = useState<boolean>(false);
   const [contractorName, setContractorName] = useState<string>('');
   const [contractorSupervisorId, setContractorSupervisorId] = useState<string>(currentUser.id);
-  const [durationDays, setDurationDays] = useState<number>(1);
+  const [durationDays, setDurationDays] = useState<number | string>(1);
   const [isManagementOnly, setIsManagementOnly] = useState<boolean>(false);
   const [isDirectToStaff, setIsDirectToStaff] = useState<boolean>(false);
   const [dailyDate, setDailyDate] = useState<string>(
@@ -347,7 +349,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
     let computedDue = new Date(dueDate).toISOString();
     let computedReport = new Date(reportDeadline).toISOString();
 
-    const actualDurationDays = Math.max(1, durationDays || 1);
+    const actualDurationDays = Math.max(1, parseInt(String(durationDays), 10) || 1);
 
     if (isDaily) {
       // Đối chiếu trực tiếp với ca làm việc của người được giao (effectiveMemberIds[0]) vào ngày được chọn
@@ -1158,7 +1160,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
             if (isDaily) {
               const baseDateObj = new Date(targetDateStr);
               const finishDateObj = new Date(baseDateObj);
-              const actualDays = Math.max(1, durationDays || 1);
+              const actualDays = Math.max(1, parseInt(String(durationDays), 10) || 1);
               finishDateObj.setDate(finishDateObj.getDate() + (actualDays - 1));
               const finishDateFormatted = new Intl.DateTimeFormat('vi-VN', {
                 weekday: 'short',
@@ -1179,7 +1181,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                   </div>
 
                   {/* Ô chọn ngày bắt đầu & Số ngày hoàn thành */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white/95 rounded-xl p-3 border border-blue-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white/95 rounded-xl p-3 border border-blue-100">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                         Ngày bắt đầu:
@@ -1188,29 +1190,90 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                         type="date"
                         value={dailyDate}
                         onChange={(e) => setDailyDate(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 text-xs font-semibold px-2.5 py-2 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
                         <span>Thời hạn hoàn thành:</span>
-                        <span className="text-[10px] text-blue-600 font-bold">{actualDays > 1 ? 'Nhiều ngày' : 'Trong ngày'}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${actualDays > 1 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
+                          {actualDays > 1 ? `Làm trong ${actualDays} ngày` : 'Trong ngày'}
+                        </span>
                       </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          min="1"
-                          max="30"
-                          value={durationDays}
-                          onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || 1)}
-                          className="w-20 bg-slate-50 border border-slate-200 text-xs font-black text-center px-2 py-1.5 rounded-lg text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <span className="text-xs font-bold text-slate-700">ngày</span>
+
+                      {/* Bộ Stepper Tăng/Giảm (+ / -) và Ô nhập số thông minh */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center bg-slate-100 border border-slate-300 rounded-xl p-0.5 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => setDurationDays(Math.max(1, actualDays - 1))}
+                            disabled={actualDays <= 1}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-700 hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs transition-all"
+                            title="Giảm 1 ngày"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+
+                          <input
+                            type="number"
+                            min="1"
+                            max="30"
+                            value={durationDays}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === '') {
+                                setDurationDays('');
+                              } else {
+                                const n = parseInt(val, 10);
+                                if (!isNaN(n)) setDurationDays(Math.min(30, Math.max(1, n)));
+                              }
+                            }}
+                            onBlur={() => {
+                              if (!durationDays || parseInt(String(durationDays), 10) < 1) {
+                                setDurationDays(1);
+                              }
+                            }}
+                            className="w-12 bg-transparent text-sm font-black text-center text-blue-900 focus:outline-none py-1"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => setDurationDays(Math.min(30, actualDays + 1))}
+                            disabled={actualDays >= 30}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-700 hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs transition-all"
+                            title="Tăng 1 ngày"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <span className="text-xs font-bold text-slate-700 shrink-0">ngày</span>
+
                         {actualDays > 1 && (
-                          <span className="text-[11px] text-slate-500">
-                            (Đến {finishDateFormatted})
+                          <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-lg truncate">
+                            Hạn: {finishDateFormatted}
                           </span>
                         )}
+                      </div>
+
+                      {/* Các nút chọn nhanh (Quick Select Chips) trên điện thoại: 1 chạm là đổi ngay */}
+                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                        <span className="text-[10px] text-slate-400 font-semibold mr-0.5">Chọn nhanh:</span>
+                        {[1, 2, 3, 4, 5, 7, 10].map((days) => (
+                          <button
+                            key={days}
+                            type="button"
+                            onClick={() => setDurationDays(days)}
+                            className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border transition-all active:scale-95 cursor-pointer ${
+                              actualDays === days
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                            }`}
+                          >
+                            {days === 1 ? '1 ngày' : `${days} ngày`}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
