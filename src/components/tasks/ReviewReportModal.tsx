@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Task, Attachment } from '@/types';
 import { compressImage } from '@/lib/imageCompression';
@@ -27,6 +27,8 @@ import {
   FolderKanban,
   Check,
   RotateCcw,
+  TrendingUp,
+  Building2,
 } from 'lucide-react';
 import { getPersonalName } from '@/utils/nameHelper';
 import { canReviewTask } from '@/utils/permissions';
@@ -82,6 +84,8 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Submit report states
+  const [reportType, setReportType] = useState<'PROGRESS' | 'COMPLETION'>('COMPLETION');
+  const [progressPercent, setProgressPercent] = useState<number>(50);
   const [summary, setSummary] = useState('');
   const [notes, setNotes] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -90,6 +94,23 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccessMsg, setSubmitSuccessMsg] = useState(false);
   const [showSubmissionForm, setShowSubmissionForm] = useState(true);
+
+  useEffect(() => {
+    if (task) {
+      if ((task.durationDays && task.durationDays > 1) || task.isContractor) {
+        if ((task.progressPercent || 0) < 100 && task.status !== 'APPROVED') {
+          setReportType('PROGRESS');
+          setProgressPercent(task.progressPercent || 50);
+        } else {
+          setReportType('COMPLETION');
+          setProgressPercent(100);
+        }
+      } else {
+        setReportType('COMPLETION');
+        setProgressPercent(100);
+      }
+    }
+  }, [task]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -181,7 +202,11 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
   const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!summary.trim()) {
-      alert('Vui lòng nhập tóm tắt kết quả công việc đã hoàn thành!');
+      alert(
+        reportType === 'PROGRESS'
+          ? 'Vui lòng nhập tóm tắt khối lượng tiến độ đã thực hiện hôm nay!'
+          : 'Vui lòng nhập tóm tắt kết quả công việc đã hoàn thành!'
+      );
       return;
     }
 
@@ -194,6 +219,8 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
         summary: summary.trim(),
         notes: notes.trim() || undefined,
         attachments,
+        reportType,
+        progressPercent: reportType === 'PROGRESS' ? progressPercent : 100,
       });
 
       setSubmitSuccessMsg(true);
@@ -571,6 +598,72 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
           )}
 
           {/* ==================================================== */}
+          {/* KHỐI TIẾN ĐỘ: NHẬT KÝ TIẾN ĐỘ TỪNG NGÀY KÈM ẢNH     */}
+          {/* ==================================================== */}
+          {task.progressUpdates && task.progressUpdates.length > 0 && (
+            <div className="border border-indigo-200 bg-indigo-50/40 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
+              <div className="flex items-center justify-between pb-2 border-b border-indigo-200/60">
+                <div className="flex items-center space-x-2">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-sm">
+                      Nhật Ký Tiến Độ Thi Công ({task.progressUpdates.length} đợt cập nhật)
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Tiến độ hiện tại: <span className="font-bold text-indigo-700">{task.progressPercent || 0}%</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                {task.progressUpdates.map((up) => {
+                  const dateStr = new Intl.DateTimeFormat('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    day: '2-digit',
+                    month: '2-digit',
+                  }).format(new Date(up.updatedAt));
+
+                  return (
+                    <div key={up.id} className="bg-white rounded-xl p-3 border border-indigo-100 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-900 text-xs">
+                          {up.updatedByName} ({up.percent}%)
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">{dateStr}</span>
+                      </div>
+                      <p className="text-slate-700 text-xs leading-relaxed whitespace-pre-line">{up.note}</p>
+
+                      {up.attachments && up.attachments.length > 0 && (
+                        <div className="pt-2 border-t border-slate-100">
+                          <p className="text-[11px] font-bold text-slate-600 mb-1.5 flex items-center gap-1">
+                            <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Ảnh hiện trường ({up.attachments.length}):</span>
+                          </p>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {up.attachments.map((att) => (
+                              <div
+                                key={att.id}
+                                onClick={() => att.type.startsWith('image/') && setSelectedImage(att.url)}
+                                className="relative aspect-video rounded-lg overflow-hidden border border-slate-200 bg-slate-100 cursor-pointer hover:scale-105 transition-transform"
+                              >
+                                <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ==================================================== */}
           {/* KHỐI 3: BẢNG NỘP CÔNG VIỆC TRỰC TIẾP (TÍCH HỢP)     */}
           {/* ==================================================== */}
           {!isApproved && (
@@ -613,17 +706,79 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
               ) : (
                 showSubmissionForm && (
                   <form onSubmit={handleSubmitReport} className="space-y-3.5">
+                    {/* Tùy chọn loại báo cáo: Tiến độ hôm nay vs Hoàn thành (Dành cho việc nhiều ngày / Nhà thầu) */}
+                    {((task.durationDays && task.durationDays > 1) || task.isContractor) && (
+                      <div className="space-y-2.5">
+                        <div className="bg-slate-100 p-1 rounded-xl flex items-center">
+                          <button
+                            type="button"
+                            onClick={() => setReportType('PROGRESS')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+                              reportType === 'PROGRESS'
+                                ? 'bg-amber-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            <span>⏳ Báo Cáo Tiến Độ Hôm Nay</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setReportType('COMPLETION')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+                              reportType === 'COMPLETION'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            <span>✅ Nghiệm Thu Hoàn Thành (100%)</span>
+                          </button>
+                        </div>
+
+                        {reportType === 'PROGRESS' && (
+                          <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+                                Mức độ tiến độ hiện tại:
+                              </label>
+                              <span className="text-sm font-black text-amber-900 bg-white px-2 py-0.5 rounded-lg border border-amber-200 shadow-2xs">
+                                {progressPercent}%
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="5"
+                              max="95"
+                              step="5"
+                              value={progressPercent}
+                              onChange={(e) => setProgressPercent(parseInt(e.target.value, 10))}
+                              className="w-full accent-amber-600 cursor-pointer"
+                            />
+                            <p className="text-[11px] text-amber-900 leading-relaxed font-medium">
+                              💡 <strong>Tiếp tục thực hiện:</strong> Báo cáo này ghi nhận tiến độ trong ngày hôm nay kèm ảnh hiện trường, công việc vẫn sẽ tiếp tục ở trạng thái <em>Đang thực hiện</em> để làm tiếp vào ngày mai.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Tóm tắt kết quả */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Tóm tắt kết quả công việc đã hoàn thành <span className="text-rose-500">*</span>
+                        {reportType === 'PROGRESS'
+                          ? 'Nội dung khối lượng đã làm hôm nay '
+                          : 'Tóm tắt kết quả công việc đã hoàn thành '}
+                        <span className="text-rose-500">*</span>
                       </label>
                       <textarea
                         required
                         rows={3}
                         value={summary}
                         onChange={(e) => setSummary(e.target.value)}
-                        placeholder="VD: Đã dán nhãn toàn bộ 45 thiết bị tại xưởng, cập nhật mã tài sản và kiểm tra hoạt động ổn định..."
+                        placeholder={
+                          reportType === 'PROGRESS'
+                            ? 'Mô tả cụ thể hôm nay đã thi công/lắp đặt được những gì, các hạng mục đã hoàn thành trong ngày...'
+                            : 'VD: Đã hoàn thành sửa chữa máy bơm, căn chỉnh áp lực nước và kiểm tra hoạt động ổn định...'
+                        }
                         className="w-full text-xs sm:text-sm border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-medium leading-relaxed bg-white shadow-2xs"
                       />
                     </div>
@@ -726,15 +881,25 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
                       )}
                     </div>
 
-                    {/* Nút gửi báo cáo hoàn thành */}
+                    {/* Nút gửi báo cáo */}
                     <div className="pt-2">
                       <button
                         type="submit"
                         disabled={isSubmitting || isCompressing}
-                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 transition-all cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          reportType === 'PROGRESS'
+                            ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 shadow-amber-500/25'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25'
+                        }`}
                       >
                         <Send className="w-4 h-4" />
-                        <span>{isSubmitting ? 'Đang gửi báo cáo...' : 'Gửi Báo Cáo Nghiệm Thu'}</span>
+                        <span>
+                          {isSubmitting
+                            ? 'Đang lưu báo cáo...'
+                            : reportType === 'PROGRESS'
+                            ? 'Lưu Tiến Độ & Ảnh Hiện Trường Hôm Nay'
+                            : 'Gửi Báo Cáo Nghiệm Thu Hoàn Thành'}
+                        </span>
                       </button>
                     </div>
                   </form>

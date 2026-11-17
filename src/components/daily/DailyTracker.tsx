@@ -895,6 +895,11 @@ export function DailyTracker({
             {filteredDailyTasks.map((task) => {
               const latestReport = task.reports && task.reports.length > 0 ? task.reports[task.reports.length - 1] : null;
               const hasImage = latestReport?.attachments && latestReport.attachments.length > 0;
+              const latestProgressWithImg = task.progressUpdates?.slice().reverse().find(p => p.attachments && p.attachments.length > 0);
+              const progressImg = latestProgressWithImg?.attachments?.[0];
+              const latestProgress = task.progressUpdates && task.progressUpdates.length > 0
+                ? task.progressUpdates[task.progressUpdates.length - 1]
+                : null;
               const deadlineDate = task.reportDeadline ? new Date(task.reportDeadline) : (task.dueDate ? new Date(task.dueDate) : null);
               const isValidDeadline = deadlineDate && !isNaN(deadlineDate.getTime());
               const isDueToday = isValidDeadline && deadlineDate.toDateString() === now.toDateString();
@@ -979,8 +984,8 @@ export function DailyTracker({
                     )}
                   </div>
 
-                  {/* Báo cáo gần nhất nếu có */}
-                  {latestReport && (
+                  {/* Báo cáo gần nhất hoặc tiến độ thi công nếu có */}
+                  {latestReport ? (
                     <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex items-start justify-between gap-2.5">
                       <div className="min-w-0 flex-1">
                         <p className="line-clamp-2 italic text-[11px] text-slate-700 font-medium">
@@ -999,7 +1004,38 @@ export function DailyTracker({
                         />
                       )}
                     </div>
-                  )}
+                  ) : latestProgress ? (
+                    <div className="bg-indigo-50/50 rounded-xl p-2.5 border border-indigo-100/70 flex items-start justify-between gap-2.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[10px] font-bold text-indigo-700 bg-white px-1.5 py-0.2 rounded border border-indigo-200">
+                            Tiến độ: {latestProgress.percent}%
+                          </span>
+                          <span className="text-[9px] text-slate-400">
+                            {new Date(latestProgress.updatedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        {latestProgress.note && (
+                          <p className="line-clamp-2 italic text-[11px] text-slate-700">
+                            &quot;{latestProgress.note}&quot;
+                          </p>
+                        )}
+                      </div>
+                      {progressImg && (
+                        <div className="relative shrink-0">
+                          <img
+                            src={progressImg.url}
+                            alt="Ảnh tiến độ"
+                            className="w-10 h-10 rounded-lg object-cover border border-indigo-200 shrink-0 cursor-pointer hover:scale-105 transition-transform shadow-xs"
+                            onClick={() => onOpenReviewModal(task)}
+                          />
+                          <span className="absolute -bottom-1 -right-1 bg-indigo-600 text-white text-[8px] font-bold px-1 rounded shadow-xs">
+                            Ảnh
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
 
                   {/* Hàng 3: Hạn nộp thông minh & Nút thao tác */}
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
@@ -1139,6 +1175,11 @@ export function DailyTracker({
                 {filteredDailyTasks.map((task, idx) => {
                   const latestReport = task.reports && task.reports.length > 0 ? task.reports[task.reports.length - 1] : null;
                   const hasImage = latestReport?.attachments && latestReport.attachments.length > 0;
+                  const latestProgressWithImg = task.progressUpdates?.slice().reverse().find(p => p.attachments && p.attachments.length > 0);
+                  const progressImg = latestProgressWithImg?.attachments?.[0];
+                  const latestProgress = task.progressUpdates && task.progressUpdates.length > 0
+                    ? task.progressUpdates[task.progressUpdates.length - 1]
+                    : null;
 
                   return (
                     <tr key={task.id} className="hover:bg-slate-50/80 transition-colors">
@@ -1311,6 +1352,20 @@ export function DailyTracker({
                               Nộp lúc: {new Date(latestReport.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
+                        ) : latestProgress ? (
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200">
+                                Tiến độ: {latestProgress.percent}%
+                              </span>
+                              <span className="text-[9px] text-slate-400">
+                                {new Date(latestProgress.updatedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            {latestProgress.note && (
+                              <p className="line-clamp-1 italic text-slate-600 mt-0.5">&quot;{latestProgress.note}&quot;</p>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-slate-400 italic">Chưa nộp kết quả</span>
                         )}
@@ -1324,6 +1379,19 @@ export function DailyTracker({
                               className="w-10 h-10 rounded-lg object-cover border border-slate-200 shadow-xs cursor-pointer hover:scale-110 transition-transform"
                               onClick={() => onOpenReviewModal(task)}
                             />
+                          </div>
+                        ) : progressImg ? (
+                          <div className="flex flex-col items-center justify-center">
+                            <div className="relative group cursor-pointer" onClick={() => onOpenReviewModal(task)}>
+                              <img
+                                src={progressImg.url}
+                                alt="Ảnh tiến độ"
+                                className="w-10 h-10 rounded-lg object-cover border border-indigo-300 shadow-xs group-hover:scale-110 transition-transform"
+                              />
+                              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[8px] font-bold px-1 rounded whitespace-nowrap shadow-xs">
+                                Tiến độ
+                              </span>
+                            </div>
                           </div>
                         ) : (
                           <span className="text-slate-300 text-[10px]">Không có</span>
