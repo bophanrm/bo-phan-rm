@@ -603,6 +603,22 @@ class ZaloBotService {
       }
 
       // Đang trong khung giờ hợp lệ (từ targetTime đến tối đa +30 phút):
+      // KHÓA NGUYÊN TỬ (Distributed Lock): Đảm bảo chỉ DUY NHẤT 1 server được gửi tin,
+      // triệt tiêu hoàn toàn trường hợp Vercel chạy song song nhiều instance / nhiều project gửi trùng tin!
+      const lockKey = `lock_well_report_${todayVnStr}`;
+      const { error: lockError } = await supabase
+        .from('app_sync_store')
+        .insert({
+          key: lockKey,
+          value: { lockedAt: new Date().toISOString(), serverTime: vnTime }
+        });
+
+      if (lockError) {
+        console.log(`[ZaloBot] Báo cáo giếng ${todayVnStr} đã được tiến trình khác gửi (Lock active). Hủy gửi để chống trùng tin.`);
+        this.config.wellReport.lastSentDate = todayVnStr;
+        return;
+      }
+
       console.log(`[ZaloBot] Đến giờ tự động gửi báo cáo giếng (${vnTime} ~ ${targetTime}) ngày ${todayVnStr}!`);
       this.config.wellReport.lastSentDate = todayVnStr;
       await this.updateConfig({ wellReport: this.config.wellReport });
@@ -663,6 +679,21 @@ class ZaloBotService {
       }
 
       // Đang trong khung giờ hợp lệ (từ targetTime đến tối đa +30 phút):
+      // KHÓA NGUYÊN TỬ (Distributed Lock): Đảm bảo chỉ DUY NHẤT 1 server được gửi lịch mở giếng, chống gửi trùng
+      const lockKey = `lock_well_schedule_${todayVnStr}`;
+      const { error: lockError } = await supabase
+        .from('app_sync_store')
+        .insert({
+          key: lockKey,
+          value: { lockedAt: new Date().toISOString(), serverTime: vnTime }
+        });
+
+      if (lockError) {
+        console.log(`[ZaloBot] Lịch mở giếng ${todayVnStr} đã được tiến trình khác gửi (Lock active). Hủy gửi để chống trùng tin.`);
+        this.config.wellSchedule.lastSentDate = todayVnStr;
+        return;
+      }
+
       console.log(`[ZaloBot] Đến giờ tự động gửi LỊCH MỞ GIẾNG (${vnTime} ~ ${targetTime}) ngày ${todayVnStr}!`);
       this.config.wellSchedule.lastSentDate = todayVnStr;
       await this.updateConfig({ wellSchedule: this.config.wellSchedule });
@@ -795,6 +826,19 @@ class ZaloBotService {
 
         const shiftKey = `${shiftId}-${todayVnStr}`;
         if (remindHistory[shiftKey] === todayVnStr) continue;
+
+        // KHÓA NGUYÊN TỬ (Distributed Lock): Đảm bảo chỉ 1 server gửi tin nhắc ca này hôm nay
+        const lockKey = `lock_shift_remind_${shiftId}_${todayVnStr}`;
+        const { error: lockError } = await supabase
+          .from('app_sync_store')
+          .insert({
+            key: lockKey,
+            value: { lockedAt: new Date().toISOString() }
+          });
+        if (lockError) {
+          remindHistory[shiftKey] = todayVnStr;
+          continue;
+        }
 
         let taskListText = '';
         group.tasksWithAssignees.slice(0, 10).forEach((entry, idx) => {
