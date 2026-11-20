@@ -134,6 +134,7 @@ export default function Home() {
           setIsCreateDaily(!!isDaily);
           setIsCreateOpen(true);
         }}
+        onSelectTask={(task) => setReviewTask(task)}
       />
 
       <main className="w-full px-3 sm:px-6 lg:px-8 xl:px-10 pt-4 sm:pt-6 pb-24 sm:pb-12 space-y-4 sm:space-y-6">

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
+import { Task } from '@/types';
 import {
   Bell,
   Shield,
@@ -29,9 +30,10 @@ interface NavbarProps {
   currentTab: 'tasks' | 'planning' | 'schedule' | 'teams' | 'chat';
   setCurrentTab: (tab: 'tasks' | 'planning' | 'schedule' | 'teams' | 'chat') => void;
   openCreateModal: (isDaily?: boolean) => void;
+  onSelectTask?: (task: Task) => void;
 }
 
-export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarProps) {
+export function Navbar({ currentTab, setCurrentTab, openCreateModal, onSelectTask }: NavbarProps) {
   const { currentUser, setCurrentUser, users, tasks, unreadCount, unreadMessagesCount } = useApp();
   const [showNotifs, setShowNotifs] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
@@ -340,7 +342,12 @@ export function Navbar({ currentTab, setCurrentTab, openCreateModal }: NavbarPro
       )}
 
       {/* Notification Drawer */}
-      <NotificationDrawer isOpen={showNotifs} onClose={() => setShowNotifs(false)} />
+      <NotificationDrawer
+        isOpen={showNotifs}
+        onClose={() => setShowNotifs(false)}
+        onSelectTask={onSelectTask}
+        onNavigateTab={setCurrentTab}
+      />
 
       {/* Backup Drawer */}
       <BackupDrawer isOpen={showBackup} onClose={() => setShowBackup(false)} />
