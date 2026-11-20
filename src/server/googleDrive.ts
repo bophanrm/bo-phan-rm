@@ -274,19 +274,62 @@ export class GoogleDriveService {
 
       const folderData = await res.json();
       if (!res.ok) {
-        if (res.status === 404) {
-          throw new Error(
-            `Không tìm thấy thư mục (ID: ${targetFolderId}). Hãy chắc chắn thư mục này đã được chia sẻ quyền Người chỉnh sửa (Editor) cho tài khoản kết nối.`
+        // Tự động tạo thư mục "Sao Lưu Bộ Phận RM" nếu thư mục cũ không truy cập được
+        try {
+          const createFolderRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&fields=id,name`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: 'Sao Lưu Bộ Phận RM',
+                mimeType: 'application/vnd.google-apps.folder',
+              }),
+            }
           );
+          const newFolder = await createFolderRes.json();
+          if (newFolder.id) {
+            targetFolderId = newFolder.id;
+            folderName = 'Sao Lưu Bộ Phận RM (Khởi tạo sẵn)';
+            await this.saveConfig({ folderId: targetFolderId, folderName });
+          } else {
+            throw new Error(
+              `Không tìm thấy thư mục (ID: ${targetFolderId}). Hãy chắc chắn thư mục này đã được chia sẻ quyền Người chỉnh sửa (Editor).`
+            );
+          }
+        } catch (e: any) {
+          throw new Error(e?.message || 'Không thể truy cập hoặc khởi tạo thư mục Google Drive.');
         }
-        throw new Error(folderData.error?.message || 'Không thể truy cập thư mục Google Drive được chỉ định.');
+      } else {
+        folderName = folderData.name || 'Thư mục Drive';
       }
-
-      if (folderData.mimeType !== 'application/vnd.google-apps.folder') {
-        throw new Error(`ID "${targetFolderId}" không phải là một Thư mục (Folder) trên Google Drive.`);
-      }
-
-      folderName = folderData.name || 'Thư mục Drive';
+    } else {
+      // Nếu chưa nhập Folder ID, tự động tạo thư mục "Sao Lưu Bộ Phận RM"
+      try {
+        const createFolderRes = await fetch(
+          `https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&fields=id,name`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: 'Sao Lưu Bộ Phận RM',
+              mimeType: 'application/vnd.google-apps.folder',
+            }),
+          }
+        );
+        const newFolder = await createFolderRes.json();
+        if (newFolder.id) {
+          targetFolderId = newFolder.id;
+          folderName = 'Sao Lưu Bộ Phận RM';
+          await this.saveConfig({ folderId: targetFolderId, folderName });
+        }
+      } catch (e) {}
     }
 
     const emailDisplay = authType === 'oauth'
