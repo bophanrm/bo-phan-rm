@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { zaloBot } from '@/server/zaloBot';
+import { GoogleDriveService } from '@/server/googleDrive';
 
 // Endpoint này được gọi tự động định kỳ bởi Vercel Cron hoặc GitHub Actions
 // để kích hoạt bot kiểm tra và gửi tin nhắn theo lịch kể cả khi không có ai mở website
@@ -12,6 +13,9 @@ export async function GET(req: Request) {
     await zaloBot.checkAndTriggerWellReport();
     await zaloBot.checkAndTriggerWellSchedule();
     await zaloBot.checkAndTriggerShiftReminders();
+
+    // 3. Tự động kiểm tra và sao lưu định kỳ lên Google Drive (nếu được bật)
+    const driveBackupTriggered = await GoogleDriveService.checkAndTriggerAutoBackup();
 
     const now = new Date();
     const vnTime = new Intl.DateTimeFormat('vi-VN', {
@@ -29,6 +33,7 @@ export async function GET(req: Request) {
       timestamp: vnTime,
       botStatus: zaloBot.status,
       user: zaloBot.userInfo?.name || null,
+      driveBackupTriggered,
       wellReport: {
         enabled: zaloBot.config.wellReport?.enabled,
         time: zaloBot.config.wellReport?.time,
