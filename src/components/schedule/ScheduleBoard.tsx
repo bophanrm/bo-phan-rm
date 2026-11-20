@@ -31,6 +31,8 @@ import {
   Bell,
   Send,
   FileCheck,
+  RotateCcw,
+  AlertTriangle,
 } from 'lucide-react';
 
 export function ScheduleBoard() {
@@ -74,8 +76,10 @@ export function ScheduleBoard() {
     isHalfDay?: boolean;
   } | null>(null);
 
-  // Weekly schedule planner modal for next week
+  // Weekly schedule planner modal for next week or current week
   const [isPlannerModalOpen, setIsPlannerModalOpen] = useState(false);
+  const [plannerTargetWeek, setPlannerTargetWeek] = useState<'CURRENT' | 'NEXT'>('NEXT');
+  const [showPendingPreview, setShowPendingPreview] = useState(false);
 
   // Mobile active day index (0 = Monday, ..., 6 = Sunday)
   const todayDay = new Date().getDay();
@@ -271,15 +275,31 @@ export function ScheduleBoard() {
           {/* Action buttons (Chỉ Cấp Nhân Viên Điều Phối mới có quyền phân ca và xuất Excel) */}
           {canArrange && (
             <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+              {/* Nút Sửa Lịch Tuần Hiện Tại (Dành cho Điều Phối Viên) */}
               <button
-                onClick={() => setIsPlannerModalOpen(true)}
+                onClick={() => {
+                  setPlannerTargetWeek('CURRENT');
+                  setIsPlannerModalOpen(true);
+                }}
                 className="flex items-center space-x-1.5 bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
               >
-                <Sparkles className="w-4 h-4" />
-                <span>⚡ Lên Lịch Làm Việc Tuần Tới</span>
+                <RotateCcw className="w-4 h-4" />
+                <span>✏️ Sửa Lịch Tuần Này</span>
               </button>
 
-              {(!isApproved || isDraft) && (
+              {/* Nút Lên Lịch Tuần Tới */}
+              <button
+                onClick={() => {
+                  setPlannerTargetWeek('NEXT');
+                  setIsPlannerModalOpen(true);
+                }}
+                className="flex items-center space-x-1.5 bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>⚡ Lên Lịch Tuần Tới</span>
+              </button>
+
+              {isDraft && (
                 <button
                   onClick={() => {
                     submitScheduleForApproval(mondayDateStr);
@@ -380,49 +400,103 @@ export function ScheduleBoard() {
       )}
 
       {/* Schedule Approval & Workflow Banner */}
-      {canApprove && isPending && (
-        <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-fade-in">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-xs sm:text-sm text-purple-900">Yêu Cầu Phê Duyệt Lịch Làm Việc Tuần Này</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-200 text-purple-800">
-                  Chờ Cấp Quản Lý Duyệt
-                </span>
+      {isPending && (
+        canApprove ? (
+          <div className={`border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-fade-in ${
+            approval.isRevision ? 'bg-amber-50 border-amber-300 text-amber-950' : 'bg-purple-50 border-purple-200 text-purple-900'
+          }`}>
+            <div className="flex items-center space-x-3">
+              <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center shrink-0 shadow-sm ${
+                approval.isRevision ? 'bg-amber-600' : 'bg-purple-600'
+              }`}>
+                {approval.isRevision ? <RotateCcw className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
               </div>
-              <p className="text-[11px] text-purple-700 mt-0.5">
-                Nhân Viên Điều Phối ({approval.submittedByName || 'Nguyên'}) đã hoàn thành sắp xếp ca và gửi lúc{' '}
-                {approval.submittedAt ? new Date(approval.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''} ngày{' '}
-                {approval.submittedAt ? new Date(approval.submittedAt).toLocaleDateString('vi-VN') : ''}.
-              </p>
+              <div>
+                <div className="flex items-center space-x-2 flex-wrap gap-1">
+                  <span className="font-bold text-xs sm:text-sm">
+                    {approval.isRevision ? 'Yêu Cầu Duyệt THAY ĐỔI Lịch Làm Việc Tuần Hiện Tại' : 'Yêu Cầu Phê Duyệt Lịch Làm Việc Tuần Mới'}
+                  </span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    approval.isRevision ? 'bg-amber-200 text-amber-900 border border-amber-300' : 'bg-purple-200 text-purple-800'
+                  }`}>
+                    Chờ Cấp 1 Phê Duyệt
+                  </span>
+                </div>
+                <p className="text-[11px] opacity-85 mt-0.5">
+                  Nhân Viên Điều Phối ({approval.submittedByName || 'Nguyên'}) đã gửi đề xuất lúc{' '}
+                  {approval.submittedAt ? new Date(approval.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''} ngày{' '}
+                  {approval.submittedAt ? new Date(approval.submittedAt).toLocaleDateString('vi-VN') : ''}.
+                  {approval.isRevision && ' Sau khi duyệt, lịch mới sẽ có hiệu lực và tự động thông báo đến tất cả nhân sự.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0 flex-wrap gap-1">
+              {approval.pendingShifts && (
+                <button
+                  type="button"
+                  onClick={() => setShowPendingPreview((prev) => !prev)}
+                  className="px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
+                >
+                  {showPendingPreview ? '👁️ Xem Lịch Đang Chạy' : '👁️ Xem Lịch Đề Xuất Mới'}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  const reason = prompt('Nhập lý do từ chối / yêu cầu chỉnh sửa (tùy chọn):', 'Cần điều chỉnh lại phân ca làm việc');
+                  if (reason !== null) {
+                    rejectSchedule(mondayDateStr, reason || 'Cần điều chỉnh lại phân ca làm việc');
+                  }
+                }}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 transition-all shadow-xs cursor-pointer"
+              >
+                ↩ Từ Chối / Sửa
+              </button>
+              <button
+                onClick={() => {
+                  approveSchedule(mondayDateStr);
+                  alert(approval.isRevision
+                    ? 'Đã phê duyệt thay đổi lịch làm việc tuần hiện tại thành công! Hệ thống đã gửi thông báo đến tất cả các cấp.'
+                    : 'Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.');
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center space-x-1.5 cursor-pointer"
+              >
+                <Check className="w-4 h-4 stroke-[2.5]" />
+                <span>{approval.isRevision ? '✓ Phê Duyệt Thay Đổi' : '✓ Phê Duyệt Lịch'}</span>
+              </button>
             </div>
           </div>
-          <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0">
-            <button
-              onClick={() => {
-                if (confirm('Yêu cầu Nhân Viên Điều Phối điều chỉnh lại phân ca?')) {
-                  rejectSchedule(mondayDateStr, 'Cần điều chỉnh lại phân ca làm việc');
-                }
-              }}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 transition-all shadow-xs"
-            >
-              ↩ Yêu Cầu Chỉnh Sửa
-            </button>
-            <button
-              onClick={() => {
-                approveSchedule(mondayDateStr);
-                alert('Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.');
-              }}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center space-x-1.5"
-            >
-              <Check className="w-4 h-4 stroke-[2.5]" />
-              <span>✓ Phê Duyệt Lịch Làm Việc</span>
-            </button>
+        ) : canArrange ? (
+          <div className={`border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-fade-in ${
+            approval.isRevision ? 'bg-amber-50 border-amber-200 text-amber-950' : 'bg-blue-50 border-blue-200 text-blue-900'
+          }`}>
+            <div className="flex items-center space-x-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 ${
+                approval.isRevision ? 'bg-amber-500' : 'bg-blue-600'
+              }`}>
+                <Clock className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold">
+                  {approval.isRevision
+                    ? '⏳ Đã gửi đề xuất thay đổi lịch tuần này — Đang chờ Cấp 1 (Ban Quản Lý) phê duyệt'
+                    : '⏳ Lịch làm việc tuần mới đang chờ Cấp 1 phê duyệt'}
+                </p>
+                <p className="text-[11px] opacity-80 mt-0.5">
+                  Gửi lúc {approval.submittedAt ? new Date(approval.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''} ngày {approval.submittedAt ? new Date(approval.submittedAt).toLocaleDateString('vi-VN') : ''}. Lịch sẽ chính thức có hiệu lực ngay sau khi được Cấp 1 duyệt.
+                </p>
+              </div>
+            </div>
+            {approval.pendingShifts && (
+              <button
+                type="button"
+                onClick={() => setShowPendingPreview((prev) => !prev)}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-all shadow-xs cursor-pointer shrink-0"
+              >
+                {showPendingPreview ? '👁️ Xem Lịch Đang Chạy' : '👁️ Xem Bản Đề Xuất'}
+              </button>
+            )}
           </div>
-        </div>
+        ) : null
       )}
 
       {/* 2. Week Navigator Bar */}
@@ -561,7 +635,10 @@ export function ScheduleBoard() {
                 const sid = sc.id;
                 const selectedDateStr = daysOfWeek[mobileActiveDayIdx].dateStr;
                 const staffInShift = filteredStaff.filter((u) => {
-                  const shift = shifts.find((s) => s.userId === u.id && s.date === selectedDateStr);
+                  const pendingShift = showPendingPreview && approval.pendingShifts
+                    ? approval.pendingShifts.find((s) => s.userId === u.id && s.date === selectedDateStr)
+                    : null;
+                  const shift = pendingShift || shifts.find((s) => s.userId === u.id && s.date === selectedDateStr);
                   return shift ? shift.shiftId === sid : sid === 'OFF';
                 });
 
@@ -583,7 +660,10 @@ export function ScheduleBoard() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {staffInShift.map((user) => {
                         const userTeam = teams.find((t) => t.memberIds.includes(user.id));
-                        const userShift = shifts.find((s) => s.userId === user.id && s.date === selectedDateStr);
+                        const pendingShift = showPendingPreview && approval.pendingShifts
+                          ? approval.pendingShifts.find((s) => s.userId === user.id && s.date === selectedDateStr)
+                          : null;
+                        const userShift = pendingShift || shifts.find((s) => s.userId === user.id && s.date === selectedDateStr);
                         const isUserHalfDay = !!userShift?.isHalfDay;
 
                         return (
@@ -733,7 +813,10 @@ export function ScheduleBoard() {
 
                     {/* 7 Day cells */}
                     {daysOfWeek.map((day) => {
-                      const shift = shifts.find((s) => s.userId === user.id && s.date === day.dateStr);
+                      const pendingShift = showPendingPreview && approval.pendingShifts
+                        ? approval.pendingShifts.find((s) => s.userId === user.id && s.date === day.dateStr)
+                        : null;
+                      const shift = pendingShift || shifts.find((s) => s.userId === user.id && s.date === day.dateStr);
                       const shiftId: ShiftId = shift ? shift.shiftId : 'OFF';
                       const isShiftHalfDay = !!shift?.isHalfDay;
                       const conf = shiftsConfigMap[shiftId] || SHIFTS_CONFIG[shiftId] || SHIFTS_CONFIG.OFF;
@@ -805,7 +888,10 @@ export function ScheduleBoard() {
                 </td>
                 {daysOfWeek.map((day) => {
                   const dayShifts = filteredStaff.map((u) => {
-                    const s = shifts.find((item) => item.userId === u.id && item.date === day.dateStr);
+                    const pendingShift = showPendingPreview && approval.pendingShifts
+                      ? approval.pendingShifts.find((s) => s.userId === u.id && s.date === day.dateStr)
+                      : null;
+                    const s = pendingShift || shifts.find((item) => item.userId === u.id && item.date === day.dateStr);
                     return s ? s.shiftId : 'OFF';
                   });
 
@@ -814,7 +900,10 @@ export function ScheduleBoard() {
                   const countC2 = dayShifts.filter((sid) => sid === 'CA_2').length;
                   const countC3 = dayShifts.filter((sid) => sid === 'CA_3').length;
                   const countOffHalf = filteredStaff.filter((u) => {
-                    const s = shifts.find((item) => item.userId === u.id && item.date === day.dateStr);
+                    const pendingShift = showPendingPreview && approval.pendingShifts
+                      ? approval.pendingShifts.find((s) => s.userId === u.id && s.date === day.dateStr)
+                      : null;
+                    const s = pendingShift || shifts.find((item) => item.userId === u.id && item.date === day.dateStr);
                     return s?.isHalfDay;
                   }).length;
                   return (
@@ -877,77 +966,105 @@ export function ScheduleBoard() {
               </button>
             </div>
 
-            <div className="space-y-2 max-h-72 overflow-y-auto">
-              {shiftsConfig.map((conf) => {
-                const sid = conf.id;
-                const isSelected = editingCell.currentShiftId === sid;
-
-                return (
-                  <button
-                    key={sid}
-                    onClick={() => handleSelectShift(sid)}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
-                      isSelected
-                        ? 'border-blue-600 bg-blue-50/70 ring-1 ring-blue-600 font-bold'
-                        : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <span className={`w-3 h-3 rounded-full ${conf.dotColor}`} />
-                      <div>
-                        <p className="text-xs font-bold text-slate-900">{conf.name}</p>
-                        {!conf.hasNoTime && conf.timeRange ? (
-                          <p className="text-[11px] text-slate-500">{conf.timeRange}</p>
-                        ) : (
-                          <p className="text-[10.5px] text-teal-800 font-semibold">Chế độ nghỉ &bull; Không ghi giờ</p>
-                        )}
-                      </div>
-                    </div>
-                    {isSelected && <Check className="w-4 h-4 text-blue-600" />}
-                  </button>
-                );
-              })}
-
-              {/* Chế độ Nghỉ Nửa Ngày: Bật/Tắt nghỉ 1/2 ca cho ca đã chọn */}
-              {editingCell.currentShiftId !== 'OFF' && (
-                <div className="pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={handleToggleEditingHalfDay}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                      editingCell.isHalfDay
-                        ? 'border-amber-300 bg-amber-100 text-amber-950 font-bold shadow-2xs'
-                        : 'border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-200 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <span className="w-3 h-3 rounded-full bg-amber-500 ring-1 ring-amber-600/30" />
-                      <div>
-                        <p className="text-xs font-bold text-amber-950">Chế độ Nghỉ Nửa Ngày</p>
-                        <p className="text-[11px] text-amber-800 font-medium">
-                          {editingCell.isHalfDay ? 'Đang bật: Làm 1/2 ca & nghỉ 1/2 ca' : 'Nhấn để áp dụng nghỉ 1/2 ca'}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded font-black ${
-                      editingCell.isHalfDay ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-600'
-                    }`}>
-                      {editingCell.isHalfDay ? 'BẬT' : 'TẮT'}
-                    </span>
-                  </button>
+            {isApproved ? (
+              <div className="space-y-3.5">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-950 space-y-1.5">
+                  <p className="font-bold flex items-center gap-1.5 text-amber-900">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Lịch tuần này đã được Cấp 1 phê duyệt!</span>
+                  </p>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    Theo quy tắc, mọi thay đổi lịch làm việc của tuần hiện tại bắt buộc phải gửi <strong>Cấp 1 (Ban Quản Lý) phê duyệt</strong> mới chính thức có hiệu lực và tự động thông báo đến tất cả nhân viên.
+                  </p>
                 </div>
-              )}
-            </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingCell(null);
+                    setPlannerTargetWeek('CURRENT');
+                    setIsPlannerModalOpen(true);
+                  }}
+                  className="w-full py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Mở Bảng Sửa Lịch Tuần Hiện Tại</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                {shiftsConfig.map((conf) => {
+                  const sid = conf.id;
+                  const isSelected = editingCell.currentShiftId === sid;
+
+                  return (
+                    <button
+                      key={sid}
+                      onClick={() => handleSelectShift(sid)}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'border-blue-600 bg-blue-50/70 ring-1 ring-blue-600 font-bold'
+                          : 'border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className={`w-3 h-3 rounded-full ${conf.dotColor}`} />
+                        <div>
+                          <p className="text-xs font-bold text-slate-900">{conf.name}</p>
+                          {!conf.hasNoTime && conf.timeRange ? (
+                            <p className="text-[11px] text-slate-500">{conf.timeRange}</p>
+                          ) : (
+                            <p className="text-[10.5px] text-teal-800 font-semibold">Chế độ nghỉ &bull; Không ghi giờ</p>
+                          )}
+                        </div>
+                      </div>
+                      {isSelected && <Check className="w-4 h-4 text-blue-600" />}
+                    </button>
+                  );
+                })}
+
+                {/* Chế độ Nghỉ Nửa Ngày: Bật/Tắt nghỉ 1/2 ca cho ca đã chọn */}
+                {editingCell.currentShiftId !== 'OFF' && (
+                  <div className="pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={handleToggleEditingHalfDay}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        editingCell.isHalfDay
+                          ? 'border-amber-300 bg-amber-100 text-amber-950 font-bold shadow-2xs'
+                          : 'border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-200 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="w-3 h-3 rounded-full bg-amber-500 ring-1 ring-amber-600/30" />
+                        <div>
+                          <p className="text-xs font-bold text-amber-950">Chế độ Nghỉ Nửa Ngày</p>
+                          <p className="text-[11px] text-amber-800 font-medium">
+                            {editingCell.isHalfDay ? 'Đang bật: Làm 1/2 ca & nghỉ 1/2 ca' : 'Nhấn để áp dụng nghỉ 1/2 ca'}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-black ${
+                        editingCell.isHalfDay ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {editingCell.isHalfDay ? 'BẬT' : 'TẮT'}
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* 6. Weekly Schedule Planner Modal (Sao chép từ tuần hiện tại, sửa cho tuần sau và lưu lại) */}
+      {/* 6. Weekly Schedule Planner Modal */}
       <WeeklySchedulePlannerModal
         isOpen={isPlannerModalOpen}
         onClose={() => setIsPlannerModalOpen(false)}
-        onScheduleSaved={(nextMon) => {
-          setCurrentMonday(nextMon);
+        targetWeek={plannerTargetWeek}
+        onScheduleSaved={(targetMon) => {
+          setCurrentMonday(targetMon);
         }}
       />
 

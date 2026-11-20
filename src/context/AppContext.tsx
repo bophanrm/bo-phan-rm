@@ -31,6 +31,7 @@ import {
   notifyNewTaskToZalo,
   notifyDailyShiftReminderToZalo,
   notifyProjectDeadlineReminderToZalo,
+  sendZaloMessage,
 } from '@/utils/zaloHelper';
 
 // Predefined Team Groups / Tổ Đội chính thức
@@ -663,7 +664,12 @@ interface AppContextType {
   getShiftForUser: (userId: string, date: string) => WorkShiftAssignment | undefined;
   scheduleApprovals: Record<string, WeekScheduleApproval>;
   getScheduleApproval: (mondayDate: string) => WeekScheduleApproval;
-  submitScheduleForApproval: (mondayDate: string, notes?: string) => void;
+  submitScheduleForApproval: (
+    mondayDate: string,
+    notes?: string,
+    pendingAssignments?: { userId: string; date: string; shiftId: ShiftId; isHalfDay?: boolean; note?: string }[],
+    isRevision?: boolean
+  ) => void;
   approveSchedule: (mondayDate: string) => void;
   rejectSchedule: (mondayDate: string, feedback?: string) => void;
   unreadCount: number;
@@ -1434,7 +1440,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
-  const submitScheduleForApproval = (mondayDate: string, notes?: string) => {
+  const submitScheduleForApproval = (
+    mondayDate: string,
+    notes?: string,
+    pendingAssignments?: { userId: string; date: string; shiftId: ShiftId; isHalfDay?: boolean; note?: string }[],
+    isRevision?: boolean
+  ) => {
+    const existing = scheduleApprovals[mondayDate];
+    const finalIsRevision = isRevision !== undefined ? isRevision : (existing?.status === 'APPROVED' || !!existing?.isRevision);
+
     const updated: Record<string, WeekScheduleApproval> = {
       ...scheduleApprovals,
       [mondayDate]: {
@@ -1444,6 +1458,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         submittedByName: getPersonalName(currentUser.name, false),
         submittedAt: new Date().toISOString(),
         notes,
+        isRevision: finalIsRevision,
+        pendingShifts: pendingAssignments || existing?.pendingShifts,
       },
     };
     setScheduleApprovals(updated);
@@ -1455,8 +1471,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const managerNotifs: NotificationItem[] = managerUsers.map((m, idx) => ({
       id: `notif-sched-pending-${Date.now()}-${idx}`,
       userId: m.id,
-      title: '📋 Lịch Làm Việc Tuần Mới Chờ Phê Duyệt',
-      message: `${getPersonalName(currentUser.name, false)} vừa hoàn tất sắp xếp ca và gửi phê duyệt Lịch Làm Việc tuần tới (${mondayDate}). Vui lòng kiểm tra và phê duyệt để công bố ca trực cho cả team.`,
+      title: finalIsRevision ? '📋 Yêu Cầu Duyệt THAY ĐỔI Lịch Làm Việc Tuần Hiện Tại' : '📋 Lịch Làm Việc Tuần Mới Chờ Phê Duyệt',
+      message: finalIsRevision
+        ? `${getPersonalName(currentUser.name, false)} vừa gửi đề xuất điều chỉnh ca làm việc tuần này (${mondayDate}). Vui lòng kiểm tra và phê duyệt để áp dụng lịch mới.`
+        : `${getPersonalName(currentUser.name, false)} vừa hoàn tất sắp xếp ca và gửi phê duyệt Lịch Làm Việc tuần tới (${mondayDate}). Vui lòng kiểm tra và phê duyệt để công bố ca trực cho cả team.`,
       isRead: false,
       createdAt: new Date().toISOString(),
     }));
@@ -1466,6 +1484,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const approveSchedule = (mondayDate: string) => {
     const existing = scheduleApprovals[mondayDate] || { mondayDate, status: 'DRAFT' };
     const managerName = getPersonalName(currentUser.name, false);
+    const isRevision = !!existing.isRevision;
+
+    // 1. Nếu có pendingShifts (đợt sửa lịch đang chờ duyệt), áp dụng chính thức vào shifts!
+    let updatedShifts = [...shifts];
+    if (existing.pendingShifts && existing.pendingShifts.length > 0) {
+      const keysToRemove = new Set(existing.pendingShifts.map((a) => `${a.userId}_${a.date}`));
+      updatedShifts = updatedShifts.filter((s) => !keysToRemove.has(`${s.userId}_${s.date}`));
+
+      existing.pendingShifts.forEach((a) => {
+        const userObj = users.find((u) => u.id === a.userId);
+        updatedShifts.push({
+          id: `shift-${a.userId}-${a.date}`,
+          userId: a.userId,
+          userName: userObj ? userObj.name : a.userId,
+          date: a.date,
+          shiftId: a.shiftId,
+          isHalfDay: a.shiftId === 'OFF' ? false : a.isHalfDay,
+          note: a.note,
+          assignedBy: existing.submittedBy || currentUser.id,
+          updatedAt: new Date().toISOString(),
+        });
+      });
+
+      setShifts(updatedShifts);
+      localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(updatedShifts));
+      saveToCloud('shifts', updatedShifts);
+    }
+
     const updated: Record<string, WeekScheduleApproval> = {
       ...scheduleApprovals,
       [mondayDate]: {
@@ -1474,13 +1520,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         approvedBy: currentUser.id,
         approvedByName: managerName,
         approvedAt: new Date().toISOString(),
+        isRevision: false,
+        pendingShifts: undefined, // Đã áp dụng xong
       },
     };
     setScheduleApprovals(updated);
     localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(updated));
     saveToCloud('schedule_approvals', updated);
 
-    // Tự động quét và đồng bộ các công việc dài ngày có hạn chót trong tuần mới được duyệt
+    // 2. Tự động quét và đồng bộ các công việc dài ngày có hạn chót trong tuần mới được duyệt
     const weekStartDate = new Date(mondayDate);
     const weekEndDate = new Date(weekStartDate);
     weekEndDate.setDate(weekEndDate.getDate() + 6);
@@ -1498,7 +1546,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (taskDeadlineDateStr >= mondayStr && taskDeadlineDateStr <= sundayStr) {
         const primaryUserId = t.assignedTo[0];
         if (!primaryUserId) return t;
-        const shiftAssigned = shifts.find((s) => s.userId === primaryUserId && s.date === taskDeadlineDateStr);
+        const shiftAssigned = updatedShifts.find((s) => s.userId === primaryUserId && s.date === taskDeadlineDateStr);
 
         if (shiftAssigned) {
           if (shiftAssigned.shiftId === 'OFF') {
@@ -1547,28 +1595,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateTasks(syncedTasks);
     }
 
-    // Gửi thông báo đến TẤT CẢ nhân viên trong công ty
+    // 3. Gửi thông báo đến TẤT CẢ nhân viên trong công ty (mọi cấp bậc)
     const nowTimestamp = Date.now();
     const broadcastNotifs: NotificationItem[] = users.map((u, idx) => ({
       id: `notif-sched-approved-${mondayDate}-${u.id}-${nowTimestamp + idx}`,
       userId: u.id,
-      title: 'Lịch Làm Việc',
-      message: 'Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.',
+      title: isRevision ? '🔄 Lịch Làm Việc Tuần Này Đã Thay Đổi' : '📋 Lịch Làm Việc',
+      message: isRevision
+        ? `Lịch làm việc tuần hiện tại (${mondayDate}) vừa được Cấp Quản Lý (${managerName}) phê duyệt điều chỉnh. Vui lòng kiểm tra lại ca trực mới của bạn!`
+        : 'Lịch làm việc mới đã được cập nhật, vui lòng kiểm tra ca trực của bạn.',
       isRead: false,
       createdAt: new Date().toISOString(),
     }));
 
     updateNotifications([...offAlertNotifs, ...broadcastNotifs, ...notifications]);
+
+    // 4. Nếu là thay đổi lịch tuần đang chạy, gửi tin nhắn Zalo thông báo đến nhóm chung
+    if (isRevision) {
+      sendZaloMessage(
+        `📢 [BỘ PHẬN RM - THÔNG BÁO THAY ĐỔI LỊCH LÀM VIỆC]\n\nLịch làm việc tuần hiện tại (${mondayDate}) đã được Ban Quản Lý (${managerName}) phê duyệt điều chỉnh theo đề xuất của Điều Phối Viên.\n\n👉 Các thành viên vui lòng kiểm tra lại ca trực mới của mình trên hệ thống:\nhttps://bo-phan-rm.vercel.app`,
+        undefined,
+        'TEST'
+      ).catch((err) => console.log('[Zalo] Schedule revision notice skipped/failed:', err));
+    }
   };
 
   const rejectSchedule = (mondayDate: string, feedback?: string) => {
     const existing = scheduleApprovals[mondayDate] || { mondayDate, status: 'DRAFT' };
+    const managerName = getPersonalName(currentUser.name, false);
+    const isRevision = !!existing.isRevision;
+
     const updated: Record<string, WeekScheduleApproval> = {
       ...scheduleApprovals,
       [mondayDate]: {
         ...existing,
-        status: 'DRAFT',
-        notes: feedback || 'Cấp Quản Lý yêu cầu điều chỉnh lại ca làm việc.',
+        // Nếu là tuần đã từng được duyệt (APPROVED), khi từ chối thay đổi thì trạng thái trở lại APPROVED (giữ lịch cũ)
+        status: isRevision ? 'APPROVED' : 'DRAFT',
+        isRevision: false,
+        pendingShifts: undefined, // Hủy bỏ bản nháp thay đổi
+        notes: feedback || 'Cấp Quản Lý yêu cầu giữ nguyên hoặc điều chỉnh lại.',
       },
     };
     setScheduleApprovals(updated);
@@ -1582,8 +1647,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const rejectNotifs: NotificationItem[] = targetUserIds.map((uId, idx) => ({
       id: `notif-sched-reject-${Date.now()}-${idx}`,
       userId: uId,
-      title: '↩ Yêu Cầu Chỉnh Sửa Lịch Làm Việc',
-      message: `Cấp Quản Lý (${getPersonalName(currentUser.name, false)}) yêu cầu điều chỉnh lại lịch làm việc tuần ${mondayDate}: "${feedback || 'Cần sắp xếp lại ca'}"`,
+      title: isRevision ? '↩ Từ Chối Thay Đổi Lịch Làm Việc' : '↩ Yêu Cầu Chỉnh Sửa Lịch Làm Việc',
+      message: isRevision
+        ? `Cấp Quản Lý (${managerName}) không phê duyệt đề xuất thay đổi lịch tuần ${mondayDate}: "${feedback || 'Giữ nguyên phân ca hiện hành'}"`
+        : `Cấp Quản Lý (${managerName}) yêu cầu điều chỉnh lại lịch làm việc tuần ${mondayDate}: "${feedback || 'Cần sắp xếp lại ca'}"`,
       isRead: false,
       createdAt: new Date().toISOString(),
     }));

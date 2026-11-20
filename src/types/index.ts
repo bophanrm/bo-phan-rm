@@ -167,6 +167,8 @@ export interface WeekScheduleApproval {
   approvedByName?: string;
   approvedAt?: string;
   notes?: string;
+  isRevision?: boolean; // Đánh dấu đợt điều chỉnh/thay đổi lịch của tuần đang chạy
+  pendingShifts?: { userId: string; date: string; shiftId: ShiftId; isHalfDay?: boolean; note?: string }[];
 }
 
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
