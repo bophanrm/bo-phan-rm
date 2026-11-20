@@ -126,6 +126,8 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
   // Đối chiếu ca trực vào ngày đã chọn
   const targetDateObj = selectedDate ? new Date(selectedDate) : new Date();
   const assigneeShift = effectiveAssigneeId ? getShiftForUser(effectiveAssigneeId, selectedDate) : undefined;
+  const hasAssigneeShift = !!assigneeShift;
+  const isAssigneeOff = assigneeShift?.shiftId === 'OFF';
   const shiftCalc = calculateShiftTimes(assigneeShift?.shiftId || 'HANH_CHINH', targetDateObj);
 
   // Tính số ngày chênh lệch giữa ngày mới và mốc hạn cơ sở
@@ -137,7 +139,14 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
   // Tính ISO deadline mới
   const computeNewDeadlineIso = () => {
     if (useShiftTime) {
-      return shiftCalc.reportDeadlineIso;
+      if (hasAssigneeShift && !isAssigneeOff) {
+        return shiftCalc.reportDeadlineIso;
+      }
+      // Chưa có lịch điều phối hoặc ngày nghỉ ca: tạm áp dụng mốc giờ chuẩn 16:00
+      // Hệ thống sẽ tự động cập nhật khớp theo ca trực thực tế ngay khi Điều phối viên duyệt lịch tuần
+      const d = new Date(selectedDate);
+      d.setHours(16, 0, 0, 0);
+      return d.toISOString();
     }
     const [h, m] = selectedTime.split(':').map(Number);
     const d = new Date(selectedDate);
@@ -486,47 +495,97 @@ export function ExtendDeadlineModal({ task, isOpen, onClose }: ExtendDeadlineMod
               </div>
 
               {/* THẺ ĐỐI CHIẾU CA TRỰC THỰC TẾ CỦA NHÂN SỰ ĐƯỢC CHỈ ĐỊNH */}
-              <div className="bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/70 border border-blue-200/90 rounded-xl p-3.5 space-y-2.5">
+              <div
+                className={`rounded-xl p-3.5 border space-y-2.5 ${
+                  isAssigneeOff
+                    ? 'bg-amber-50/90 border-amber-300'
+                    : hasAssigneeShift
+                    ? 'bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/70 border-blue-200/90'
+                    : 'bg-slate-50 border-slate-300'
+                }`}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-blue-900 flex items-center space-x-1.5">
+                  <span className="font-bold text-slate-800 flex items-center space-x-1.5 text-xs">
                     <Clock className="w-3.5 h-3.5 text-blue-600" />
                     <span>Lịch Trực Ca: {targetUserName}</span>
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white">
-                    {shiftCalc.shiftInfo.shortName}
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isAssigneeOff
+                        ? 'bg-amber-200 text-amber-900 border border-amber-300'
+                        : hasAssigneeShift
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-purple-600 text-white'
+                    }`}
+                  >
+                    {isAssigneeOff
+                      ? '⚠️ Nghỉ Ca'
+                      : hasAssigneeShift
+                      ? shiftCalc.shiftInfo.shortName
+                      : '⏳ Chờ điều phối (Thứ 6)'}
                   </span>
                 </div>
 
-                <div className="bg-white/95 rounded-lg p-2.5 border border-blue-100 flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-slate-800 text-[11px]">{shiftCalc.formattedShiftText}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
-                      Tự động nhắc việc trước khi hết ca 1 tiếng: <strong>{shiftCalc.formattedReminderText}</strong>
+                {hasAssigneeShift && !isAssigneeOff ? (
+                  <div className="bg-white/95 rounded-lg p-2.5 border border-blue-100 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-slate-800 text-[11px]">{shiftCalc.formattedShiftText}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        Tự động nhắc việc trước khi hết ca 1 tiếng: <strong>{shiftCalc.formattedReminderText}</strong>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9px] font-semibold text-slate-400 block uppercase">Hết ca lúc</span>
+                      <span className="font-extrabold text-blue-700 text-xs">{shiftCalc.formattedDeadlineText}</span>
+                    </div>
+                  </div>
+                ) : isAssigneeOff ? (
+                  <div className="bg-white/95 rounded-lg p-2.5 border border-amber-300 space-y-2 text-amber-900 text-xs">
+                    <div className="flex items-start space-x-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">
+                          Lưu ý: {targetUserName} có lịch Nghỉ Ca vào ngày đã chọn ({selectedDate ? new Date(selectedDate).toLocaleDateString('vi-VN') : ''}).
+                        </p>
+                        <p className="text-[11px] text-amber-800 mt-0.5">
+                          Đề xuất xử lý: <strong>(1) Gia hạn sang ca trực kế tiếp</strong> hoặc <strong>(2) Thay đổi hạn chót cho công việc đó</strong>.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAddDays((diffDaysFromBase || 0) + 1)}
+                      className="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1.5 rounded-lg shadow-xs transition-all cursor-pointer"
+                    >
+                      ➕ (1) Gia hạn sang ca trực kế tiếp (+1 ngày)
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-white/95 rounded-lg p-2.5 border border-slate-200 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-800 text-[11px]">Chưa có lịch phân ca từ điều phối viên</span>
+                      <span className="font-extrabold text-blue-700 text-xs">16:00 (Mốc tiêu chuẩn)</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500">
+                      Lịch làm việc tuần sau sẽ được điều phối viên lập vào Thứ 6. Hệ thống tạm lấy mốc 16:00 và sẽ tự động khớp ca trực ngay khi duyệt lịch tuần.
                     </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[9px] font-semibold text-slate-400 block uppercase">Hết ca lúc</span>
-                    <span className="font-extrabold text-blue-700 text-xs">{shiftCalc.formattedDeadlineText}</span>
-                  </div>
-                </div>
-
-                {shiftCalc.isOff && (
-                  <div className="p-2 bg-amber-100/90 border border-amber-300 rounded-lg text-amber-900 text-[10px] flex items-center space-x-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                    <span>Nhân sự này có lịch Nghỉ Ca vào ngày đã chọn. Hệ thống tạm áp dụng khung 7h30 - 16h.</span>
                   </div>
                 )}
 
                 {/* Checkbox: Tự động chốt theo giờ hết ca hay tùy chỉnh */}
-                <div className="flex items-center justify-between pt-1 border-t border-blue-200/60 text-[11px]">
-                  <label className="flex items-center space-x-2 cursor-pointer font-medium text-blue-950">
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200/80 text-[11px]">
+                  <label className="flex items-center space-x-2 cursor-pointer font-medium text-slate-800">
                     <input
                       type="checkbox"
                       checked={useShiftTime}
                       onChange={(e) => setUseShiftTime(e.target.checked)}
                       className="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
-                    <span>Tự động chốt hạn theo giờ hết ca ({shiftCalc.formattedDeadlineText})</span>
+                    <span>
+                      {hasAssigneeShift && !isAssigneeOff
+                        ? `Tự động chốt hạn theo giờ hết ca (${shiftCalc.formattedDeadlineText})`
+                        : 'Tự động chốt hạn theo khung giờ chuẩn (16:00)'}
+                    </span>
                   </label>
 
                   {!useShiftTime && (

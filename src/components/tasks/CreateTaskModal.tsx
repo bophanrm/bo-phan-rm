@@ -362,18 +362,35 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
       computedStart = shiftCalc.startDateIso;
 
       if (actualDurationDays > 1) {
-        // Nếu làm trong nhiều ngày: hạn chót được tính vào cuối ca của ngày kết thúc
+        // Nếu làm trong nhiều ngày: đối chiếu ngày kết thúc
         const finishDate = new Date(baseDate);
         finishDate.setDate(finishDate.getDate() + (actualDurationDays - 1));
         const finishTargetStr = finishDate.toISOString().split('T')[0];
         const finishShift = primaryAssigneeId ? getShiftForUser(primaryAssigneeId, finishTargetStr) : undefined;
-        const finishShiftCalc = calculateShiftTimes(finishShift?.shiftId || 'HANH_CHINH', finishDate);
 
-        computedDue = finishShiftCalc.dueDateIso;
-        computedReport = finishShiftCalc.reportDeadlineIso;
+        if (finishShift && finishShift.shiftId !== 'OFF') {
+          // Đã có lịch phân ca thực tế do điều phối viên duyệt
+          const finishShiftCalc = calculateShiftTimes(finishShift.shiftId, finishDate);
+          computedDue = finishShiftCalc.dueDateIso;
+          computedReport = finishShiftCalc.reportDeadlineIso;
+        } else {
+          // Chưa có lịch điều phối (rơi vào tuần sau) hoặc ngày nghỉ ca: áp dụng khung giờ tiêu chuẩn 16:00
+          // Sẽ tự động đồng bộ theo ca trực thực tế ngay khi Điều phối viên duyệt lịch vào thứ 6
+          const defaultCutoff = new Date(finishDate);
+          defaultCutoff.setHours(16, 0, 0, 0);
+          computedDue = defaultCutoff.toISOString();
+          computedReport = defaultCutoff.toISOString();
+        }
       } else {
-        computedDue = shiftCalc.dueDateIso;
-        computedReport = shiftCalc.reportDeadlineIso; // Hạn nộp báo cáo hoàn thành theo đúng giờ hết ca trực
+        if (userShift && userShift.shiftId !== 'OFF') {
+          computedDue = shiftCalc.dueDateIso;
+          computedReport = shiftCalc.reportDeadlineIso;
+        } else {
+          const defaultCutoff = new Date(baseDate);
+          defaultCutoff.setHours(16, 0, 0, 0);
+          computedDue = defaultCutoff.toISOString();
+          computedReport = defaultCutoff.toISOString();
+        }
       }
     }
 
@@ -1162,6 +1179,7 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
               const finishDateObj = new Date(baseDateObj);
               const actualDays = Math.max(1, parseInt(String(durationDays), 10) || 1);
               finishDateObj.setDate(finishDateObj.getDate() + (actualDays - 1));
+              const finishTargetStr = finishDateObj.toISOString().split('T')[0];
 
               const startDateFormatted = new Intl.DateTimeFormat('vi-VN', {
                 weekday: 'short',
@@ -1175,6 +1193,17 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                 month: '2-digit',
                 year: 'numeric',
               }).format(finishDateObj);
+
+              // Tra cứu ca trực thực tế do điều phối viên xếp cho ngày bắt đầu và ngày hạn chót
+              const startShift = primaryAssigneeId ? getShiftForUser(primaryAssigneeId, targetDateStr) : undefined;
+              const hasStartShift = !!startShift;
+              const isStartOff = startShift?.shiftId === 'OFF';
+              const startShiftCalc = hasStartShift ? calculateShiftTimes(startShift!.shiftId, baseDateObj) : null;
+
+              const finishShift = primaryAssigneeId ? getShiftForUser(primaryAssigneeId, finishTargetStr) : undefined;
+              const hasFinishShift = !!finishShift;
+              const isFinishOff = finishShift?.shiftId === 'OFF';
+              const finishShiftCalc = hasFinishShift ? calculateShiftTimes(finishShift!.shiftId, finishDateObj) : null;
 
               return (
                 <div className="bg-slate-50/90 border border-blue-200/80 rounded-2xl p-4 space-y-3.5 shadow-xs">
@@ -1297,77 +1326,104 @@ export function CreateTaskModal({ isOpen, onClose, initialIsDaily, initialAssign
                     ))}
                   </div>
 
-                  {/* Thẻ Hạn Chót Hoàn Thành - Nổi bật, rộng rãi, hiển thị trọn vẹn 100% */}
-                  <div className="bg-gradient-to-r from-blue-50 via-indigo-50/80 to-blue-50 rounded-xl p-3.5 border-2 border-blue-200 shadow-xs space-y-1.5">
+                  {/* Thẻ Hạn Chót Hoàn Thành - Nổi bật, rộng rãi, thông minh */}
+                  <div
+                    className={`rounded-xl p-3.5 border-2 shadow-xs space-y-2 ${
+                      isFinishOff
+                        ? 'bg-amber-50/90 border-amber-300 text-amber-950'
+                        : hasFinishShift
+                        ? 'bg-gradient-to-r from-blue-50 via-indigo-50/80 to-blue-50 border-blue-200'
+                        : 'bg-gradient-to-r from-slate-50 via-sky-50/70 to-indigo-50/70 border-slate-300'
+                    }`}
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-800 flex items-center space-x-1">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider flex items-center space-x-1">
                         <span>🏁 HẠN CHÓT HOÀN TẤT CÔNG VIỆC</span>
                       </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-2xs">
-                        Hết ca trực
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs ${
+                          isFinishOff
+                            ? 'bg-amber-200 text-amber-900 border border-amber-300'
+                            : hasFinishShift
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-purple-600 text-white'
+                        }`}
+                      >
+                        {isFinishOff
+                          ? '⚠️ Nhân sự nghỉ ca'
+                          : hasFinishShift
+                          ? `Theo ${finishShiftCalc?.shiftInfo.name}`
+                          : '⏳ Chờ điều phối xếp ca (Thứ 6)'}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="text-base sm:text-lg font-black text-blue-900 leading-tight">
-                        {actualDays > 1 ? finishDateFormatted : `${currentShiftCalc.formattedDeadlineText} (${startDateFormatted})`}
+                      <div className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                        {finishDateFormatted} &ndash;{' '}
+                        <span className="text-blue-700">
+                          {hasFinishShift && !isFinishOff ? finishShiftCalc?.formattedDeadlineText : '16:00 (Mốc tiêu chuẩn)'}
+                        </span>
                       </div>
-                      <div className="text-[11px] font-semibold text-slate-600 bg-white/90 px-2.5 py-1 rounded-lg border border-blue-100">
-                        {actualDays > 1 ? `Kéo dài ${actualDays} ngày (Từ ${startDateFormatted})` : 'Toàn thời gian ca làm việc'}
+                      <div className="text-[11px] font-semibold text-slate-600 bg-white/90 px-2.5 py-1 rounded-lg border border-slate-200">
+                        {actualDays > 1 ? `Kế hoạch ${actualDays} ngày (Khởi hành: ${startDateFormatted})` : 'Toàn thời gian ca làm việc'}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Thông tin ca trực & cơ chế nhắc nhở */}
-                  <div className="bg-white rounded-xl p-3 border border-slate-200/80 space-y-1">
-                    <p className="text-xs font-bold text-slate-800">
-                      Ca trực của {primaryAssigneeUser ? getPersonalName(primaryAssigneeUser.name) : 'nhân sự'}:{' '}
-                      <span className="text-blue-700">{currentShiftCalc.formattedShiftText}</span>
-                    </p>
-                    {actualDays > 1 ? (
-                      <p className="text-[11px] text-amber-800 font-medium">
-                        🔔 <strong>Nhắc nhở hằng ngày:</strong> Hệ thống tự động nhắc cập nhật tiến độ trước khi hết ca 60 phút mỗi ngày cho đến khi hoàn thành.
-                      </p>
-                    ) : (
-                      <p className="text-[11px] text-slate-500">
-                        Hệ thống tự động đồng bộ hạn nộp theo lịch phân ca làm việc thực tế của nhân sự.
+                    {/* Xử lý tình huống nhân sự có lịch NGHỈ CA vào ngày hạn chót */}
+                    {isFinishOff && (
+                      <div className="bg-white/95 rounded-lg p-2.5 border border-amber-300 space-y-2 mt-1">
+                        <div className="flex items-start space-x-2 text-amber-900 text-xs">
+                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-bold">
+                              Lưu ý: {primaryAssigneeUser ? getPersonalName(primaryAssigneeUser.name) : 'Nhân sự'} có lịch Nghỉ Ca vào ngày hạn chót ({finishDateFormatted}).
+                            </p>
+                            <p className="text-[11px] text-amber-800 mt-0.5">
+                              Đề xuất xử lý: <strong>(1) Gia hạn sang ca trực kế tiếp</strong> hoặc <strong>(2) Thay đổi hạn chót cho công việc đó</strong>.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setDurationDays(actualDays + 1)}
+                            className="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer flex items-center space-x-1"
+                          >
+                            <span>➕ (1) Gia hạn sang ca trực kế tiếp (+1 ngày)</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Giải thích khi ngày này chưa có lịch điều phối (rơi vào tuần sau) */}
+                    {!hasFinishShift && (
+                      <p className="text-[11px] text-slate-500 italic bg-white/80 p-2 rounded-lg border border-slate-200/80">
+                        💡 <strong>Lưu ý về lịch phân ca:</strong> Lịch làm việc tuần sau chưa được nhân viên điều phối lập (lịch sẽ được lập và duyệt vào Thứ 6). Hệ thống tạm áp dụng khung giờ chuẩn <strong>16:00</strong> và sẽ <strong>tự động đồng bộ theo ca trực thực tế</strong> ngay khi Điều phối viên duyệt lịch tuần.
                       </p>
                     )}
                   </div>
 
-                  {currentShiftCalc.isOff && (
-                    <div className="p-2.5 bg-amber-100 border border-amber-300 rounded-xl text-amber-900 text-xs flex items-center space-x-2">
-                      <BellRing className="w-4 h-4 text-amber-700 shrink-0" />
-                      <span>
-                        Lưu ý: <strong>{primaryAssigneeUser ? getPersonalName(primaryAssigneeUser.name) : 'Nhân sự'}</strong> có lịch <strong>Nghỉ Ca</strong> vào ngày này. Hệ thống tạm tính theo khung giờ chuẩn 7h30 &ndash; 16h.
+                  {/* Thông tin ca trực & cơ chế nhắc nhở hằng ngày */}
+                  <div className="bg-white rounded-xl p-3 border border-slate-200/80 space-y-1.5">
+                    <p className="text-xs font-bold text-slate-800">
+                      Ca trực ngày bắt đầu của {primaryAssigneeUser ? getPersonalName(primaryAssigneeUser.name) : 'nhân sự'}:{' '}
+                      <span className="text-blue-700">
+                        {hasStartShift
+                          ? isStartOff
+                            ? 'Nghỉ ca (OFF)'
+                            : startShiftCalc?.formattedShiftText
+                          : 'Chưa có lịch ca (Chờ điều phối)'}
                       </span>
-                    </div>
-                  )}
-
-                  {/* Thông tin Hạn nộp & Cơ chế nhắc nhở theo ca */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="bg-white/90 rounded-xl p-3 border border-blue-100 space-y-0.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        {actualDays > 1 ? 'Hạn chót hoàn tất công việc' : 'Hạn nộp kết quả báo cáo'}
-                      </span>
-                      <p className="text-sm font-extrabold text-blue-700">
-                        {actualDays > 1 ? `${finishDateFormatted} (Hết ca)` : `${currentShiftCalc.formattedDeadlineText} (Hết ca)`}
+                    </p>
+                    {actualDays > 1 ? (
+                      <p className="text-[11px] text-blue-900 font-medium bg-blue-50/70 p-2 rounded-lg border border-blue-100">
+                        🔔 <strong>Cơ chế nhắc nhở hằng ngày:</strong> Hệ thống tự động kiểm tra ca làm việc thực tế của từng ngày đang diễn ra và gửi thông báo nhắc nhân viên cập nhật tiến độ trước khi hết ca 60 phút mỗi ngày.
                       </p>
-                      <p className="text-[10px] text-slate-500">
-                        {actualDays > 1 ? `Kéo dài ${actualDays} ngày` : 'Toàn thời gian ca làm việc trong ngày'}
+                    ) : (
+                      <p className="text-[11px] text-slate-500">
+                        Hệ thống tự động đồng bộ hạn nộp theo ca làm việc thực tế do điều phối viên sắp xếp.
                       </p>
-                    </div>
-
-                    <div className="bg-amber-50/90 rounded-xl p-3 border border-amber-200/90 space-y-0.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 flex items-center space-x-1">
-                        <BellRing className="w-3.5 h-3.5 text-amber-600 animate-bounce" />
-                        <span>Cơ chế nhắc nhở tự động</span>
-                      </span>
-                      <p className="text-sm font-extrabold text-amber-900">{currentShiftCalc.formattedReminderText} (Trước hết ca 1h)</p>
-                      <p className="text-[10px] text-amber-700">
-                        {actualDays > 1 ? 'Nhắc cập nhật tiến độ mỗi ngày' : 'Nhắc nếu chưa gửi báo cáo hoàn thành'}
-                      </p>
-                    </div>
+                    )}
                   </div>
                 </div>
               );

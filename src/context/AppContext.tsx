@@ -569,9 +569,9 @@ export function generateInitialShifts(usersList: User[]): WorkShiftAssignment[] 
 
   const staffUsers = usersList.filter((u) => u.role !== 'ADMIN');
 
-  // Tạo lịch phân ca sẵn: các tuần quá khứ (-2, -1), tuần hiện tại (0), và tuần sau (+1)
-  // Tuyệt đối không tạo lịch cho các tuần xa hơn tuần sau (weekOffset <= 1)
-  for (let weekOffset = -2; weekOffset <= 1; weekOffset++) {
+  // Chỉ tạo lịch phân ca sẵn: các tuần quá khứ (-2, -1) và tuần hiện tại (0)
+  // Tuyệt đối không tự động sinh lịch cho tuần sau (tuần sau chỉ có lịch khi điều phối viên lập vào thứ 6)
+  for (let weekOffset = -2; weekOffset <= 0; weekOffset++) {
     const weekMonday = new Date(monday);
     weekMonday.setDate(monday.getDate() + weekOffset * 7);
 
@@ -1479,6 +1479,73 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(updated));
     saveToCloud('schedule_approvals', updated);
 
+    // Tự động quét và đồng bộ các công việc dài ngày có hạn chót trong tuần mới được duyệt
+    const weekStartDate = new Date(mondayDate);
+    const weekEndDate = new Date(weekStartDate);
+    weekEndDate.setDate(weekEndDate.getDate() + 6);
+    const mondayStr = mondayDate;
+    const sundayStr = weekEndDate.toISOString().split('T')[0];
+
+    const offAlertNotifs: NotificationItem[] = [];
+    const syncedTasks = tasks.map((t) => {
+      if (t.status === 'APPROVED') return t;
+      const targetDeadline = t.reportDeadline || t.dueDate;
+      if (!targetDeadline) return t;
+      const taskDeadlineDateStr = targetDeadline.split('T')[0];
+
+      // Nếu hạn của task nằm trong tuần vừa được duyệt lịch
+      if (taskDeadlineDateStr >= mondayStr && taskDeadlineDateStr <= sundayStr) {
+        const primaryUserId = t.assignedTo[0];
+        if (!primaryUserId) return t;
+        const shiftAssigned = shifts.find((s) => s.userId === primaryUserId && s.date === taskDeadlineDateStr);
+
+        if (shiftAssigned) {
+          if (shiftAssigned.shiftId === 'OFF') {
+            // TÌNH HUỐNG: Nhân sự có lịch NGHỈ CA vào ngày hạn chót
+            const alertMsg = `Nhân sự ${getPersonalName(t.assignedToNames?.[0] || 'phụ trách')} có lịch Nghỉ Ca vào ngày hạn chót (${new Date(taskDeadlineDateStr).toLocaleDateString('vi-VN')}) của công việc "${t.title}". Đề xuất: (1) Gia hạn sang ca trực kế tiếp hoặc (2) Thay đổi hạn chót cho công việc đó.`;
+            
+            // Gửi cho người tạo việc
+            if (t.createdBy) {
+              offAlertNotifs.push({
+                id: `notif-off-${t.id}-${Date.now()}-creator`,
+                userId: t.createdBy,
+                title: '⚠️ Nhân sự nghỉ ca vào ngày hạn chót',
+                message: alertMsg,
+                taskId: t.id,
+                isRead: false,
+                createdAt: new Date().toISOString(),
+              });
+            }
+            // Gửi cho Quản lý / Người duyệt lịch nếu không phải là người tạo
+            if (currentUser.id !== t.createdBy) {
+              offAlertNotifs.push({
+                id: `notif-off-${t.id}-${Date.now()}-mgr`,
+                userId: currentUser.id,
+                title: '⚠️ Nhân sự nghỉ ca vào ngày hạn chót',
+                message: alertMsg,
+                taskId: t.id,
+                isRead: false,
+                createdAt: new Date().toISOString(),
+              });
+            }
+          } else {
+            // Tự động đồng bộ giờ hết ca chuẩn xác theo ca làm việc thực tế vừa được điều phối duyệt
+            const calc = calculateShiftTimes(shiftAssigned.shiftId, new Date(taskDeadlineDateStr), shiftsConfigMap);
+            return {
+              ...t,
+              dueDate: calc.dueDateIso,
+              reportDeadline: calc.reportDeadlineIso,
+            };
+          }
+        }
+      }
+      return t;
+    });
+
+    if (JSON.stringify(syncedTasks) !== JSON.stringify(tasks)) {
+      updateTasks(syncedTasks);
+    }
+
     // Gửi thông báo đến TẤT CẢ nhân viên trong công ty
     const nowTimestamp = Date.now();
     const broadcastNotifs: NotificationItem[] = users.map((u, idx) => ({
@@ -1490,7 +1557,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     }));
 
-    updateNotifications([...broadcastNotifs, ...notifications]);
+    updateNotifications([...offAlertNotifs, ...broadcastNotifs, ...notifications]);
   };
 
   const rejectSchedule = (mondayDate: string, feedback?: string) => {
