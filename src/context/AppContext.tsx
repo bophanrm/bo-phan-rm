@@ -641,6 +641,7 @@ interface AppContextType {
   approveTaskExtension: (taskId: string, approvedDeadline: string, replacementAssigneeId?: string, feedback?: string) => void;
   rejectTaskExtension: (taskId: string, feedback: string) => void;
   rolloverTaskToTomorrow: (taskId: string) => void;
+  toggleDismissOverdue: (taskId: string, reason?: string) => void;
   markNotificationAsRead: (id: string) => void;
   updateUserPermissions: (
     userId: string,
@@ -2282,6 +2283,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const toggleDismissOverdue = (taskId: string, reason?: string) => {
+    let newStatus = false;
+    let taskTitle = '';
+    const updatedTasks = tasks.map((t) => {
+      if (t.id === taskId) {
+        newStatus = !t.isDismissedOverdue;
+        taskTitle = t.title;
+        return {
+          ...t,
+          isDismissedOverdue: newStatus,
+          dismissedOverdueAt: newStatus ? new Date().toISOString() : undefined,
+          dismissedOverdueBy: newStatus ? currentUser.id : undefined,
+          dismissedOverdueByName: newStatus ? getPersonalName(currentUser.name, true) : undefined,
+          dismissedOverdueReason: newStatus ? reason || 'Chủ động bỏ qua nhắc nhở quá hạn' : undefined,
+        };
+      }
+      return t;
+    });
+
+    updateTasks(updatedTasks);
+
+    const notif: NotificationItem = {
+      id: `notif-dismiss-${taskId}-${Date.now()}`,
+      userId: currentUser.id,
+      title: newStatus ? '🔕 Đã tắt nhắc nhở công việc' : '🔔 Đã bật lại nhắc nhở công việc',
+      message: newStatus
+        ? `Công việc "${taskTitle}" đã được tắt nhắc nhở quá hạn để tránh làm phiền.`
+        : `Công việc "${taskTitle}" đã được bật lại cơ chế thông báo nhắc nhở.`,
+      taskId,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    };
+    updateNotifications([notif, ...notifications]);
+  };
+
   const markNotificationAsRead = (id: string) => {
     const updated = notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n));
     updateNotifications(updated);
@@ -2424,6 +2460,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         approveTaskExtension,
         rejectTaskExtension,
         rolloverTaskToTomorrow,
+        toggleDismissOverdue,
         markNotificationAsRead,
         updateUserPermissions,
         saveUser,

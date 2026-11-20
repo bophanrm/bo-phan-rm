@@ -299,6 +299,11 @@ export interface Task {
   reports?: TaskReport[];
   extensionRequest?: TaskExtensionRequest;
   extensionHistory?: TaskExtensionHistoryItem[];
+  isDismissedOverdue?: boolean; // Bỏ qua nhắc nhở / thông báo khi quá hạn
+  dismissedOverdueAt?: string;
+  dismissedOverdueBy?: string;
+  dismissedOverdueByName?: string;
+  dismissedOverdueReason?: string;
 }
 
 export interface NotificationItem {

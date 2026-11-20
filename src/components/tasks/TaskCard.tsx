@@ -82,9 +82,22 @@ export function TaskCard({ task, onOpenReportModal, onOpenReviewModal }: TaskCar
               </span>
             )}
             {isOverdue && (
-              <span className="flex items-center space-x-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
-                <AlertTriangle className="w-3 h-3" />
-                <span>Quá hạn</span>
+              <span className={`flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                task.isDismissedOverdue
+                  ? 'text-slate-600 bg-slate-100 border border-slate-200'
+                  : 'text-rose-600 bg-rose-50'
+              }`}>
+                {task.isDismissedOverdue ? (
+                  <>
+                    <span className="text-xs">🔕</span>
+                    <span>Quá hạn (Tắt nhắc)</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-3 h-3" />
+                    <span>Quá hạn</span>
+                  </>
+                )}
               </span>
             )}
           </div>

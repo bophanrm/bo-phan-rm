@@ -46,6 +46,8 @@ import {
   Building2,
   TrendingUp,
   BarChart3,
+  Bell,
+  BellOff,
 } from 'lucide-react';
 
 interface DailyTrackerProps {
@@ -257,7 +259,7 @@ export function DailyTracker({
   onOpenReportModal,
   onOpenReviewModal,
 }: DailyTrackerProps) {
-  const { tasks, currentUser, users, teams, shifts, shiftsConfigMap, rolloverTaskToTomorrow } = useApp();
+  const { tasks, currentUser, users, teams, shifts, shiftsConfigMap, rolloverTaskToTomorrow, toggleDismissOverdue } = useApp();
 
   // State
   const [filterType, setFilterType] = useState<TaskFilterType>('ALL');
@@ -318,6 +320,7 @@ export function DailyTracker({
   const countAll = tasksInPeriod.length;
   const countUnfinished = tasksInPeriod.filter((t) => t.status !== 'APPROVED').length;
   const countOverdue = tasksInPeriod.filter((t) => isTaskOverdue(t)).length;
+  const countActiveOverdue = tasksInPeriod.filter((t) => isTaskOverdue(t) && !t.isDismissedOverdue).length;
   const countDaily = tasksInPeriod.filter((t) => t.isDaily).length;
   const countProject = tasksInPeriod.filter((t) => !t.isDaily).length;
   const countApproved = tasksInPeriod.filter((t) => t.status === 'APPROVED').length;
@@ -814,7 +817,9 @@ export function DailyTracker({
             {countOverdue > 0 && (
               <button
                 onClick={() => setFilterType(filterType === 'OVERDUE' ? 'ALL' : 'OVERDUE')}
-                className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-1 sm:gap-1.5 animate-pulse shrink-0 ${
+                className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-1 sm:gap-1.5 shrink-0 ${
+                  countActiveOverdue > 0 ? 'animate-pulse' : ''
+                } ${
                   filterType === 'OVERDUE'
                     ? 'bg-rose-600 text-white shadow-xs'
                     : 'bg-rose-100 text-rose-800 border border-rose-300'
@@ -925,6 +930,7 @@ export function DailyTracker({
                 task.isDaily &&
                 (!task.reports || task.reports.length === 0) &&
                 isValidDeadline &&
+                !task.isDismissedOverdue &&
                 now >= new Date(deadlineDate.getTime() - 60 * 60 * 1000);
 
               return (
@@ -972,6 +978,8 @@ export function DailyTracker({
                             ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
                             : task.status === 'SUBMITTED'
                             ? 'bg-purple-50 text-purple-800 border border-purple-300'
+                            : task.isDismissedOverdue
+                            ? 'bg-slate-100 text-slate-700'
                             : isRemindTime
                             ? 'bg-amber-100 text-amber-900 border border-amber-300 font-extrabold animate-pulse'
                             : 'bg-slate-100 text-slate-700'
@@ -981,6 +989,8 @@ export function DailyTracker({
                           ? '✓ Đã xong'
                           : task.status === 'SUBMITTED'
                           ? 'Chờ duyệt'
+                          : task.isDismissedOverdue
+                          ? 'Đang làm'
                           : isRemindTime
                           ? '⏰ Cần nộp'
                           : 'Đang làm'}
@@ -1084,10 +1094,50 @@ export function DailyTracker({
                           🔄 {task.extensionHistory[task.extensionHistory.length - 1].actionType === 'REASSIGN' ? 'Bàn giao' : 'Gia hạn'}
                         </span>
                       )}
+                      {task.isDismissedOverdue && (
+                        <span
+                          title={`Đã tắt nhắc nhở bởi ${task.dismissedOverdueByName || 'Người dùng'}`}
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-300 flex items-center gap-1"
+                        >
+                          <span>🔕</span>
+                          <span>Đã tắt nhắc</span>
+                        </span>
+                      )}
                     </div>
 
                     {/* Các nút thao tác */}
                     <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                      {/* Nút Bỏ qua / Bật lại thông báo quá hạn */}
+                      {task.status !== 'APPROVED' &&
+                        isValidDeadline &&
+                        now > deadlineDate &&
+                        (isManager || isSecretary || task.createdBy === currentUser.id || task.assignedTo.includes(currentUser.id)) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDismissOverdue(task.id);
+                            }}
+                            title={task.isDismissedOverdue ? 'Bật lại thông báo quá hạn' : 'Bỏ qua / Tắt thông báo quá hạn'}
+                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-semibold ${
+                              task.isDismissedOverdue
+                                ? 'text-slate-600 bg-slate-100 hover:bg-slate-200 border-slate-300'
+                                : 'text-amber-800 bg-amber-50 hover:bg-amber-100 border-amber-300'
+                            }`}
+                          >
+                            {task.isDismissedOverdue ? (
+                              <>
+                                <Bell className="w-3.5 h-3.5 text-slate-500" />
+                                <span className="hidden xs:inline">Bật lại</span>
+                              </>
+                            ) : (
+                              <>
+                                <BellOff className="w-3.5 h-3.5 text-amber-700" />
+                                <span className="hidden xs:inline">Bỏ qua</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       {/* Nút Cập nhật nhanh tiến độ (Cấp 1, Cấp 2, Giám sát, Người tạo hoặc Người phụ trách) */}
                       {task.status !== 'APPROVED' && (isManager || isSecretary || task.createdBy === currentUser.id || task.assignedTo.includes(currentUser.id)) && (
                         <button
@@ -1196,6 +1246,8 @@ export function DailyTracker({
                   const latestProgress = task.progressUpdates && task.progressUpdates.length > 0
                     ? task.progressUpdates[task.progressUpdates.length - 1]
                     : null;
+                  const rowDeadline = task.reportDeadline ? new Date(task.reportDeadline) : (task.dueDate ? new Date(task.dueDate) : null);
+                  const isRowOverdue = rowDeadline && !isNaN(rowDeadline.getTime()) && now > rowDeadline && task.status !== 'APPROVED';
 
                   return (
                     <tr key={task.id} className="hover:bg-slate-50/80 transition-colors">
@@ -1321,14 +1373,24 @@ export function DailyTracker({
                                   🔄 {task.extensionHistory[task.extensionHistory.length - 1].actionType === 'REASSIGN' ? 'Đã bàn giao' : 'Đã gia hạn'}
                                 </span>
                               )}
-                              {task.status !== 'APPROVED' &&
+                              {task.isDismissedOverdue ? (
+                                <span
+                                  title={`Đã tắt nhắc nhở bởi ${task.dismissedOverdueByName || 'Người dùng'}`}
+                                  className="mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-300 inline-flex items-center gap-1"
+                                >
+                                  <span>🔕</span>
+                                  <span>Đã tắt nhắc</span>
+                                </span>
+                              ) : (
+                                task.status !== 'APPROVED' &&
                                 task.status !== 'SUBMITTED' &&
                                 (!task.reports || task.reports.length === 0) &&
                                 now >= new Date(deadline.getTime() - 60 * 60 * 1000) && (
                                   <span className="mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
                                     ⏰ Nhắc nộp báo cáo
                                   </span>
-                                )}
+                                )
+                              )}
                             </div>
                           );
                         })() : (
@@ -1344,6 +1406,7 @@ export function DailyTracker({
                               ? 'bg-purple-100 text-purple-800 border border-purple-300'
                               : task.isDaily &&
                                 (!task.reports || task.reports.length === 0) &&
+                                !task.isDismissedOverdue &&
                                 now >= new Date(new Date(task.reportDeadline || task.dueDate).getTime() - 60 * 60 * 1000)
                               ? 'bg-amber-100 text-amber-900 border border-amber-300 font-extrabold animate-pulse'
                               : 'bg-slate-100 text-slate-700'
@@ -1355,6 +1418,7 @@ export function DailyTracker({
                             ? 'Chờ duyệt'
                             : task.isDaily &&
                               (!task.reports || task.reports.length === 0) &&
+                              !task.isDismissedOverdue &&
                               now >= new Date(new Date(task.reportDeadline || task.dueDate).getTime() - 60 * 60 * 1000)
                             ? '⏰ Cần nộp (15h)'
                             : 'Đang làm'}
@@ -1426,6 +1490,33 @@ export function DailyTracker({
                               <TrendingUp className="w-3.5 h-3.5" />
                             </button>
                           )}
+
+                          {/* Nút Bỏ qua / Bật lại thông báo quá hạn */}
+                          {isRowOverdue &&
+                            (isManager || isSecretary || task.createdBy === currentUser.id || task.assignedTo.includes(currentUser.id)) && (
+                              <button
+                                type="button"
+                                onClick={() => toggleDismissOverdue(task.id)}
+                                title={task.isDismissedOverdue ? 'Bật lại thông báo quá hạn' : 'Bỏ qua / Tắt thông báo quá hạn'}
+                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-bold ${
+                                  task.isDismissedOverdue
+                                    ? 'text-slate-600 bg-slate-100 hover:bg-slate-200 border-slate-300'
+                                    : 'text-amber-800 bg-amber-50 hover:bg-amber-100 border-amber-300'
+                                }`}
+                              >
+                                {task.isDismissedOverdue ? (
+                                  <>
+                                    <Bell className="w-3.5 h-3.5 text-slate-500" />
+                                    <span className="hidden xl:inline">Bật lại</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <BellOff className="w-3.5 h-3.5 text-amber-700" />
+                                    <span className="hidden xl:inline">Bỏ qua</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
 
                           {/* 1. Nút Duyệt gia hạn (Nếu có yêu cầu và user có thẩm quyền) */}
                           {task.extensionRequest?.status === 'PENDING' && canApproveExtensionRequest(currentUser, task, users) && (

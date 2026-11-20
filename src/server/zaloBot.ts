@@ -760,6 +760,7 @@ class ZaloBotService {
         if (!t.isDaily) return;
         if (t.isManagementOnly || t.isDirectToStaff) return;
         if (t.status === 'APPROVED' || t.status === 'SUBMITTED') return;
+        if (t.isDismissedOverdue) return;
 
         // Xử lý công việc nhiều ngày và công việc trong ngày
         const isMultiDay = t.durationDays && t.durationDays > 1;

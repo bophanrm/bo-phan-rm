@@ -29,6 +29,8 @@ import {
   RotateCcw,
   TrendingUp,
   Building2,
+  Bell,
+  BellOff,
 } from 'lucide-react';
 import { getPersonalName } from '@/utils/nameHelper';
 import { canReviewTask } from '@/utils/permissions';
@@ -77,7 +79,7 @@ interface ReviewReportModalProps {
 }
 
 export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalProps) {
-  const { currentUser, users, reviewReport, submitReport } = useApp();
+  const { currentUser, users, reviewReport, submitReport, toggleDismissOverdue } = useApp();
 
   // Review states
   const [feedback, setFeedback] = useState('');
@@ -320,6 +322,12 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
                   📁 {task.teamName}
                 </span>
               )}
+              {task.isDismissedOverdue && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1">
+                  <span>🔕</span>
+                  <span>Đã tắt nhắc nhở</span>
+                </span>
+              )}
             </div>
 
             {/* Task Title */}
@@ -450,6 +458,57 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
                     </div>
                   </div>
                 </div>
+
+                {/* Cảnh báo quá hạn & Cơ chế Bỏ qua thông báo */}
+                {(() => {
+                  const deadlineToCheck = task.reportDeadline ? new Date(task.reportDeadline) : (task.dueDate ? new Date(task.dueDate) : null);
+                  const isTaskOverdue = deadlineToCheck && !isNaN(deadlineToCheck.getTime()) && Date.now() > deadlineToCheck.getTime() && task.status !== 'APPROVED';
+                  if (!isTaskOverdue) return null;
+
+                  return (
+                    <div className={`mt-2.5 rounded-xl p-3 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all ${
+                      task.isDismissedOverdue
+                        ? 'bg-slate-100/90 border-slate-300 text-slate-700'
+                        : 'bg-rose-50/90 border-rose-300 text-rose-900'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base shrink-0">{task.isDismissedOverdue ? '🔕' : '⚠️'}</span>
+                        <div>
+                          <p className="font-bold text-xs">
+                            {task.isDismissedOverdue ? 'Đã tắt nhắc nhở công việc này' : 'Công việc này hiện đã quá hạn!'}
+                          </p>
+                          <p className="text-[11px] opacity-85 leading-snug">
+                            {task.isDismissedOverdue
+                              ? `Đã bỏ qua thông báo bởi ${task.dismissedOverdueByName || 'Người dùng'} lúc ${task.dismissedOverdueAt ? new Date(task.dismissedOverdueAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date(task.dismissedOverdueAt).toLocaleDateString('vi-VN') : ''}.`
+                              : 'Hệ thống và Zalo Bot đang gửi thông báo nhắc nhở định kỳ về công việc này.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => toggleDismissOverdue(task.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1.5 border shadow-2xs transition-all cursor-pointer ${
+                          task.isDismissedOverdue
+                            ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
+                            : 'bg-white hover:bg-rose-100 text-rose-700 border-rose-300'
+                        }`}
+                      >
+                        {task.isDismissedOverdue ? (
+                          <>
+                            <Bell className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Bật lại thông báo</span>
+                          </>
+                        ) : (
+                          <>
+                            <BellOff className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Bỏ qua thông báo</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
