@@ -3,8 +3,16 @@ import { supabase } from '@/lib/supabase';
 
 export interface GoogleDriveConfig {
   enabled: boolean;
+  authType: 'service_account' | 'oauth';
+  // Service Account
   clientEmail: string;
   privateKey: string;
+  // OAuth 2.0 (dành cho Gmail cá nhân 15GB)
+  oauthClientId?: string;
+  oauthClientSecret?: string;
+  oauthRefreshToken?: string;
+  oauthUserEmail?: string;
+  // Thư mục & Lịch
   folderId: string;
   folderName?: string;
   scheduleTime: string; // HH:mm, mặc định "00:00"
@@ -26,7 +34,7 @@ export interface GoogleDriveBackupFile {
 }
 
 // Bộ nhớ đệm token
-let cachedToken: { token: string; expiresAt: number } | null = null;
+let cachedToken: { token: string; expiresAt: number; authKey: string } | null = null;
 
 export class GoogleDriveService {
   // Lấy cấu hình Drive từ Supabase hoặc biến môi trường
@@ -41,8 +49,13 @@ export class GoogleDriveService {
       if (data?.value) {
         return {
           enabled: !!data.value.enabled,
+          authType: data.value.authType || 'service_account',
           clientEmail: data.value.clientEmail || process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
           privateKey: data.value.privateKey || process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '',
+          oauthClientId: data.value.oauthClientId || process.env.GOOGLE_OAUTH_CLIENT_ID || '',
+          oauthClientSecret: data.value.oauthClientSecret || process.env.GOOGLE_OAUTH_CLIENT_SECRET || '',
+          oauthRefreshToken: data.value.oauthRefreshToken || '',
+          oauthUserEmail: data.value.oauthUserEmail || '',
           folderId: data.value.folderId || process.env.GOOGLE_DRIVE_FOLDER_ID || '',
           folderName: data.value.folderName || '',
           scheduleTime: data.value.scheduleTime || '00:00',
@@ -61,8 +74,13 @@ export class GoogleDriveService {
     // Fallback từ env
     return {
       enabled: false,
+      authType: 'service_account',
       clientEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
       privateKey: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '',
+      oauthClientId: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
+      oauthClientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET || '',
+      oauthRefreshToken: '',
+      oauthUserEmail: '',
       folderId: process.env.GOOGLE_DRIVE_FOLDER_ID || '',
       folderName: '',
       scheduleTime: '00:00',
@@ -79,10 +97,8 @@ export class GoogleDriveService {
       ...config,
     };
 
-    // Xóa cache token nếu email hoặc privateKey thay đổi
-    if (config.clientEmail || config.privateKey) {
-      cachedToken = null;
-    }
+    // Xóa cache token
+    cachedToken = null;
 
     try {
       await supabase.from('app_sync_store').upsert({
@@ -107,7 +123,7 @@ export class GoogleDriveService {
     return key.replace(/\\n/g, '\n');
   }
 
-  // Tạo JWT Bearer Assertion ký bằng RSA-SHA256
+  // Tạo JWT Bearer Assertion ký bằng RSA-SHA256 cho Service Account
   private static createSignedJwt(clientEmail: string, privateKey: string): string {
     const header = {
       alg: 'RS256',
@@ -147,18 +163,58 @@ export class GoogleDriveService {
     return `${signInput}.${signature}`;
   }
 
-  // Lấy Access Token từ Google OAuth2
-  public static async getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
+  // Lấy Access Token từ Google OAuth2 hoặc Service Account
+  public static async getAccessToken(configOverride?: Partial<GoogleDriveConfig>): Promise<{ token: string; authType: 'service_account' | 'oauth' }> {
+    const config = { ...(await this.getConfig()), ...configOverride };
     const now = Date.now();
-    if (cachedToken && cachedToken.expiresAt > now + 60000) {
-      return cachedToken.token;
+    const currentAuthKey = config.authType === 'oauth' ? (config.oauthRefreshToken || '') : (config.clientEmail || '');
+
+    if (cachedToken && cachedToken.expiresAt > now + 60000 && cachedToken.authKey === currentAuthKey) {
+      return { token: cachedToken.token, authType: config.authType };
     }
 
-    if (!clientEmail || !privateKey) {
+    // 1. NẾU DÙNG OAUTH 2.0 (Gmail cá nhân 15GB)
+    if (config.authType === 'oauth') {
+      if (!config.oauthRefreshToken) {
+        throw new Error('Chưa liên kết tài khoản Google cá nhân. Vui lòng bấm "Đăng nhập Google" để cấp quyền.');
+      }
+      if (!config.oauthClientId || !config.oauthClientSecret) {
+        throw new Error('Thiếu OAuth Client ID hoặc Client Secret từ Google Cloud.');
+      }
+
+      const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: config.oauthClientId,
+          client_secret: config.oauthClientSecret,
+          refresh_token: config.oauthRefreshToken,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error_description || data.error || 'Không thể làm mới Access Token từ Google OAuth 2.0');
+      }
+
+      cachedToken = {
+        token: data.access_token,
+        expiresAt: now + (data.expires_in ? data.expires_in * 1000 : 3600000),
+        authKey: currentAuthKey,
+      };
+
+      return { token: data.access_token, authType: 'oauth' };
+    }
+
+    // 2. NẾU DÙNG SERVICE ACCOUNT (Shared Drive / Bộ nhớ dùng chung)
+    if (!config.clientEmail || !config.privateKey) {
       throw new Error('Thiếu Service Account Client Email hoặc Private Key của Google.');
     }
 
-    const jwt = this.createSignedJwt(clientEmail, privateKey);
+    const jwt = this.createSignedJwt(config.clientEmail, config.privateKey);
 
     const res = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -181,9 +237,10 @@ export class GoogleDriveService {
     cachedToken = {
       token: data.access_token,
       expiresAt: now + (data.expires_in ? data.expires_in * 1000 : 3600000),
+      authKey: currentAuthKey,
     };
 
-    return data.access_token;
+    return { token: data.access_token, authType: 'service_account' };
   }
 
   // Kiểm tra kết nối và quyền hạn truy cập thư mục Google Drive
@@ -195,26 +252,19 @@ export class GoogleDriveService {
     message: string;
   }> {
     const config = { ...(await this.getConfig()), ...customConfig };
+    const { token, authType } = await this.getAccessToken(config);
 
-    if (!config.clientEmail || !config.privateKey) {
-      throw new Error('Vui lòng cung cấp Client Email và Private Key của Service Account.');
-    }
-
-    const token = await this.getAccessToken(config.clientEmail, config.privateKey);
-
-    // Nếu có Folder ID, kiểm tra folder có tồn tại và Service Account có quyền xem/ghi không
     let targetFolderId = config.folderId ? config.folderId.trim() : '';
-    // Nếu người dùng dán nguyên link URL thư mục Drive (https://drive.google.com/drive/folders/XXXXX)
     if (targetFolderId.includes('/folders/')) {
       const match = targetFolderId.match(/\/folders\/([a-zA-Z0-9_-]+)/);
       if (match && match[1]) targetFolderId = match[1];
     }
 
-    let folderName = 'Google Drive (Root / Mặc định)';
+    let folderName = 'Google Drive (Root / Thư mục gốc)';
 
     if (targetFolderId) {
       const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${targetFolderId}?fields=id,name,mimeType,capabilities`,
+        `https://www.googleapis.com/drive/v3/files/${targetFolderId}?supportsAllDrives=true&fields=id,name,mimeType,capabilities`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -226,7 +276,7 @@ export class GoogleDriveService {
       if (!res.ok) {
         if (res.status === 404) {
           throw new Error(
-            `Không tìm thấy thư mục (ID: ${targetFolderId}). Hãy chắc chắn bạn đã CHIA SẺ (Share) thư mục này cho email Service Account "${config.clientEmail}" với quyền Người chỉnh sửa (Editor).`
+            `Không tìm thấy thư mục (ID: ${targetFolderId}). Hãy chắc chắn thư mục này đã được chia sẻ quyền Người chỉnh sửa (Editor) cho tài khoản kết nối.`
           );
         }
         throw new Error(folderData.error?.message || 'Không thể truy cập thư mục Google Drive được chỉ định.');
@@ -239,12 +289,16 @@ export class GoogleDriveService {
       folderName = folderData.name || 'Thư mục Drive';
     }
 
+    const emailDisplay = authType === 'oauth'
+      ? (config.oauthUserEmail || 'Tài khoản Google cá nhân (OAuth)')
+      : config.clientEmail;
+
     return {
       success: true,
       folderName,
       folderId: targetFolderId,
-      accountEmail: config.clientEmail,
-      message: `Kết nối thành công tới Google Drive! Service Account: ${config.clientEmail} - Thư mục: ${folderName}`,
+      accountEmail: emailDisplay,
+      message: `Kết nối thành công tới Google Drive! Tài khoản: ${emailDisplay} - Thư mục: ${folderName}`,
     };
   }
 
@@ -256,6 +310,7 @@ export class GoogleDriveService {
       content: string;
       mimeType: string;
       folderId?: string;
+      authType?: 'service_account' | 'oauth';
     }
   ): Promise<GoogleDriveBackupFile> {
     const boundary = `-------BoPhanRM_DriveBoundary_${Date.now()}`;
@@ -287,8 +342,9 @@ export class GoogleDriveService {
       options.content +
       closeDelimiter;
 
+    // supportsAllDrives=true để hỗ trợ cả Shared Drive
     const res = await fetch(
-      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,size,createdTime,webViewLink,webContentLink',
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,name,mimeType,size,createdTime,webViewLink,webContentLink',
       {
         method: 'POST',
         headers: {
@@ -302,7 +358,17 @@ export class GoogleDriveService {
     const file = await res.json();
     if (!res.ok) {
       console.error('[GoogleDrive Upload Error]:', file);
-      throw new Error(file.error?.message || 'Lỗi tải file lên Google Drive.');
+      const rawErrMsg = file.error?.message || '';
+
+      if (rawErrMsg.includes('storage quota') || rawErrMsg.includes('storageQuotaExceeded')) {
+        throw new Error(
+          'Lỗi dung lượng: Google không cấp dung lượng cho Service Account trên Drive cá nhân (@gmail.com). ' +
+          'GIẢI PHÁP: (1) Nếu dùng Gmail cá nhân, bạn hãy chuyển sang mục "Liên kết tài khoản Google (OAuth 2.0)" để dùng 15GB miễn phí; ' +
+          'HOẶC (2) Nếu dùng Google Workspace, hãy tạo thư mục bên trong "Bộ nhớ dùng chung" (Shared Drive) và thêm Service Account vào.'
+        );
+      }
+
+      throw new Error(rawErrMsg || 'Lỗi tải file lên Google Drive.');
     }
 
     return {
@@ -318,7 +384,6 @@ export class GoogleDriveService {
   // Lấy danh sách các file backup gần nhất trong thư mục
   public static async listBackups(customConfig?: Partial<GoogleDriveConfig>): Promise<GoogleDriveBackupFile[]> {
     const config = { ...(await this.getConfig()), ...customConfig };
-    if (!config.clientEmail || !config.privateKey) return [];
 
     let cleanFolderId = config.folderId ? config.folderId.trim() : '';
     if (cleanFolderId.includes('/folders/')) {
@@ -327,7 +392,7 @@ export class GoogleDriveService {
     }
 
     try {
-      const token = await this.getAccessToken(config.clientEmail, config.privateKey);
+      const { token } = await this.getAccessToken(config);
 
       let query = `trashed = false and mimeType != 'application/vnd.google-apps.folder'`;
       if (cleanFolderId) {
@@ -335,7 +400,7 @@ export class GoogleDriveService {
       }
 
       const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
+        `https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&includeItemsFromAllDrives=true&q=${encodeURIComponent(
           query
         )}&fields=files(id,name,mimeType,size,createdTime,webViewLink)&orderBy=createdTime desc&pageSize=15`,
         {
@@ -370,17 +435,11 @@ export class GoogleDriveService {
     totalTasks: number;
   }> {
     const config = { ...(await this.getConfig()), ...options?.customConfig };
-
-    if (!config.clientEmail || !config.privateKey) {
-      throw new Error('Chưa cấu hình tài khoản Service Account Google Drive.');
-    }
-
-    const token = await this.getAccessToken(config.clientEmail, config.privateKey);
+    const { token, authType } = await this.getAccessToken(config);
 
     // Thu thập dữ liệu sao lưu
     let backupPayload: any = options?.snapshotData;
     if (!backupPayload) {
-      // Đọc toàn bộ snapshot từ Supabase app_sync_store
       const { data: rows } = await supabase
         .from('app_sync_store')
         .select('key, value')
@@ -429,6 +488,7 @@ export class GoogleDriveService {
       content: fileContent,
       mimeType: 'application/json',
       folderId: config.folderId,
+      authType,
     });
 
     // Cập nhật trạng thái sao lưu mới nhất vào config
@@ -451,7 +511,12 @@ export class GoogleDriveService {
   // Tự động kiểm tra và chạy sao lưu định kỳ (chạy trong cron /api/zalo/cron)
   public static async checkAndTriggerAutoBackup(): Promise<boolean> {
     const config = await this.getConfig();
-    if (!config.enabled || !config.clientEmail || !config.privateKey) {
+    if (!config.enabled) return false;
+
+    if (config.authType === 'service_account' && (!config.clientEmail || !config.privateKey)) {
+      return false;
+    }
+    if (config.authType === 'oauth' && !config.oauthRefreshToken) {
       return false;
     }
 
@@ -476,7 +541,7 @@ export class GoogleDriveService {
       return false;
     }
 
-    // Khóa nguyên tử chống sao lưu trùng lặp khi nhiều server chạy song song
+    // Khóa nguyên tử chống sao lưu trùng lặp
     const lockKey = `lock_drive_backup_${todayVnStr}`;
     const { error: lockError } = await supabase.from('app_sync_store').insert({
       key: lockKey,
@@ -484,7 +549,6 @@ export class GoogleDriveService {
     });
 
     if (lockError) {
-      // Đã có phiên khác sao lưu hôm nay
       return false;
     }
 

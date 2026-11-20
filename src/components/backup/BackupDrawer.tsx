@@ -39,14 +39,21 @@ interface GoogleDriveBackupFile {
 
 interface GoogleDriveConfigState {
   enabled: boolean;
+  authType: 'service_account' | 'oauth';
   clientEmail: string;
   privateKey: string;
+  oauthClientId?: string;
+  oauthClientSecret?: string;
+  oauthUserEmail?: string;
+  isOAuthConnected?: boolean;
   folderId: string;
   folderName?: string;
   scheduleTime: string;
   frequency: 'daily' | '12h' | 'manual';
   hasPrivateKey?: boolean;
   privateKeyMasked?: string;
+  hasClientSecret?: boolean;
+  oauthClientSecretMasked?: string;
   lastBackupTime?: string;
   lastBackupFileName?: string;
   lastBackupStatus?: 'success' | 'error' | 'idle';
@@ -74,8 +81,11 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
   // Google Drive state
   const [driveConfig, setDriveConfig] = useState<GoogleDriveConfigState>({
     enabled: true,
+    authType: 'service_account',
     clientEmail: '',
     privateKey: '',
+    oauthClientId: '',
+    oauthClientSecret: '',
     folderId: '',
     scheduleTime: '00:00',
     frequency: 'daily',
@@ -181,14 +191,19 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
     try {
       const payload: any = {
         enabled: driveConfig.enabled,
+        authType: driveConfig.authType,
         clientEmail: driveConfig.clientEmail,
         folderId: driveConfig.folderId,
         scheduleTime: driveConfig.scheduleTime,
         frequency: driveConfig.frequency,
+        oauthClientId: driveConfig.oauthClientId,
       };
 
       if (driveConfig.privateKey) {
         payload.privateKey = driveConfig.privateKey;
+      }
+      if (driveConfig.oauthClientSecret) {
+        payload.oauthClientSecret = driveConfig.oauthClientSecret;
       }
 
       const res = await fetch('/api/drive/config', {
@@ -202,6 +217,7 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
           ...prev,
           ...data.config,
           privateKey: '',
+          oauthClientSecret: '',
         }));
         setEditPrivateKey(false);
         setTestResult({
@@ -221,6 +237,49 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
       });
     } finally {
       setSavingConfig(false);
+    }
+  };
+
+  // Khởi động đăng nhập Google OAuth 2.0
+  const [connectingOAuth, setConnectingOAuth] = useState(false);
+  const handleStartOAuth = async () => {
+    setConnectingOAuth(true);
+    setTestResult(null);
+    try {
+      if (driveConfig.oauthClientId) {
+        await fetch('/api/drive/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            authType: 'oauth',
+            oauthClientId: driveConfig.oauthClientId,
+            oauthClientSecret: driveConfig.oauthClientSecret,
+            folderId: driveConfig.folderId,
+          }),
+        });
+      }
+
+      const res = await fetch(
+        `/api/drive/oauth/url?origin=${encodeURIComponent(window.location.origin)}&clientId=${encodeURIComponent(
+          driveConfig.oauthClientId || ''
+        )}`
+      );
+      const data = await res.json();
+      if (data.success && data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        setTestResult({
+          success: false,
+          message: data.error || 'Vui lòng điền OAuth Client ID trước khi bấm Đăng nhập.',
+        });
+      }
+    } catch (err: any) {
+      setTestResult({
+        success: false,
+        message: err?.message || 'Lỗi khi bắt đầu xác thực Google.',
+      });
+    } finally {
+      setConnectingOAuth(false);
     }
   };
 
@@ -494,9 +553,28 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
                   </div>
                 )}
                 {syncErrorMsg && (
-                  <div className="mt-3 p-2.5 rounded-xl bg-rose-100/90 border border-rose-300 text-rose-900 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
-                    <span className="font-semibold">{syncErrorMsg}</span>
+                  <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs space-y-2 leading-relaxed">
+                    <div className="flex items-center gap-2 font-bold text-rose-950">
+                      <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
+                      <span>Thông báo từ Google Drive</span>
+                    </div>
+                    <p className="font-semibold">{syncErrorMsg}</p>
+                    {(syncErrorMsg.includes('storage quota') || syncErrorMsg.includes('Lỗi dung lượng')) && (
+                      <div className="p-2.5 bg-white rounded-xl border border-rose-200 text-[11px] text-slate-800 space-y-1.5 shadow-2xs">
+                        <p className="font-bold text-rose-800">💡 Nguyên nhân & 2 Cách xử lý nhanh:</p>
+                        <p className="text-slate-600">
+                          Google quy định tài khoản Service Account (tài khoản robot) có dung lượng = 0 MB nên không được tự ý tạo file trong Google Drive cá nhân (@gmail.com).
+                        </p>
+                        <div className="space-y-1 pt-1">
+                          <p>
+                            • <strong>Cách 1 (Nếu dùng Google Workspace / Công ty):</strong> Mở Google Drive &gt; Vào mục <strong>"Bộ nhớ dùng chung" (Shared Drives)</strong> &gt; Tạo thư mục tại đó &gt; Thêm email Service Account vào làm <em>Người quản lý nội dung</em>.
+                          </p>
+                          <p>
+                            • <strong>Cách 2 (Nếu dùng Gmail cá nhân @gmail.com):</strong> Hãy chuyển phương thức xác thực bên dưới sang <strong>"Tài khoản Google cá nhân (OAuth 2.0)"</strong> để sử dụng trọn vẹn 15GB miễn phí của chính bạn.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {testResult && (
@@ -551,32 +629,100 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
                 )}
               </div>
 
-              {/* Form Cấu hình Service Account */}
+              {/* Form Cấu hình */}
               <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3.5 shadow-2xs">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                     <Settings2 className="w-4 h-4 text-blue-600" />
-                    <span>Thông tin kết nối & Lịch sao lưu</span>
+                    <span>Phương thức kết nối & Lịch sao lưu</span>
                   </h4>
-                  {/* Nút Upload nhanh file credentials JSON */}
-                  <div>
-                    <input
-                      ref={serviceAccountFileRef}
-                      type="file"
-                      accept=".json"
-                      onChange={handleServiceAccountFileUpload}
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => serviceAccountFileRef.current?.click()}
-                      className="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center gap-1.5 transition-all cursor-pointer"
-                    >
-                      <UploadCloud className="w-3.5 h-3.5" />
-                      <span>Nạp file .JSON Google</span>
-                    </button>
-                  </div>
+                  {driveConfig.authType === 'service_account' && (
+                    <div>
+                      <input
+                        ref={serviceAccountFileRef}
+                        type="file"
+                        accept=".json"
+                        onChange={handleServiceAccountFileUpload}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => serviceAccountFileRef.current?.click()}
+                        className="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        <span>Nạp file .JSON Google</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                {/* Chọn loại tài khoản */}
+                <div className="p-1 bg-slate-100 rounded-xl grid grid-cols-2 gap-1 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setDriveConfig({ ...driveConfig, authType: 'service_account' })}
+                    className={`py-2 px-2.5 rounded-lg text-center transition-all cursor-pointer ${
+                      driveConfig.authType === 'service_account'
+                        ? 'bg-white text-blue-700 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    🏢 Bộ nhớ dùng chung (Shared Drive)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDriveConfig({ ...driveConfig, authType: 'oauth' })}
+                    className={`py-2 px-2.5 rounded-lg text-center transition-all cursor-pointer ${
+                      driveConfig.authType === 'oauth'
+                        ? 'bg-white text-blue-700 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    👤 Gmail cá nhân (15GB OAuth)
+                  </button>
+                </div>
+
+                {/* Ghi chú phương thức */}
+                {driveConfig.authType === 'service_account' ? (
+                  <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-[11px] text-blue-900 leading-relaxed">
+                    <strong>Lưu ý cho Service Account:</strong> Google yêu cầu thư mục sao lưu phải nằm trong mục <strong>"Bộ nhớ dùng chung" (Shared Drives)</strong> của Google Workspace công ty. Nếu dùng Gmail cá nhân thường, hãy chọn tab <em>"Gmail cá nhân (15GB OAuth)"</em> ở trên.
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200 text-[11px] text-indigo-900 leading-relaxed space-y-2">
+                    <p>
+                      <strong>Dành cho tài khoản Gmail cá nhân:</strong> Dùng trực tiếp 15GB miễn phí của tài khoản Gmail của bạn, không bị giới hạn quota.
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      {driveConfig.isOAuthConnected ? (
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-emerald-700 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Đã liên kết: {driveConfig.oauthUserEmail || 'Gmail'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleStartOAuth}
+                            disabled={connectingOAuth}
+                            className="text-[10px] text-blue-600 underline font-bold cursor-pointer"
+                          >
+                            Đăng nhập lại
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleStartOAuth}
+                          disabled={connectingOAuth}
+                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Cloud className="w-3.5 h-3.5" />
+                          <span>{connectingOAuth ? 'Đang chuyển trang...' : 'Đăng nhập Google để liên kết'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Bật/Tắt tự động */}
                 <div className="flex items-center justify-between py-1">
@@ -634,60 +780,93 @@ export function BackupDrawer({ isOpen, onClose }: BackupDrawerProps) {
                     className="w-full text-xs font-medium px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-hidden"
                   />
                   <p className="text-[10px] text-slate-500 mt-1">
-                    Nhớ chia sẻ quyền <strong>Người chỉnh sửa (Editor)</strong> thư mục này cho Service Account bên dưới.
+                    {driveConfig.authType === 'service_account'
+                      ? 'Thư mục phải nằm trong "Bộ nhớ dùng chung" (Shared Drive) và cấp quyền cho email Service Account.'
+                      : 'Thư mục nằm trong Drive cá nhân của bạn.'}
                   </p>
                 </div>
 
-                {/* Client Email */}
-                <div>
-                  <label className="text-[11px] font-bold text-slate-700 block mb-1 flex items-center gap-1.5">
-                    <span>📧</span>
-                    <span>Service Account Client Email:</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={driveConfig.clientEmail}
-                    onChange={(e) => setDriveConfig({ ...driveConfig, clientEmail: e.target.value })}
-                    placeholder="bophanrm-backup@project-id.iam.gserviceaccount.com"
-                    className="w-full text-xs font-medium px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-hidden font-mono"
-                  />
-                </div>
-
-                {/* Private Key */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                      <Key className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Private Key (RSA-SHA256):</span>
-                    </label>
-                    {driveConfig.hasPrivateKey && !editPrivateKey && (
-                      <button
-                        type="button"
-                        onClick={() => setEditPrivateKey(true)}
-                        className="text-[10px] text-blue-600 font-bold hover:underline cursor-pointer"
-                      >
-                        Thay đổi Key
-                      </button>
-                    )}
-                  </div>
-
-                  {driveConfig.hasPrivateKey && !editPrivateKey ? (
-                    <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-300 text-xs font-mono text-slate-600 flex items-center justify-between">
-                      <span>{driveConfig.privateKeyMasked || '••••••••••••••••••••••••••••••••'}</span>
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-                        Đã lưu an toàn
-                      </span>
+                {/* CÁC TRƯỜNG DÀNH CHO OAUTH */}
+                {driveConfig.authType === 'oauth' && (
+                  <div className="space-y-3 pt-1 border-t border-slate-100">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">OAuth Client ID (Google Cloud):</label>
+                      <input
+                        type="text"
+                        value={driveConfig.oauthClientId || ''}
+                        onChange={(e) => setDriveConfig({ ...driveConfig, oauthClientId: e.target.value })}
+                        placeholder="xxxx.apps.googleusercontent.com"
+                        className="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-hidden"
+                      />
                     </div>
-                  ) : (
-                    <textarea
-                      rows={3}
-                      value={driveConfig.privateKey}
-                      onChange={(e) => setDriveConfig({ ...driveConfig, privateKey: e.target.value })}
-                      placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
-                      className="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-hidden"
-                    />
-                  )}
-                </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">OAuth Client Secret:</label>
+                      <input
+                        type="password"
+                        value={driveConfig.oauthClientSecret || ''}
+                        onChange={(e) => setDriveConfig({ ...driveConfig, oauthClientSecret: e.target.value })}
+                        placeholder={driveConfig.hasClientSecret ? '••••••••••••••••' : 'Nhập Client Secret'}
+                        className="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-hidden"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* CÁC TRƯỜNG DÀNH CHO SERVICE ACCOUNT */}
+                {driveConfig.authType === 'service_account' && (
+                  <>
+                    {/* Client Email */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1 flex items-center gap-1.5">
+                        <span>📧</span>
+                        <span>Service Account Client Email:</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={driveConfig.clientEmail}
+                        onChange={(e) => setDriveConfig({ ...driveConfig, clientEmail: e.target.value })}
+                        placeholder="bophanrm-backup@project-id.iam.gserviceaccount.com"
+                        className="w-full text-xs font-medium px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-hidden font-mono"
+                      />
+                    </div>
+
+                    {/* Private Key */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                          <Key className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Private Key (RSA-SHA256):</span>
+                        </label>
+                        {driveConfig.hasPrivateKey && !editPrivateKey && (
+                          <button
+                            type="button"
+                            onClick={() => setEditPrivateKey(true)}
+                            className="text-[10px] text-blue-600 font-bold hover:underline cursor-pointer"
+                          >
+                            Thay đổi Key
+                          </button>
+                        )}
+                      </div>
+
+                      {driveConfig.hasPrivateKey && !editPrivateKey ? (
+                        <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-300 text-xs font-mono text-slate-600 flex items-center justify-between">
+                          <span>{driveConfig.privateKeyMasked || '••••••••••••••••••••••••••••••••'}</span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                            Đã lưu an toàn
+                          </span>
+                        </div>
+                      ) : (
+                        <textarea
+                          rows={3}
+                          value={driveConfig.privateKey}
+                          onChange={(e) => setDriveConfig({ ...driveConfig, privateKey: e.target.value })}
+                          placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
+                          className="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-hidden"
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
 
                 {/* Nút Lưu Cấu Hình */}
                 <button

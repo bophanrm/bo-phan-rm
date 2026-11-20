@@ -4,9 +4,11 @@ import { GoogleDriveService } from '@/server/googleDrive';
 export async function GET() {
   try {
     const config = await GoogleDriveService.getConfig();
-    // Ẩn bớt privateKey vì lý do bảo mật khi trả về UI
     const maskedPrivateKey = config.privateKey
       ? config.privateKey.substring(0, 32) + '...[ĐÃ BẢO MẬT]...'
+      : '';
+    const maskedClientSecret = config.oauthClientSecret
+      ? config.oauthClientSecret.substring(0, 6) + '...[ĐÃ BẢO MẬT]...'
       : '';
 
     return NextResponse.json({
@@ -15,6 +17,9 @@ export async function GET() {
         ...config,
         hasPrivateKey: !!config.privateKey,
         privateKeyMasked: maskedPrivateKey,
+        hasClientSecret: !!config.oauthClientSecret,
+        oauthClientSecretMasked: maskedClientSecret,
+        isOAuthConnected: !!config.oauthRefreshToken,
       },
     });
   } catch (error: any) {
@@ -29,13 +34,18 @@ export async function POST(req: Request) {
 
     const updatePayload: any = {
       enabled: body.enabled !== undefined ? !!body.enabled : current.enabled,
+      authType: body.authType || current.authType || 'service_account',
       clientEmail: body.clientEmail !== undefined ? body.clientEmail.trim() : current.clientEmail,
       folderId: body.folderId !== undefined ? body.folderId.trim() : current.folderId,
       scheduleTime: body.scheduleTime || current.scheduleTime,
       frequency: body.frequency || current.frequency,
+      oauthClientId: body.oauthClientId !== undefined ? body.oauthClientId.trim() : current.oauthClientId,
     };
 
-    // Chỉ cập nhật privateKey nếu người dùng gửi key mới thực tế (không phải chuỗi masked)
+    if (body.oauthClientSecret && !body.oauthClientSecret.includes('[ĐÃ BẢO MẬT]')) {
+      updatePayload.oauthClientSecret = body.oauthClientSecret.trim();
+    }
+
     if (body.privateKey && !body.privateKey.includes('[ĐÃ BẢO MẬT]')) {
       updatePayload.privateKey = body.privateKey.trim();
     }
@@ -48,6 +58,9 @@ export async function POST(req: Request) {
         ...saved,
         hasPrivateKey: !!saved.privateKey,
         privateKeyMasked: saved.privateKey ? saved.privateKey.substring(0, 32) + '...[ĐÃ BẢO MẬT]...' : '',
+        hasClientSecret: !!saved.oauthClientSecret,
+        oauthClientSecretMasked: saved.oauthClientSecret ? saved.oauthClientSecret.substring(0, 6) + '...[ĐÃ BẢO MẬT]...' : '',
+        isOAuthConnected: !!saved.oauthRefreshToken,
       },
     });
   } catch (error: any) {
