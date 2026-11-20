@@ -924,6 +924,8 @@ export function DailyTracker({
               const deadlineDate = task.reportDeadline ? new Date(task.reportDeadline) : (task.dueDate ? new Date(task.dueDate) : null);
               const isValidDeadline = deadlineDate && !isNaN(deadlineDate.getTime());
               const isDueToday = isValidDeadline && deadlineDate.toDateString() === now.toDateString();
+              const overdueDays = isValidDeadline && now > deadlineDate ? Math.floor((now.getTime() - deadlineDate.getTime()) / (24 * 3600 * 1000)) : 0;
+              const isOverdue30Days = isValidDeadline && task.status !== 'APPROVED' && (overdueDays >= 30 || !!task.isDismissedOverdue);
               const isRemindTime =
                 task.status !== 'APPROVED' &&
                 task.status !== 'SUBMITTED' &&
@@ -1107,10 +1109,8 @@ export function DailyTracker({
 
                     {/* Các nút thao tác */}
                     <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                      {/* Nút Bỏ qua / Bật lại thông báo quá hạn */}
-                      {task.status !== 'APPROVED' &&
-                        isValidDeadline &&
-                        now > deadlineDate &&
+                      {/* Nút Bỏ qua / Bật lại thông báo quá hạn (chỉ xuất hiện khi quá hạn từ 30 ngày trở lên hoặc đã tắt trước đó) */}
+                      {isOverdue30Days &&
                         (isManager || isSecretary || task.createdBy === currentUser.id || task.assignedTo.includes(currentUser.id)) && (
                           <button
                             type="button"
@@ -1248,6 +1248,8 @@ export function DailyTracker({
                     : null;
                   const rowDeadline = task.reportDeadline ? new Date(task.reportDeadline) : (task.dueDate ? new Date(task.dueDate) : null);
                   const isRowOverdue = rowDeadline && !isNaN(rowDeadline.getTime()) && now > rowDeadline && task.status !== 'APPROVED';
+                  const rowOverdueDays = isRowOverdue && rowDeadline ? Math.floor((now.getTime() - rowDeadline.getTime()) / (24 * 3600 * 1000)) : 0;
+                  const isRowOverdue30Days = isRowOverdue && (rowOverdueDays >= 30 || !!task.isDismissedOverdue);
 
                   return (
                     <tr key={task.id} className="hover:bg-slate-50/80 transition-colors">
@@ -1491,8 +1493,8 @@ export function DailyTracker({
                             </button>
                           )}
 
-                          {/* Nút Bỏ qua / Bật lại thông báo quá hạn */}
-                          {isRowOverdue &&
+                          {/* Nút Bỏ qua / Bật lại thông báo quá hạn (chỉ xuất hiện khi quá hạn từ 30 ngày trở lên hoặc đã tắt trước đó) */}
+                          {isRowOverdue30Days &&
                             (isManager || isSecretary || task.createdBy === currentUser.id || task.assignedTo.includes(currentUser.id)) && (
                               <button
                                 type="button"

@@ -459,11 +459,14 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
                   </div>
                 </div>
 
-                {/* Cảnh báo quá hạn & Cơ chế Bỏ qua thông báo */}
+                {/* Cảnh báo quá hạn & Cơ chế Bỏ qua thông báo (quá hạn >= 30 ngày) */}
                 {(() => {
                   const deadlineToCheck = task.reportDeadline ? new Date(task.reportDeadline) : (task.dueDate ? new Date(task.dueDate) : null);
                   const isTaskOverdue = deadlineToCheck && !isNaN(deadlineToCheck.getTime()) && Date.now() > deadlineToCheck.getTime() && task.status !== 'APPROVED';
                   if (!isTaskOverdue) return null;
+
+                  const overdueDays = deadlineToCheck ? Math.floor((Date.now() - deadlineToCheck.getTime()) / (24 * 3600 * 1000)) : 0;
+                  const canDismissOverdue = overdueDays >= 30 || !!task.isDismissedOverdue;
 
                   return (
                     <div className={`mt-2.5 rounded-xl p-3 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all ${
@@ -475,37 +478,43 @@ export function ReviewReportModal({ task, isOpen, onClose }: ReviewReportModalPr
                         <span className="text-base shrink-0">{task.isDismissedOverdue ? '🔕' : '⚠️'}</span>
                         <div>
                           <p className="font-bold text-xs">
-                            {task.isDismissedOverdue ? 'Đã tắt nhắc nhở công việc này' : 'Công việc này hiện đã quá hạn!'}
+                            {task.isDismissedOverdue
+                              ? `Đã tắt nhắc nhở công việc này (quá hạn ${Math.max(1, overdueDays)} ngày)`
+                              : `Công việc này hiện đã quá hạn ${overdueDays > 0 ? `${overdueDays} ngày` : ''}!`}
                           </p>
                           <p className="text-[11px] opacity-85 leading-snug">
                             {task.isDismissedOverdue
                               ? `Đã bỏ qua thông báo bởi ${task.dismissedOverdueByName || 'Người dùng'} lúc ${task.dismissedOverdueAt ? new Date(task.dismissedOverdueAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date(task.dismissedOverdueAt).toLocaleDateString('vi-VN') : ''}.`
-                              : 'Hệ thống và Zalo Bot đang gửi thông báo nhắc nhở định kỳ về công việc này.'}
+                              : canDismissOverdue
+                              ? 'Hệ thống và Zalo Bot đang gửi thông báo nhắc nhở định kỳ. Công việc đã quá hạn trên 30 ngày, bạn có thể chọn bỏ qua để không bị làm phiền.'
+                              : `Hệ thống và Zalo Bot đang gửi thông báo nhắc nhở định kỳ về công việc này. (Cơ chế bỏ qua thông báo chỉ xuất hiện khi công việc quá hạn từ 30 ngày trở lên — hiện đã quá hạn ${Math.max(0, overdueDays)} ngày).`}
                           </p>
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => toggleDismissOverdue(task.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1.5 border shadow-2xs transition-all cursor-pointer ${
-                          task.isDismissedOverdue
-                            ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
-                            : 'bg-white hover:bg-rose-100 text-rose-700 border-rose-300'
-                        }`}
-                      >
-                        {task.isDismissedOverdue ? (
-                          <>
-                            <Bell className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Bật lại thông báo</span>
-                          </>
-                        ) : (
-                          <>
-                            <BellOff className="w-3.5 h-3.5 text-rose-600" />
-                            <span>Bỏ qua thông báo</span>
-                          </>
-                        )}
-                      </button>
+                      {canDismissOverdue && (
+                        <button
+                          type="button"
+                          onClick={() => toggleDismissOverdue(task.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1.5 border shadow-2xs transition-all cursor-pointer ${
+                            task.isDismissedOverdue
+                              ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
+                              : 'bg-white hover:bg-rose-100 text-rose-700 border-rose-300'
+                          }`}
+                        >
+                          {task.isDismissedOverdue ? (
+                            <>
+                              <Bell className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Bật lại thông báo</span>
+                            </>
+                          ) : (
+                            <>
+                              <BellOff className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Bỏ qua thông báo</span>
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   );
                 })()}

@@ -2351,6 +2351,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleDismissOverdue = (taskId: string, reason?: string) => {
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
+
+    // Quy định: chỉ cho phép bỏ qua nếu công việc quá hạn >= 30 ngày (hoặc đang bật lại thông báo)
+    if (!targetTask.isDismissedOverdue) {
+      const deadline = targetTask.reportDeadline ? new Date(targetTask.reportDeadline) : (targetTask.dueDate ? new Date(targetTask.dueDate) : null);
+      if (deadline && !isNaN(deadline.getTime())) {
+        const overdueDays = Math.floor((Date.now() - deadline.getTime()) / (24 * 3600 * 1000));
+        if (overdueDays < 30) {
+          alert(`Chỉ được phép bỏ qua thông báo khi công việc đã quá hạn từ 30 ngày trở lên (hiện tại mới quá hạn ${Math.max(0, overdueDays)} ngày).`);
+          return;
+        }
+      }
+    }
+
     let newStatus = false;
     let taskTitle = '';
     const updatedTasks = tasks.map((t) => {
