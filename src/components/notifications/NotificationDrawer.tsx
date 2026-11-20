@@ -28,11 +28,11 @@ export function NotificationDrawer({
   onSelectTask,
   onNavigateTab,
 }: NotificationDrawerProps) {
-  const { notifications, currentUser, tasks, markNotificationAsRead } = useApp();
+  const { notifications, currentUser, tasks, markNotificationAsRead, markAllNotificationsAsRead } = useApp();
 
   if (!isOpen) return null;
 
-  const userNotifs = notifications.filter((n) => n.userId === currentUser.id);
+  const userNotifs = notifications.filter((n) => n.userId === currentUser.id || !n.userId);
   const unreadNotifs = userNotifs.filter((n) => !n.isRead);
 
   const handleNotificationClick = (notif: NotificationItem) => {
@@ -70,7 +70,7 @@ export function NotificationDrawer({
   };
 
   const handleMarkAllAsRead = () => {
-    unreadNotifs.forEach((n) => markNotificationAsRead(n.id));
+    markAllNotificationsAsRead();
   };
 
   return (

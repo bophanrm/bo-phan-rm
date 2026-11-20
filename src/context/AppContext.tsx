@@ -644,6 +644,7 @@ interface AppContextType {
   rolloverTaskToTomorrow: (taskId: string) => void;
   toggleDismissOverdue: (taskId: string, reason?: string) => void;
   markNotificationAsRead: (id: string) => void;
+  markAllNotificationsAsRead: () => void;
   updateUserPermissions: (
     userId: string,
     role: Role,
@@ -2401,12 +2402,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const markNotificationAsRead = (id: string) => {
-    const updated = notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n));
-    updateNotifications(updated);
+    setNotifications((prev) => {
+      const updated = prev.map((n) => (n.id === id ? { ...n, isRead: true } : n));
+      localStorage.setItem(STORAGE_KEYS.NOTIFS, JSON.stringify(updated));
+      saveToCloud('notifications', updated);
+      return updated;
+    });
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications((prev) => {
+      const updated = prev.map((n) =>
+        n.userId === currentUser.id || !n.userId ? { ...n, isRead: true } : n
+      );
+      localStorage.setItem(STORAGE_KEYS.NOTIFS, JSON.stringify(updated));
+      saveToCloud('notifications', updated);
+      return updated;
+    });
   };
 
   const unreadCount = notifications.filter(
-    (n) => n.userId === currentUser.id && !n.isRead
+    (n) => (n.userId === currentUser.id || !n.userId) && !n.isRead
   ).length;
 
   const sendMessage = (data: {
@@ -2544,6 +2560,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         rolloverTaskToTomorrow,
         toggleDismissOverdue,
         markNotificationAsRead,
+        markAllNotificationsAsRead,
         updateUserPermissions,
         saveUser,
         deleteUser,
