@@ -356,8 +356,8 @@ class ZaloBotService {
   }
 
   // Bắt đầu tạo mã QR để người dùng quét
-  public async startQRLogin() {
-    if (this.status === 'GENERATING_QR' || this.status === 'QR_READY') {
+  public async startQRLogin(): Promise<{ status: string; qrCode: string | null; errorMessage?: string | null }> {
+    if (this.status === 'QR_READY' && this.qrCodeBase64 && this.qrExpiresAt && Date.now() < this.qrExpiresAt) {
       return { status: this.status, qrCode: this.qrCodeBase64 };
     }
 
@@ -366,79 +366,144 @@ class ZaloBotService {
     this.errorMessage = null;
     this.zalo = new Zalo();
 
-    this.loginPromise = (async () => {
-      try {
-        const api = await this.zalo.loginQR(
-          {
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-          },
-          (event: any) => {
-            if (event.type === LoginQRCallbackEventType.QRCodeGenerated) {
-              this.status = 'QR_READY';
-              // Base64 image
-              this.qrCodeBase64 = event.data.image.startsWith('data:image')
-                ? event.data.image
-                : `data:image/png;base64,${event.data.image}`;
-              this.qrExpiresAt = Date.now() + 90000;
-              console.log('[ZaloBot] QR Code generated successfully.');
-            } else if (event.type === LoginQRCallbackEventType.QRCodeScanned) {
-              this.status = 'SCANNED';
-              console.log('[ZaloBot] QR Code has been scanned by user!');
-            } else if (event.type === LoginQRCallbackEventType.QRCodeExpired) {
-              this.status = 'DISCONNECTED';
-              this.qrCodeBase64 = null;
-              this.errorMessage = 'Mã QR đã hết hạn, vui lòng bấm thử lại.';
-              console.log('[ZaloBot] QR Code expired.');
-            } else if (event.type === LoginQRCallbackEventType.QRCodeDeclined) {
-              this.status = 'DISCONNECTED';
-              this.qrCodeBase64 = null;
-              this.errorMessage = 'Đăng nhập bị từ chối trên điện thoại.';
-              console.log('[ZaloBot] QR Code declined.');
-            } else if (event.type === LoginQRCallbackEventType.GotLoginInfo) {
-              this.saveSession(event.data);
-            }
-          }
-        );
+    try {
+      await supabase.from('app_sync_store').upsert({
+        key: 'zalo_qr_state',
+        value: { status: 'GENERATING_QR', qrCode: null, updatedAt: Date.now() },
+        updated_at: new Date().toISOString(),
+      });
+    } catch (e) {}
 
-        this.api = api;
-        this.status = 'CONNECTED';
-        this.qrCodeBase64 = null;
-        this.errorMessage = null;
+    return new Promise((resolve) => {
+      let resolved = false;
+      const safeResolve = (res: { status: string; qrCode: string | null; errorMessage?: string | null }) => {
+        if (!resolved) {
+          resolved = true;
+          resolve(res);
+        }
+      };
 
-        // Lấy thông tin tài khoản vừa đăng nhập
+      // Timeout 15 giây nếu Zalo chưa phản hồi kịp
+      const timeoutTimer = setTimeout(() => {
+        safeResolve({ status: this.status, qrCode: this.qrCodeBase64, errorMessage: this.errorMessage });
+      }, 15000);
+
+      this.loginPromise = (async () => {
         try {
-          const accountInfo = await api.fetchAccountInfo();
-          if (accountInfo && accountInfo.data) {
+          const api = await this.zalo.loginQR(
+            {
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+            },
+            async (event: any) => {
+              if (event.type === LoginQRCallbackEventType.QRCodeGenerated) {
+                this.status = 'QR_READY';
+                this.qrCodeBase64 = event.data.image.startsWith('data:image')
+                  ? event.data.image
+                  : `data:image/png;base64,${event.data.image}`;
+                this.qrExpiresAt = Date.now() + 90000;
+                console.log('[ZaloBot] QR Code generated successfully.');
+
+                try {
+                  await supabase.from('app_sync_store').upsert({
+                    key: 'zalo_qr_state',
+                    value: { status: 'QR_READY', qrCode: this.qrCodeBase64, expiresAt: this.qrExpiresAt, updatedAt: Date.now() },
+                    updated_at: new Date().toISOString(),
+                  });
+                } catch (e) {}
+
+                clearTimeout(timeoutTimer);
+                safeResolve({ status: 'QR_READY', qrCode: this.qrCodeBase64 });
+              } else if (event.type === LoginQRCallbackEventType.QRCodeScanned) {
+                this.status = 'SCANNED';
+                console.log('[ZaloBot] QR Code has been scanned by user!');
+                try {
+                  await supabase.from('app_sync_store').upsert({
+                    key: 'zalo_qr_state',
+                    value: { status: 'SCANNED', qrCode: this.qrCodeBase64, updatedAt: Date.now() },
+                    updated_at: new Date().toISOString(),
+                  });
+                } catch (e) {}
+              } else if (event.type === LoginQRCallbackEventType.QRCodeExpired) {
+                this.status = 'DISCONNECTED';
+                this.qrCodeBase64 = null;
+                this.errorMessage = 'Mã QR đã hết hạn, vui lòng bấm thử lại.';
+                console.log('[ZaloBot] QR Code expired.');
+                try {
+                  await supabase.from('app_sync_store').upsert({
+                    key: 'zalo_qr_state',
+                    value: { status: 'DISCONNECTED', qrCode: null, errorMessage: this.errorMessage, updatedAt: Date.now() },
+                    updated_at: new Date().toISOString(),
+                  });
+                } catch (e) {}
+              } else if (event.type === LoginQRCallbackEventType.QRCodeDeclined) {
+                this.status = 'DISCONNECTED';
+                this.qrCodeBase64 = null;
+                this.errorMessage = 'Đăng nhập bị từ chối trên điện thoại.';
+                console.log('[ZaloBot] QR Code declined.');
+                try {
+                  await supabase.from('app_sync_store').upsert({
+                    key: 'zalo_qr_state',
+                    value: { status: 'DISCONNECTED', qrCode: null, errorMessage: this.errorMessage, updatedAt: Date.now() },
+                    updated_at: new Date().toISOString(),
+                  });
+                } catch (e) {}
+              } else if (event.type === LoginQRCallbackEventType.GotLoginInfo) {
+                this.config.enabled = true;
+                await this.saveSession(event.data);
+                await this.updateConfig({ enabled: true });
+                try {
+                  await supabase.from('app_sync_store').upsert({
+                    key: 'zalo_qr_state',
+                    value: { status: 'CONNECTED', qrCode: null, updatedAt: Date.now() },
+                    updated_at: new Date().toISOString(),
+                  });
+                } catch (e) {}
+              }
+            }
+          );
+
+          this.api = api;
+          this.status = 'CONNECTED';
+          this.qrCodeBase64 = null;
+          this.errorMessage = null;
+
+          // Lấy thông tin tài khoản vừa đăng nhập
+          try {
+            const accountInfo = await api.fetchAccountInfo();
+            if (accountInfo && accountInfo.data) {
+              this.userInfo = {
+                id: accountInfo.data.userId || accountInfo.data.uid,
+                name: accountInfo.data.name || accountInfo.data.displayName || 'Tài khoản Zalo',
+                avatar: accountInfo.data.avatar,
+              };
+            }
+          } catch (e) {
             this.userInfo = {
-              id: accountInfo.data.userId || accountInfo.data.uid,
-              name: accountInfo.data.name || accountInfo.data.displayName || 'Tài khoản Zalo',
-              avatar: accountInfo.data.avatar,
+              id: 'zalo-user',
+              name: 'Zalo Bot Cấp 2',
             };
           }
-        } catch (e) {
-          this.userInfo = {
-            id: 'zalo-user',
-            name: 'Zalo Bot Cấp 2',
-          };
+
+          // Cập nhật lại file với userInfo
+          if (fs.existsSync(SESSION_FILE_PATH)) {
+            try {
+              const raw = fs.readFileSync(SESSION_FILE_PATH, 'utf-8');
+              const data = JSON.parse(raw);
+              data.userInfo = this.userInfo;
+              fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+            } catch (e) {}
+          }
+
+          console.log('[ZaloBot] Login completely successful! User:', this.userInfo?.name);
+        } catch (err: any) {
+          console.error('[ZaloBot] Login error:', err.message);
+          this.status = 'ERROR';
+          this.errorMessage = err.message || 'Lỗi kết nối Zalo';
+          clearTimeout(timeoutTimer);
+          safeResolve({ status: 'ERROR', qrCode: null, errorMessage: this.errorMessage });
         }
-
-        // Cập nhật lại file với userInfo
-        if (fs.existsSync(SESSION_FILE_PATH)) {
-          const raw = fs.readFileSync(SESSION_FILE_PATH, 'utf-8');
-          const data = JSON.parse(raw);
-          data.userInfo = this.userInfo;
-          fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-        }
-
-        console.log('[ZaloBot] Login completely successful! User:', this.userInfo?.name);
-      } catch (err: any) {
-        console.error('[ZaloBot] Login error:', err.message);
-        this.status = 'ERROR';
-        this.errorMessage = err.message || 'Lỗi kết nối Zalo';
-      }
-    })();
-
-    return { status: this.status, qrCode: this.qrCodeBase64 };
+      })();
+    });
   }
 
   // Lấy danh sách nhóm Zalo mà tài khoản đang tham gia
