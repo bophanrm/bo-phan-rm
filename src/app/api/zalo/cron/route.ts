@@ -2,12 +2,15 @@ import { NextResponse } from 'next/server';
 import { zaloBot } from '@/server/zaloBot';
 import { GoogleDriveService } from '@/server/googleDrive';
 
+export const maxDuration = 60; // Thiết lập thời gian thực thi tối đa 60s cho Vercel Serverless
+export const dynamic = 'force-dynamic';
+
 // Endpoint này được gọi tự động định kỳ bởi Vercel Cron hoặc GitHub Actions
 // để kích hoạt bot kiểm tra và gửi tin nhắn theo lịch kể cả khi không có ai mở website
 export async function GET(req: Request) {
   try {
-    // 1. Luôn nạp lại phiên và cấu hình mới nhất từ Supabase
-    await zaloBot.loadSavedSession();
+    // 1. Luôn nạp lại phiên và đảm bảo bot đã kết nối từ Supabase
+    await zaloBot.ensureConnected();
 
     // 2. Kích hoạt kiểm tra và gửi tin theo lịch
     await zaloBot.checkAndTriggerWellReport();
